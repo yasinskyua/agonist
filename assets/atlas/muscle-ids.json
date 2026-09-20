@@ -1,0 +1,204 @@
+{
+  "source": "Human Anatomy Component System — Ryan Graves, CC BY 4.0 (див. CREDITS.md)",
+  "generatedBy": "tools/atlas-ids.mjs",
+  "views": {
+    "front": "assets/atlas/front.svg",
+    "back": "assets/atlas/back.svg"
+  },
+  "count": 30,
+  "muscles": {
+    "abductors": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 6
+    },
+    "biceps_brachii": {
+      "views": [
+        "front"
+      ],
+      "paths": 4
+    },
+    "brachialis": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "brachioradialis": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "deltoid_anterior": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "deltoid_medial_lateral": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 4
+    },
+    "deltoid_posterior": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "gastrocnemius": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 4
+    },
+    "gluteus_maximus": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "hamstrings": {
+      "views": [
+        "back"
+      ],
+      "paths": 4
+    },
+    "hip_adductors": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 8
+    },
+    "hip_flexors": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "latissimus_dorsi_teres_major": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 4
+    },
+    "levator_scapulae": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "obliques": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 18
+    },
+    "pectoralis_major": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "pronators": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "quadriceps": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 12
+    },
+    "rectus_abdominis": {
+      "views": [
+        "front"
+      ],
+      "paths": 7
+    },
+    "sartorius": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "soleus": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 3
+    },
+    "sternocleidomastoid": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 4
+    },
+    "supinators": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "tibialis_anterior": {
+      "views": [
+        "front"
+      ],
+      "paths": 2
+    },
+    "trapezius_lower": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "trapezius_middle": {
+      "views": [
+        "back"
+      ],
+      "paths": 2
+    },
+    "trapezius_upper": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 4
+    },
+    "triceps_brachii": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 10
+    },
+    "wrist_extensors": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 8
+    },
+    "wrist_flexors": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "paths": 8
+    }
+  }
+}

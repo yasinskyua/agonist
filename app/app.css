@@ -1,0 +1,197 @@
+/* Однією рукою: усе, що тапається постійно, — унизу, під великим пальцем.
+   Заголовок угорі не тапається. */
+
+:root {
+  --bg: #fbf8f6;
+  --ink: #21191a;
+  --dim: #6f6360;
+  --line: #e2d8d4;
+  --highlight: #2f6f8f; /* єдиний колір: Ролі розрізняє тікет 06 */
+  --off: #d8cdcb; /* М'яз без Вправ */
+  --tap: 44px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  font: 16px/1.4 system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0 3rem 0 0;
+  font-size: 1.15rem;
+}
+
+h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+h4 {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.95rem;
+}
+
+button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* ── Мапа ───────────────────────────────────────────────────────────── */
+
+#map {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+#map svg {
+  width: 100%;
+  height: 100%;
+}
+
+#map svg[hidden] {
+  display: none;
+}
+
+[data-muscle] {
+  cursor: pointer;
+}
+
+/* Скелет і тло намальовані поверх глибоких М'язів — палець має проходити крізь. */
+#map svg path:not([data-muscle]) {
+  pointer-events: none;
+}
+
+/* М'яз без Вправ: сірий і не реагує — тапати нема на що. */
+.off {
+  pointer-events: none;
+}
+
+path.off[fill] {
+  fill: var(--off);
+}
+
+/* Зона тапу: грубіша за шлях, невидима, ловить палець. */
+rect.tap {
+  fill: none;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+#hint {
+  margin: 0;
+  padding: 0 1rem 0.5rem;
+  text-align: center;
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+
+#hint[hidden] {
+  display: none;
+}
+
+/* ── Панель М'яза ───────────────────────────────────────────────────── */
+
+#panel {
+  position: relative;
+  max-height: 45dvh;
+  overflow-y: auto;
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
+
+#panel[hidden] {
+  display: none;
+}
+
+#panel .close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  padding: 0 0.6rem;
+  font-size: 0.85rem;
+}
+
+.latin {
+  margin: 0.15rem 0 0;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.action {
+  margin: 0.5rem 0 0;
+}
+
+#panel ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+#panel li {
+  padding: 0.1rem 0;
+}
+
+/* ── Нижня панель ───────────────────────────────────────────────────── */
+
+#views {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+
+#views button {
+  flex: 1;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

@@ -1,13 +1,13 @@
-/* Однією рукою: усе, що тапається постійно, — унизу, під великим пальцем.
-   Заголовок угорі не тапається. */
+/* One-handed: everything tapped over and over sits at the bottom, under the
+   thumb. The heading at the top is not tappable. */
 
 :root {
   --bg: #fbf8f6;
   --ink: #21191a;
   --dim: #6f6360;
   --line: #e2d8d4;
-  --highlight: #2f6f8f; /* єдиний колір: Ролі розрізняє тікет 06 */
-  --off: #d8cdcb; /* М'яз без Вправ */
+  --highlight: #2f6f8f; /* one colour: ticket 06 tells the Roles apart */
+  --off: #d8cdcb; /* a Muscle with no Exercises */
   --tap: 44px;
 }
 
@@ -77,7 +77,7 @@ button[aria-pressed='true'] {
   color: var(--bg);
 }
 
-/* ── Мапа ───────────────────────────────────────────────────────────── */
+/* ── The map ────────────────────────────────────────────────────────── */
 
 #map {
   flex: 1;
@@ -99,12 +99,12 @@ button[aria-pressed='true'] {
   cursor: pointer;
 }
 
-/* Скелет і тло намальовані поверх глибоких М'язів — палець має проходити крізь. */
+/* The skeleton is drawn over the deep Muscles — a finger must pass through. */
 #map svg path:not([data-muscle]) {
   pointer-events: none;
 }
 
-/* М'яз без Вправ: сірий і не реагує — тапати нема на що. */
+/* A Muscle with no Exercises: grey and inert — there is nothing to tap. */
 .off {
   pointer-events: none;
 }
@@ -113,7 +113,7 @@ path.off[fill] {
   fill: var(--off);
 }
 
-/* Зона тапу: грубіша за шлях, невидима, ловить палець. */
+/* A tap zone: coarser than the path, invisible, catches the finger. */
 rect.tap {
   fill: none;
   pointer-events: all;
@@ -132,7 +132,7 @@ rect.tap {
   display: none;
 }
 
-/* ── Панель М'яза ───────────────────────────────────────────────────── */
+/* ── The Muscle panel ───────────────────────────────────────────────── */
 
 #panel {
   position: relative;
@@ -165,6 +165,12 @@ rect.tap {
   margin: 0.5rem 0 0;
 }
 
+/* A broken content file reports itself here, not only in the console. */
+.failure {
+  white-space: pre-wrap;
+  color: #8c2f2f;
+}
+
 #panel ul {
   margin: 0;
   padding-left: 1.2rem;
@@ -174,7 +180,7 @@ rect.tap {
   padding: 0.1rem 0;
 }
 
-/* ── Нижня панель ───────────────────────────────────────────────────── */
+/* ── The bottom bar ─────────────────────────────────────────────────── */
 
 #views {
   display: flex;
@@ -186,12 +192,4 @@ rect.tap {
 
 #views button {
   flex: 1;
-}
-
-.sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }

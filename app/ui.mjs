@@ -1,18 +1,18 @@
-// Клей між атласом і екраном: інлайнить два SVG, слухає тап, малює панель
-// М'яза. Логіки тут навмисно немає — усі відповіді дає `atlas.mjs`.
+// The glue between the atlas and the screen: it inlines the two SVGs, listens
+// for taps and draws the Muscle panel. There is deliberately no logic here —
+// every answer comes from `atlas.mjs`.
 //
-// Модуль не чіпає `document` при імпорті: усе починається з `start()`. Саме
-// тому геометрію зон тапу можна перевірити в Node без емуляції DOM.
+// The module does not touch `document` on import; everything starts at
+// `start()`. That is what lets the tap-zone geometry be checked in Node
+// without emulating a DOM.
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { LANGS, translator, otherLang } from './i18n.mjs';
 
-/** Мінімальна зона під палець. Нижче цього тап промахується. */
-const MIN_TAP_PX = 44;
-
 const VIEWS = ['front', 'back'];
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-/** Рамка, що вкриває всі передані. М'яз — це кілька шляхів. */
+/** The box covering all the given ones. A Muscle is several paths. */
 export function union(boxes) {
   const x = Math.min(...boxes.map((b) => b.x));
   const y = Math.min(...boxes.map((b) => b.y));
@@ -25,9 +25,9 @@ export function union(boxes) {
 }
 
 /**
- * Рамка, розтягнута до `min` по кожній стороні від свого центру. Тікет 02
- * заміряв, що 30 М'язів із 40 вужчі за палець; зона тапу тому окрема й
- * грубіша за шлях, який підсвічується.
+ * The box stretched to `min` on each side, around its own centre. Ticket 02
+ * measured that 30 Muscles out of 40 are narrower than a finger, so the tap
+ * zone is separate from — and coarser than — the path that lights up.
  */
 export function expand(box, min) {
   const width = Math.max(box.width, min);
@@ -40,7 +40,8 @@ export function expand(box, min) {
   };
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+/** The Muscles an atlas path belongs to. On the neck one path carries two. */
+const musclesOf = (element) => element.getAttribute('data-muscle').split(' ');
 
 const json = (path) => fetch(path).then((r) => r.json());
 const text = (path) => fetch(path).then((r) => r.text());
@@ -61,8 +62,8 @@ export async function start() {
     atlasMuscles: atlasIds.muscles,
   });
 
-  // М'яз без Вправ показувати нема чого, тож він і не інтерактивний.
-  const live = new Set(
+  // A Muscle with no Exercises has nothing to show, so it is not interactive.
+  const withExercises = new Set(
     atlas.muscles().map((m) => m.id).filter((id) => atlas.muscleExercises(id).length > 0),
   );
 
@@ -71,60 +72,68 @@ export async function start() {
   const panel = el('panel');
   const highlight = el('highlight');
 
+  /** The finger minimum. One source: the CSS that sizes the buttons too. */
+  const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
+
   const state = { lang: LANGS[0], view: VIEWS[0], muscle: null };
 
-  // ── Мапа ────────────────────────────────────────────────────────────────
+  // ── The map ─────────────────────────────────────────────────────────────
 
   const figures = new Map();
   VIEWS.forEach((view, i) => {
     map.insertAdjacentHTML('beforeend', svgSources[i]);
     const svg = map.lastElementChild;
     svg.dataset.view = view;
-    // Шлях, жоден М'яз якого не має Вправ, не запрошує до тапу: ні кольором,
-    // ні реакцією. Перевіряємо пошляхово, бо на шиї один шлях — два М'язи.
+    // A path whose Muscles all lack Exercises invites no tap: not by colour,
+    // not by reacting. Decided per path, because on the neck one path is two
+    // Muscles and only one of them may be live.
     for (const path of svg.querySelectorAll('[data-muscle]')) {
-      const ids = path.getAttribute('data-muscle').split(' ');
-      path.classList.toggle('off', !ids.some((id) => live.has(id)));
+      path.classList.toggle('off', !musclesOf(path).some((id) => withExercises.has(id)));
     }
     figures.set(view, svg);
   });
 
-  /** Перший М'яз шляху, який має що показати. */
+  /** The first Muscle of a path that has something to show. */
   const muscleAt = (target) => {
     const path = target.closest?.('[data-muscle]');
-    return path?.getAttribute('data-muscle').split(' ').find((id) => live.has(id));
+    return path && musclesOf(path).find((id) => withExercises.has(id));
   };
 
   /**
-   * Зони тапу поверх фігури. Перераховуються при кожній зміні розміру:
-   * 44 px — це екранні пікселі, а рамка М'яза живе в координатах viewBox.
+   * Tap zones over the figure, recomputed on every resize: 44 px is screen
+   * pixels, while a Muscle's box lives in viewBox units.
+   *
+   * ponytail: a zone always outranks whatever it covers, so a big Muscle
+   * loses the patch a small neighbour's zone sits on. It stays reachable
+   * everywhere else, and the alternative — no zone — makes the small Muscle
+   * unreachable entirely. Revisit if a Trainer reports missing a big one.
    */
   function layTapZones(svg) {
     for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
 
     const scale = svg.getScreenCTM()?.a;
-    if (!scale) return; // вид схований — порахуємо, коли покажуть
+    if (!scale) return; // this view is hidden — we will measure when it shows
 
-    const min = MIN_TAP_PX / scale;
+    const min = minTapPx / scale;
     const small = [];
 
-    for (const id of live) {
+    for (const id of withExercises) {
       const paths = svg.querySelectorAll(`[data-muscle~="${id}"]`);
-      if (!paths.length) continue; // М'яза не видно з цього боку
+      if (!paths.length) continue; // this Muscle is not seen from this side
 
       const box = union([...paths].map((p) => p.getBBox()));
-      if (box.width >= min && box.height >= min) continue; // палець і так влучає
+      if (box.width >= min && box.height >= min) continue; // a finger already hits it
       small.push({ id, box, area: box.width * box.height });
     }
 
-    // Найдрібніші кладемо останніми: інакше зона сусіда накриє їх зверху.
+    // The smallest go last, or a neighbour's zone would cover them.
     small.sort((a, b) => b.area - a.area);
 
     for (const { id, box } of small) {
       const zone = document.createElementNS(SVG_NS, 'rect');
       const { x, y, width, height } = expand(box, min);
       zone.setAttribute('class', 'tap');
-      // Без `fill`, інакше правило підсвічування пофарбувало б саму зону.
+      // No `fill` attribute, or the highlight rule would paint the zone itself.
       zone.setAttribute('data-muscle', id);
       Object.entries({ x, y, width, height }).forEach(([k, v]) => zone.setAttribute(k, v));
       svg.append(zone);
@@ -138,7 +147,7 @@ export async function start() {
     if (id) select(id);
   });
 
-  // ── Панель М'яза ────────────────────────────────────────────────────────
+  // ── The Muscle panel ────────────────────────────────────────────────────
 
   function renderPanel(t) {
     if (!state.muscle) {
@@ -173,7 +182,7 @@ export async function start() {
     panel.querySelector('.close').addEventListener('click', () => select(null));
   }
 
-  // ── Рендер ──────────────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────────
 
   function render() {
     const t = translator(state.lang);
@@ -181,7 +190,7 @@ export async function start() {
     document.documentElement.lang = state.lang;
     document.title = t('app.title');
     el('title').textContent = t('app.title');
-    el('map-label').textContent = t('map.label');
+    map.setAttribute('aria-label', t('map.label'));
     el('hint').textContent = t('map.hint');
     el('hint').hidden = Boolean(state.muscle);
 
@@ -189,18 +198,19 @@ export async function start() {
       const button = el(`view-${view}`);
       button.textContent = t(`view.${view}`);
       button.setAttribute('aria-pressed', String(view === state.view));
-      // `hidden` як властивість існує тільки в HTML-елементів, SVG його мовчки
-      // проковтне: тут потрібен саме атрибут.
+      // `hidden` as a property exists only on HTML elements; an SVG element
+      // swallows it silently. Here it has to be the attribute.
       figures.get(view).toggleAttribute('hidden', view !== state.view);
     }
     el('views').setAttribute('aria-label', t('view.label'));
 
     const lang = el('lang');
     lang.textContent = t('lang.other');
-    lang.title = t('lang.switch');
+    lang.setAttribute('aria-label', t('lang.switch'));
 
-    // Підсвічування — одне правило, а не обхід шляхів: `~=` бо шлях на шиї
-    // належить двом М'язам. `[fill]` відсікає обвідні двійники й зони тапу.
+    // Highlighting is one rule rather than a walk over paths: `~=` because a
+    // neck path belongs to two Muscles, `[fill]` to skip the outline twins
+    // (filling a detail stroke would smear it) and the tap zones themselves.
     highlight.textContent = state.muscle
       ? `[data-muscle~="${state.muscle}"][fill] { fill: var(--highlight); }`
       : '';
@@ -212,7 +222,6 @@ export async function start() {
   function select(id) {
     state.muscle = id;
     render();
-    if (id) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   el('lang').addEventListener('click', () => {

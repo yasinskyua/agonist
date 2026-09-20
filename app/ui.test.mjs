@@ -1,30 +1,32 @@
-// З UI тестується рівно одне — геометрія зон тапу. Решта (DOM, підсвічування,
-// перемикання виду) перевіряється очима за хвилину, як вирішено в spec.md.
+// Exactly one thing is tested out of the UI: the tap-zone geometry. The rest
+// — DOM, highlighting, switching views — is checked by eye in a minute, as
+// spec.md decided.
 //
-// Ця частина очима не перевіряється: тікет 02 заміряв, що 30 М'язів із 40
-// вужчі за палець, і чи справді зона виросла до 44 px — на екрані не видно.
+// This part is not checkable by eye: ticket 02 measured that 30 Muscles out
+// of 40 are narrower than a finger, and whether a zone really grew to 44 px
+// does not show on screen.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { expand, union } from './ui.mjs';
 
-test('вузький М\'яз розширюється до мінімуму, лишаючись на місці', () => {
+test('a narrow Muscle grows to the minimum and stays put', () => {
   const box = expand({ x: 100, y: 50, width: 7, height: 60 }, 44);
 
   assert.equal(box.width, 44);
-  assert.equal(box.height, 60, 'бік, який і так більший за мінімум, не чіпаємо');
-  assert.equal(box.x + box.width / 2, 103.5, 'центр М\'яза не зсунувся');
+  assert.equal(box.height, 60, 'a side already past the minimum is left alone');
+  assert.equal(box.x + box.width / 2, 103.5, "the Muscle's centre did not move");
   assert.equal(box.y, 50);
 });
 
-test('М\'яз, у який палець і так влучає, лишається як є', () => {
+test('a Muscle a finger already hits is left as it is', () => {
   const box = { x: 0, y: 0, width: 62, height: 90 };
 
   assert.deepEqual(expand(box, 44), box);
 });
 
-test('рамка М\'яза — об\'єднання рамок усіх його шляхів', () => {
+test("a Muscle's box is the union of all its paths' boxes", () => {
   const box = union([
     { x: 10, y: 10, width: 10, height: 10 },
     { x: 30, y: 5, width: 10, height: 10 },

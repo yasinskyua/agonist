@@ -1,35 +1,37 @@
-// Інтерфейс двомовний з першого рядка, тож перевіряємо не переклад окремого
-// рядка, а повноту словника: пропущений ключ в одній мові — це порожнє місце
-// на екрані, і знайти його оком можна лише перемкнувши мову й обійшовши всі
-// екрани.
+// The interface is bilingual from its first line, so what we check is not one
+// translated string but the dictionary's completeness: a key missing in one
+// language is a blank spot on screen, and finding it by eye means switching
+// language and walking every screen.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { LANGS, KEYS, translator } from './i18n.mjs';
 
-test('кожен рядок є в кожній мові й не порожній', () => {
+test('every string exists in every language and is not blank', () => {
   for (const lang of LANGS) {
     const t = translator(lang);
     for (const key of KEYS) {
-      assert.match(t(key), /\S/, `${lang}: порожній рядок "${key}"`);
+      assert.match(t(key), /\S/, `${lang}: blank string "${key}"`);
     }
   }
 });
 
-test('українська й англійська не збігаються слово в слово', () => {
+test('no string is left untranslated', () => {
   const [uk, en] = LANGS.map(translator);
-  const same = KEYS.filter((key) => uk(key) === en(key));
 
-  // Збіг сам по собі не помилка (латина, цифри), але мовчазний збіг усього
-  // словника означав би, що перекладу немає взагалі.
-  assert.ok(same.length < KEYS.length / 2, `однакові в обох мовах: ${same.join(', ')}`);
+  // A word that is genuinely the same in both languages would have to be
+  // listed here on purpose. Today none is, so a match means a copy-paste.
+  assert.deepEqual(
+    KEYS.filter((key) => uk(key) === en(key)),
+    [],
+  );
 });
 
-test('невідомий ключ падає гучно, а не малює порожнє місце', () => {
-  assert.throws(() => translator('uk')('немає.такого'), /немає\.такого/);
+test('an unknown key fails loudly instead of drawing a blank', () => {
+  assert.throws(() => translator('uk')('no.such.key'), /no\.such\.key/);
 });
 
-test('невідома мова падає гучно', () => {
+test('an unknown language fails loudly', () => {
   assert.throws(() => translator('de'), /de/);
 });

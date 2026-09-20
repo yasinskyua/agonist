@@ -1,8 +1,9 @@
-// Рядки інтерфейсу двома мовами. Робоча мова Тренера — українська; англійська
-// потрібна, коли Клієнт іноземець.
+// Interface strings in both languages. Ukrainian is the Trainer's working
+// language; English is for when the Client is a foreigner.
 //
-// Не перекладаються тут: назви М'язів (українська й латина живуть у контенті)
-// і назви Вправ — вони англійські в залі обома мовами.
+// Not translated here: Muscle names (Ukrainian and Latin live in the content)
+// and Exercise names — those stay English in both, because that is how the
+// gym says them.
 
 export const LANGS = ['uk', 'en'];
 
@@ -25,18 +26,18 @@ const STRINGS = {
 export const KEYS = Object.keys(STRINGS);
 
 /**
- * Пошук перекладу. Невідомий ключ — помилка коду, а не порожнє місце на
- * екрані: мовчазний `??  ''` знаходиться лише очима й лише в одній мові.
+ * Translation lookup. An unknown key is a bug, not a blank on screen: a silent
+ * `?? ''` is only ever found by eye, and only in one of the two languages.
  */
 export function translator(lang) {
-  if (!LANGS.includes(lang)) throw new Error(`невідома мова "${lang}"`);
+  if (!LANGS.includes(lang)) throw new Error(`unknown language "${lang}"`);
 
   return (key) => {
     const string = STRINGS[key]?.[lang];
-    if (!string) throw new Error(`немає рядка "${key}" для мови "${lang}"`);
+    if (!string) throw new Error(`no string "${key}" for language "${lang}"`);
     return string;
   };
 }
 
-/** Друга мова — та, на яку перемикає кнопка. Мов рівно дві. */
+/** The language the switch button moves to. There are exactly two. */
 export const otherLang = (lang) => LANGS.find((l) => l !== lang);

@@ -1,0 +1,78 @@
+{
+  "_": "Вправи й Мапа Ролей. Назва — англійською: саме так Вправи звуться в залі. Ролі: agonist (рівно один на Вправу), synergist, stabilizer. Це насіннєвий контент — шість рухів, щоб довести схему; вичитку Тренером робить тікет 10.",
+  "exercises": {
+    "bench-press": {
+      "en": "Barbell Bench Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "stabilizer",
+        "trapezius_middle": "stabilizer"
+      }
+    },
+    "push-up": {
+      "en": "Push-Up",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "obliques": "stabilizer"
+      }
+    },
+    "pull-up": {
+      "en": "Pull-Up",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "biceps_brachii": "synergist",
+        "rhomboids": "synergist",
+        "trapezius_lower": "synergist",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "back-squat": {
+      "en": "Barbell Back Squat",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "trapezius_upper": "stabilizer"
+      }
+    },
+    "deadlift": {
+      "en": "Conventional Deadlift",
+      "muscles": {
+        "erector_spinae": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "quadriceps": "synergist",
+        "trapezius_middle": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "overhead-press": {
+      "en": "Standing Overhead Press",
+      "muscles": {
+        "deltoid_anterior": "agonist",
+        "deltoid_medial_lateral": "synergist",
+        "triceps_brachii": "synergist",
+        "trapezius_upper": "synergist",
+        "serratus_anterior": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "gluteus_maximus": "stabilizer"
+      }
+    }
+  }
+}

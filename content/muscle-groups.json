@@ -1,0 +1,15 @@
+{
+  "_": "М'язові групи. Ідентифікатори збігаються з data-group в SVG атласу.",
+  "groups": {
+    "back": { "uk": "Спина", "en": "Back" },
+    "calves": { "uk": "Гомілки", "en": "Calves" },
+    "chest": { "uk": "Груди", "en": "Chest" },
+    "forearms": { "uk": "Передпліччя", "en": "Forearms" },
+    "hips": { "uk": "Таз", "en": "Hips" },
+    "neck": { "uk": "Шия", "en": "Neck" },
+    "shoulders": { "uk": "Плечі", "en": "Shoulders" },
+    "thighs": { "uk": "Стегна", "en": "Thighs" },
+    "upper_arms": { "uk": "Плече", "en": "Upper Arms" },
+    "waist": { "uk": "Тулуб", "en": "Waist" }
+  }
+}

@@ -19,7 +19,7 @@ const FORBIDDEN = [
   [/(?:xlink:)?href\s*=\s*["']https?:|url\(\s*["']?https?:/i, 'зовнішнє посилання'],
 ];
 
-function readMuscles(path) {
+function readPaths(path) {
   let svg;
   try {
     svg = readFileSync(path, 'utf8');
@@ -37,28 +37,40 @@ function readMuscles(path) {
 
   // Один шлях може належати двом М'язам, що накладаються (шия), тому значення
   // атрибута — список імен через пробіл, як у class.
-  const muscles = [...svg.matchAll(/\sdata-muscle="([^"]+)"/g)].flatMap((m) => m[1].split(' '));
+  const attr = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]+)"`))?.[1].split(' ') ?? [];
+  const paths = (svg.match(/<path\b[^>]*>/g) ?? [])
+    .map((tag) => ({ muscles: attr(tag, 'data-muscle'), groups: attr(tag, 'data-group') }))
+    .filter((p) => p.muscles.length > 0);
 
-  if (muscles.length === 0) {
+  if (paths.length === 0) {
     throw new Error(`${path}: жодного data-muscle. Зібрано не тим скриптом?`);
   }
-  return muscles;
+  return paths;
 }
 
 export function collectMuscles(views = VIEWS) {
   const byMuscle = new Map();
 
   for (const [view, path] of Object.entries(views)) {
-    for (const muscle of readMuscles(path)) {
-      if (!byMuscle.has(muscle)) byMuscle.set(muscle, { views: [], paths: 0 });
-      const entry = byMuscle.get(muscle);
-      if (!entry.views.includes(view)) entry.views.push(view);
-      entry.paths += 1;
+    for (const { muscles, groups } of readPaths(path)) {
+      for (const muscle of muscles) {
+        if (!byMuscle.has(muscle)) byMuscle.set(muscle, { views: [], groups: [], paths: 0 });
+        const entry = byMuscle.get(muscle);
+        if (!entry.views.includes(view)) entry.views.push(view);
+        // М'язова група М'яза — та, що вкриває його шляхи; авторувати зв'язок
+        // руками не треба, він уже намальований в атласі.
+        for (const group of groups) if (!entry.groups.includes(group)) entry.groups.push(group);
+        entry.paths += 1;
+      }
     }
   }
 
   const muscles = {};
-  for (const id of [...byMuscle.keys()].sort()) muscles[id] = byMuscle.get(id);
+  for (const id of [...byMuscle.keys()].sort()) {
+    const entry = byMuscle.get(id);
+    entry.groups.sort();
+    muscles[id] = entry;
+  }
 
   return {
     source: 'Human Anatomy Component System — Ryan Graves, CC BY 4.0 (див. CREDITS.md)',
@@ -83,8 +95,10 @@ if (import.meta.filename === process.argv[1]) {
     } else {
       writeFileSync(OUTPUT, json);
       const { count, muscles } = JSON.parse(json);
-      const both = Object.values(muscles).filter((m) => m.views.length === 2).length;
-      console.log(`${OUTPUT}: ${count} М'язів, з них ${both} видно з обох боків`);
+      const groups = new Set(Object.values(muscles).flatMap((m) => m.groups));
+      const orphan = Object.entries(muscles).filter(([, m]) => m.groups.length === 0);
+      console.log(`${OUTPUT}: ${count} М'язів, ${groups.size} М'язових груп`);
+      if (orphan.length) console.log(`  без групи: ${orphan.map(([id]) => id).join(', ')}`);
     }
   } catch (error) {
     console.error(error.message); // стектрейс тут — шум: помилка адресована людині

@@ -13,7 +13,7 @@ import { collectMuscles } from './atlas-ids.mjs';
 const dir = mkdtempSync(join(tmpdir(), 'atlas-'));
 
 /** Записує пару фікстур і повертає views для collectMuscles(). */
-function views(frontBody, backBody = '<path data-muscle="soleus"/>') {
+function views(frontBody, backBody = '<path data-muscle="soleus" data-group="calves"/>') {
   const wrap = (body) => `<svg xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
   const front = join(dir, `${Math.random()}-front.svg`);
   const back = join(dir, `${Math.random()}-back.svg`);
@@ -27,7 +27,7 @@ test('М\'яз із кількох шляхів — один запис', () => 
     views('<path data-muscle="quadriceps"/><path data-muscle="quadriceps"/>'),
   );
 
-  assert.deepEqual(muscles.quadriceps, { views: ['front'], paths: 2 });
+  assert.deepEqual(muscles.quadriceps, { views: ['front'], groups: [], paths: 2 });
   assert.equal(count, 2); // quadriceps + soleus із заднього виду
 });
 
@@ -46,8 +46,18 @@ test('шлях, поділений двома М\'язами, зараховує
     views('<path data-muscle="sternocleidomastoid levator_scapulae"/>'),
   );
 
-  assert.deepEqual(muscles.sternocleidomastoid, { views: ['front'], paths: 1 });
-  assert.deepEqual(muscles.levator_scapulae, { views: ['front'], paths: 1 });
+  assert.deepEqual(muscles.sternocleidomastoid, { views: ['front'], groups: [], paths: 1 });
+  assert.deepEqual(muscles.levator_scapulae, { views: ['front'], groups: [], paths: 1 });
+});
+
+test('М\'язова група береться з шляхів, які М\'яз ділить із нею', () => {
+  const { muscles } = collectMuscles(
+    views('<path data-group="chest" data-muscle="pectoralis_major"/>' +
+          '<path data-group="chest" data-muscle="pectoralis_major"/>'),
+  );
+
+  assert.deepEqual(muscles.pectoralis_major, { views: ['front'], groups: ['chest'], paths: 2 });
+  assert.deepEqual(muscles.soleus.groups, ['calves']);
 });
 
 test('текст, растр і шрифт у SVG — це помилка, не попередження', () => {

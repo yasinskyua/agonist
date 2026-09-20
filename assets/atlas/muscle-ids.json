@@ -12,11 +12,17 @@
         "front",
         "back"
       ],
+      "groups": [
+        "hips"
+      ],
       "paths": 6
     },
     "biceps_brachii": {
       "views": [
         "front"
+      ],
+      "groups": [
+        "upper_arms"
       ],
       "paths": 4
     },
@@ -24,17 +30,26 @@
       "views": [
         "front"
       ],
+      "groups": [
+        "upper_arms"
+      ],
       "paths": 2
     },
     "brachioradialis": {
       "views": [
         "front"
       ],
+      "groups": [
+        "upper_arms"
+      ],
       "paths": 2
     },
     "deltoid_anterior": {
       "views": [
         "front"
+      ],
+      "groups": [
+        "shoulders"
       ],
       "paths": 2
     },
@@ -43,11 +58,17 @@
         "front",
         "back"
       ],
+      "groups": [
+        "shoulders"
+      ],
       "paths": 4
     },
     "deltoid_posterior": {
       "views": [
         "back"
+      ],
+      "groups": [
+        "shoulders"
       ],
       "paths": 2
     },
@@ -56,17 +77,26 @@
         "front",
         "back"
       ],
+      "groups": [
+        "calves"
+      ],
       "paths": 4
     },
     "gluteus_maximus": {
       "views": [
         "back"
       ],
+      "groups": [
+        "hips"
+      ],
       "paths": 2
     },
     "hamstrings": {
       "views": [
         "back"
+      ],
+      "groups": [
+        "thighs"
       ],
       "paths": 4
     },
@@ -75,11 +105,17 @@
         "front",
         "back"
       ],
+      "groups": [
+        "thighs"
+      ],
       "paths": 8
     },
     "hip_flexors": {
       "views": [
         "front"
+      ],
+      "groups": [
+        "hips"
       ],
       "paths": 2
     },
@@ -88,12 +124,16 @@
         "front",
         "back"
       ],
+      "groups": [
+        "back"
+      ],
       "paths": 4
     },
     "levator_scapulae": {
       "views": [
         "back"
       ],
+      "groups": [],
       "paths": 2
     },
     "obliques": {
@@ -101,17 +141,26 @@
         "front",
         "back"
       ],
+      "groups": [
+        "waist"
+      ],
       "paths": 18
     },
     "pectoralis_major": {
       "views": [
         "front"
       ],
+      "groups": [
+        "chest"
+      ],
       "paths": 2
     },
     "pronators": {
       "views": [
         "front"
+      ],
+      "groups": [
+        "forearms"
       ],
       "paths": 2
     },
@@ -120,17 +169,26 @@
         "front",
         "back"
       ],
+      "groups": [
+        "thighs"
+      ],
       "paths": 12
     },
     "rectus_abdominis": {
       "views": [
         "front"
       ],
+      "groups": [
+        "waist"
+      ],
       "paths": 7
     },
     "sartorius": {
       "views": [
         "front"
+      ],
+      "groups": [
+        "thighs"
       ],
       "paths": 2
     },
@@ -139,6 +197,9 @@
         "front",
         "back"
       ],
+      "groups": [
+        "calves"
+      ],
       "paths": 3
     },
     "sternocleidomastoid": {
@@ -146,11 +207,17 @@
         "front",
         "back"
       ],
+      "groups": [
+        "neck"
+      ],
       "paths": 4
     },
     "supinators": {
       "views": [
         "back"
+      ],
+      "groups": [
+        "forearms"
       ],
       "paths": 2
     },
@@ -158,16 +225,25 @@
       "views": [
         "front"
       ],
+      "groups": [
+        "calves"
+      ],
       "paths": 2
     },
     "trapezius_lower": {
       "views": [
         "back"
       ],
+      "groups": [
+        "back"
+      ],
       "paths": 2
     },
     "trapezius_middle": {
       "views": [
+        "back"
+      ],
+      "groups": [
         "back"
       ],
       "paths": 2
@@ -177,12 +253,18 @@
         "front",
         "back"
       ],
+      "groups": [
+        "back"
+      ],
       "paths": 4
     },
     "triceps_brachii": {
       "views": [
         "front",
         "back"
+      ],
+      "groups": [
+        "upper_arms"
       ],
       "paths": 10
     },
@@ -191,12 +273,18 @@
         "front",
         "back"
       ],
+      "groups": [
+        "forearms"
+      ],
       "paths": 8
     },
     "wrist_flexors": {
       "views": [
         "front",
         "back"
+      ],
+      "groups": [
+        "forearms"
       ],
       "paths": 8
     }

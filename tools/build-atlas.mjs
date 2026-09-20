@@ -39,29 +39,41 @@ function sliceById(svg, marker, prefix, from = 0) {
 
 const pathTags = (fragment) => fragment.match(/<path\b[^>]*\/?>/g) ?? [];
 
-/** Індекс шляху → імена М'язів, які його підсвічують (зазвичай один). */
+/**
+ * Індекс шляху → імена М'язів і М'язових груп, які його підсвічують.
+ *
+ * Виноски М'язів автор назвав `Muscle Group=- Biceps Brachii`, а М'язових
+ * груп — `Muscle Group=Chest`, без дефіса. Дефіс і є єдиною ознакою, що це
+ * М'яз. Пробіл після дефіса необов'язковий: `-Rhomboids` написано злитно, і
+ * суворий шаблон мовчки губив цей М'яз.
+ */
 function calloutMap(callouts, figmaView) {
-  const owners = new Map();
-  const re = /id="Muscle Group=- ([^,"]+), View=(Anterior|Posterior), Dissection=Outer Muscles"/g;
+  const muscles = new Map();
+  const groups = new Map();
+  const re = /id="Muscle Group=([^,"]+), View=(Anterior|Posterior), Dissection=Outer Muscles"/g;
 
-  for (const [, name, view] of callouts.matchAll(re)) {
+  for (const [, rawName, view] of callouts.matchAll(re)) {
     if (view !== figmaView) continue;
+    const isMuscle = rawName.startsWith('-');
+    const owners = isMuscle ? muscles : groups;
+    const id = muscleId(rawName);
+
     const frag = sliceById(
       callouts,
-      `Muscle Group=- ${name}, View=${view}, Dissection=${DISSECTION}`,
+      `Muscle Group=${rawName}, View=${view}, Dissection=${DISSECTION}`,
       'Muscle Group=',
     );
     pathTags(frag).forEach((tag, i) => {
       if (!tag.includes(HIGHLIGHT)) return;
       if (!owners.has(i)) owners.set(i, []);
-      owners.get(i).push(muscleId(name));
+      owners.get(i).push(id);
     });
   }
 
-  if (owners.size === 0) {
+  if (muscles.size === 0) {
     throw new Error(`${figmaView}: жодного підсвіченого шляху — змінився ${HIGHLIGHT}?`);
   }
-  return owners;
+  return { muscles, groups };
 }
 
 /**
@@ -96,9 +108,9 @@ function viewBox(tags) {
 function buildView({ systems, callouts, figmaView }) {
   const figure = sliceById(systems, `View=${figmaView}, Dissection=${DISSECTION}, Color=Yes`, 'View=');
   const tags = pathTags(figure);
-  const owners = calloutMap(callouts, figmaView);
+  const { muscles: owners, groups } = calloutMap(callouts, figmaView);
 
-  const maxIndex = Math.max(...owners.keys());
+  const maxIndex = Math.max(...owners.keys(), ...groups.keys());
   if (maxIndex >= tags.length) {
     throw new Error(
       `${figmaView}: виноска вказує на шлях ${maxIndex}, а у фігурі їх ${tags.length}. ` +
@@ -107,9 +119,12 @@ function buildView({ systems, callouts, figmaView }) {
   }
 
   const body = tags.map((tag, i) => {
-    const clean = tag.replace(/\sid="[^"]*"/, ''); // `Vector 163` нічого не значить
-    const muscles = owners.get(i);
-    return muscles ? clean.replace(/^<path/, `<path data-muscle="${muscles.join(' ')}"`) : clean;
+    let out = tag.replace(/\sid="[^"]*"/, ''); // `Vector 163` нічого не значить
+    const attr = (name, value) =>
+      value && (out = out.replace(/^<path/, `<path ${name}="${value.join(' ')}"`));
+    attr('data-group', groups.get(i));
+    attr('data-muscle', owners.get(i));
+    return out;
   });
 
   const [x, y, w, h] = viewBox(tags);
@@ -122,7 +137,12 @@ function buildView({ systems, callouts, figmaView }) {
     '',
   ].join('\n');
 
-  return { svg, tags: tags.length, muscles: new Set([...owners.values()].flat()) };
+  return {
+    svg,
+    tags: tags.length,
+    muscles: new Set([...owners.values()].flat()),
+    groups: new Set([...groups.values()].flat()),
+  };
 }
 
 const [systemsPath, calloutsPath] = process.argv.slice(2);
@@ -136,11 +156,12 @@ try {
   const callouts = readFileSync(calloutsPath, 'utf8');
 
   for (const [view, figmaView] of Object.entries(VIEWS)) {
-    const { svg, tags, muscles } = buildView({ systems, callouts, figmaView });
+    const { svg, tags, muscles, groups } = buildView({ systems, callouts, figmaView });
     const out = `assets/atlas/${view}.svg`;
     writeFileSync(out, svg);
     console.log(
-      `${out}: ${tags} шляхів, ${muscles.size} М'язів, ${(svg.length / 1024).toFixed(0)} КБ`,
+      `${out}: ${tags} шляхів, ${muscles.size} М'язів, ${groups.size} груп, ` +
+        `${(svg.length / 1024).toFixed(0)} КБ`,
     );
   }
 } catch (error) {

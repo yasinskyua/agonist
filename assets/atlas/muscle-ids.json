@@ -5,7 +5,7 @@
     "front": "assets/atlas/front.svg",
     "back": "assets/atlas/back.svg"
   },
-  "count": 30,
+  "count": 40,
   "muscles": {
     "abductors": {
       "views": [
@@ -15,7 +15,7 @@
       "groups": [
         "hips"
       ],
-      "paths": 6
+      "paths": 3
     },
     "biceps_brachii": {
       "views": [
@@ -24,7 +24,7 @@
       "groups": [
         "upper_arms"
       ],
-      "paths": 4
+      "paths": 2
     },
     "brachialis": {
       "views": [
@@ -33,7 +33,7 @@
       "groups": [
         "upper_arms"
       ],
-      "paths": 2
+      "paths": 1
     },
     "brachioradialis": {
       "views": [
@@ -42,7 +42,17 @@
       "groups": [
         "upper_arms"
       ],
-      "paths": 2
+      "paths": 1
+    },
+    "deep_external_rotators": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "groups": [
+        "hips"
+      ],
+      "paths": 6
     },
     "deltoid_anterior": {
       "views": [
@@ -61,7 +71,7 @@
       "groups": [
         "shoulders"
       ],
-      "paths": 4
+      "paths": 3
     },
     "deltoid_posterior": {
       "views": [
@@ -69,6 +79,16 @@
       ],
       "groups": [
         "shoulders"
+      ],
+      "paths": 2
+    },
+    "erector_spinae": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "groups": [
+        "waist"
       ],
       "paths": 2
     },
@@ -80,7 +100,7 @@
       "groups": [
         "calves"
       ],
-      "paths": 4
+      "paths": 2
     },
     "gluteus_maximus": {
       "views": [
@@ -89,7 +109,7 @@
       "groups": [
         "hips"
       ],
-      "paths": 2
+      "paths": 1
     },
     "hamstrings": {
       "views": [
@@ -98,7 +118,7 @@
       "groups": [
         "thighs"
       ],
-      "paths": 4
+      "paths": 2
     },
     "hip_adductors": {
       "views": [
@@ -108,7 +128,7 @@
       "groups": [
         "thighs"
       ],
-      "paths": 8
+      "paths": 4
     },
     "hip_flexors": {
       "views": [
@@ -116,6 +136,15 @@
       ],
       "groups": [
         "hips"
+      ],
+      "paths": 1
+    },
+    "infraspinatus_teres_minor": {
+      "views": [
+        "back"
+      ],
+      "groups": [
+        "back"
       ],
       "paths": 2
     },
@@ -127,14 +156,16 @@
       "groups": [
         "back"
       ],
-      "paths": 4
+      "paths": 2
     },
     "levator_scapulae": {
       "views": [
         "back"
       ],
-      "groups": [],
-      "paths": 2
+      "groups": [
+        "back"
+      ],
+      "paths": 1
     },
     "obliques": {
       "views": [
@@ -144,7 +175,7 @@
       "groups": [
         "waist"
       ],
-      "paths": 18
+      "paths": 9
     },
     "pectoralis_major": {
       "views": [
@@ -153,7 +184,16 @@
       "groups": [
         "chest"
       ],
-      "paths": 2
+      "paths": 1
+    },
+    "pectoralis_minor": {
+      "views": [
+        "front"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "paths": 1
     },
     "pronators": {
       "views": [
@@ -161,6 +201,16 @@
       ],
       "groups": [
         "forearms"
+      ],
+      "paths": 1
+    },
+    "quadratus_lumborum": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "groups": [
+        "waist"
       ],
       "paths": 2
     },
@@ -172,7 +222,7 @@
       "groups": [
         "thighs"
       ],
-      "paths": 12
+      "paths": 6
     },
     "rectus_abdominis": {
       "views": [
@@ -181,7 +231,16 @@
       "groups": [
         "waist"
       ],
-      "paths": 7
+      "paths": 4
+    },
+    "rhomboids": {
+      "views": [
+        "back"
+      ],
+      "groups": [
+        "back"
+      ],
+      "paths": 1
     },
     "sartorius": {
       "views": [
@@ -192,6 +251,15 @@
       ],
       "paths": 2
     },
+    "serratus_anterior": {
+      "views": [
+        "front"
+      ],
+      "groups": [
+        "chest"
+      ],
+      "paths": 1
+    },
     "soleus": {
       "views": [
         "front",
@@ -200,9 +268,9 @@
       "groups": [
         "calves"
       ],
-      "paths": 3
+      "paths": 2
     },
-    "sternocleidomastoid": {
+    "splenius": {
       "views": [
         "front",
         "back"
@@ -210,7 +278,27 @@
       "groups": [
         "neck"
       ],
-      "paths": 4
+      "paths": 2
+    },
+    "sternocleidomastoid": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "groups": [
+        "back",
+        "neck"
+      ],
+      "paths": 2
+    },
+    "subscapularis": {
+      "views": [
+        "front"
+      ],
+      "groups": [
+        "back"
+      ],
+      "paths": 10
     },
     "supinators": {
       "views": [
@@ -219,7 +307,17 @@
       "groups": [
         "forearms"
       ],
-      "paths": 2
+      "paths": 1
+    },
+    "supraspinatus": {
+      "views": [
+        "front",
+        "back"
+      ],
+      "groups": [
+        "shoulders"
+      ],
+      "paths": 8
     },
     "tibialis_anterior": {
       "views": [
@@ -228,7 +326,7 @@
       "groups": [
         "calves"
       ],
-      "paths": 2
+      "paths": 1
     },
     "trapezius_lower": {
       "views": [
@@ -237,7 +335,7 @@
       "groups": [
         "back"
       ],
-      "paths": 2
+      "paths": 1
     },
     "trapezius_middle": {
       "views": [
@@ -246,7 +344,7 @@
       "groups": [
         "back"
       ],
-      "paths": 2
+      "paths": 1
     },
     "trapezius_upper": {
       "views": [
@@ -256,7 +354,7 @@
       "groups": [
         "back"
       ],
-      "paths": 4
+      "paths": 2
     },
     "triceps_brachii": {
       "views": [
@@ -266,7 +364,7 @@
       "groups": [
         "upper_arms"
       ],
-      "paths": 10
+      "paths": 5
     },
     "wrist_extensors": {
       "views": [
@@ -276,7 +374,7 @@
       "groups": [
         "forearms"
       ],
-      "paths": 8
+      "paths": 4
     },
     "wrist_flexors": {
       "views": [
@@ -286,7 +384,7 @@
       "groups": [
         "forearms"
       ],
-      "paths": 8
+      "paths": 4
     }
   }
 }

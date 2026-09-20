@@ -29,16 +29,25 @@ body {
 header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
   padding-top: max(0.5rem, env(safe-area-inset-top));
 }
 
 h1 {
+  flex: 1;
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+}
+
+/* Credits are opened once, not during a set: quieter than the language switch. */
+.quiet {
+  border-color: transparent;
+  background: none;
+  padding: 0 0.5rem;
+  color: var(--dim);
+  text-decoration: underline;
 }
 
 h2 {
@@ -147,7 +156,8 @@ rect.tap {
   display: none;
 }
 
-#panel .close {
+#panel .close,
+#credits .close {
   position: absolute;
   top: 0.5rem;
   right: 0.75rem;
@@ -178,6 +188,33 @@ rect.tap {
 
 #panel li {
   padding: 0.1rem 0;
+}
+
+/* ── The Credits screen ─────────────────────────────────────────────── */
+
+#credits {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+#map[hidden],
+#views[hidden] {
+  display: none;
+}
+
+.credit {
+  margin-bottom: 1.25rem;
+}
+
+.credit p {
+  margin: 0.15rem 0;
+}
+
+#credits .note {
+  margin-top: 1.5rem;
+  color: var(--dim);
 }
 
 /* ── The bottom bar ─────────────────────────────────────────────────── */

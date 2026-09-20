@@ -47,11 +47,12 @@ const json = (path) => fetch(path).then((r) => r.json());
 const text = (path) => fetch(path).then((r) => r.text());
 
 export async function start() {
-  const [muscles, groups, exercises, atlasIds, ...svgSources] = await Promise.all([
+  const [muscles, groups, exercises, atlasIds, thanks, ...svgSources] = await Promise.all([
     json('content/muscles.json'),
     json('content/muscle-groups.json'),
     json('content/exercises.json'),
     json('assets/atlas/muscle-ids.json'),
+    json('content/credits.json'),
     ...VIEWS.map((view) => text(`assets/atlas/${view}.svg`)),
   ]);
 
@@ -70,12 +71,42 @@ export async function start() {
   const el = (id) => document.getElementById(id);
   const map = el('map');
   const panel = el('panel');
+  const credits = el('credits');
   const highlight = el('highlight');
 
   /** The finger minimum. One source: the CSS that sizes the buttons too. */
   const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
 
-  const state = { lang: LANGS[0], view: VIEWS[0], muscle: null };
+  // Only the language is state. The screen lives in the hash, so a link to a
+  // Muscle survives being sent to another Trainer, and GitHub Pages needs no
+  // server configuration to serve it.
+  const state = { lang: LANGS[0] };
+
+  const hashFor = (view, muscle) => `#/${view}${muscle ? `/${muscle}` : ''}`;
+
+  /** The screen the address bar asks for. Anything unknown falls back. */
+  function route() {
+    const [first, second] = location.hash.replace(/^#\/?/, '').split('/');
+    if (first === 'credits') return { screen: 'credits' };
+
+    // A Muscle id out of a URL is untrusted: a stale link must show the map,
+    // not throw.
+    const muscle = atlas.muscle(second) ? second : null;
+    const asked = VIEWS.includes(first) ? first : VIEWS[0];
+    // The Muscle wins over the side. On the dissected figure each Muscle is
+    // drawn from one side only (ADR-0003), so a link naming a Muscle the
+    // asked-for side cannot show would light nothing at all.
+    const views = muscle ? atlas.muscle(muscle).views : [];
+
+    return {
+      screen: 'map',
+      view: !muscle || views.includes(asked) ? asked : views[0],
+      muscle,
+    };
+  }
+
+  /** Where the Credits screen returns to. */
+  let lastMap = hashFor(VIEWS[0], null);
 
   // ── The map ─────────────────────────────────────────────────────────────
 
@@ -109,10 +140,10 @@ export async function start() {
    * unreachable entirely. Revisit if a Trainer reports missing a big one.
    */
   function layTapZones(svg) {
-    for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
-
     const scale = svg.getScreenCTM()?.a;
     if (!scale) return; // this view is hidden — we will measure when it shows
+
+    for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
 
     const min = minTapPx / scale;
     const small = [];
@@ -140,23 +171,23 @@ export async function start() {
     }
   }
 
-  new ResizeObserver(() => layTapZones(figures.get(state.view))).observe(map);
+  new ResizeObserver(() => layTapZones(figures.get(route().view ?? VIEWS[0]))).observe(map);
 
   map.addEventListener('click', (event) => {
     const id = muscleAt(event.target);
-    if (id) select(id);
+    if (id) location.hash = hashFor(route().view, id);
   });
 
   // ── The Muscle panel ────────────────────────────────────────────────────
 
-  function renderPanel(t) {
-    if (!state.muscle) {
+  function renderPanel(t, selected) {
+    if (!selected) {
       panel.hidden = true;
       panel.textContent = '';
       return;
     }
 
-    const muscle = atlas.muscle(state.muscle);
+    const muscle = atlas.muscle(selected);
     const byRole = new Map(ROLES.map((role) => [role, []]));
     for (const { exercise, role } of atlas.muscleExercises(muscle.id)) {
       byRole.get(role).push(exercise.en);
@@ -164,7 +195,7 @@ export async function start() {
 
     panel.hidden = false;
     panel.innerHTML = `
-      <button class="close" type="button">${t('muscle.close')}</button>
+      <button class="close" type="button">${t('close')}</button>
       <h2>${muscle.uk}</h2>
       ${muscle.la ? `<p class="latin">${muscle.la}</p>` : ''}
       <p class="action">${muscle.action}</p>
@@ -179,49 +210,90 @@ export async function start() {
         )
         .join('')}`;
 
-    panel.querySelector('.close').addEventListener('click', () => select(null));
+    panel.querySelector('.close').addEventListener('click', () => {
+      location.hash = hashFor(route().view, null);
+    });
+  }
+
+  // ── The Credits screen ──────────────────────────────────────────────────
+
+  /**
+   * Attribution is a licence obligation, so the rows come from
+   * `content/credits.json` rather than from this file: one place to edit, and
+   * `app/credits.test.mjs` fails if it drifts from `CREDITS.md`.
+   */
+  function renderCredits(t) {
+    credits.innerHTML = `
+      <button class="close" type="button">${t('close')}</button>
+      <h2>${t('credits.link')}</h2>
+      ${thanks.credits
+        .map(
+          (row) => `
+        <section class="credit">
+          <h3>${row.what[state.lang]}</h3>
+          <p>${row.work} — ${row.author}</p>
+          <p>
+            <a href="${row.licenseUrl}" rel="license noopener noreferrer" target="_blank">${row.license}</a>
+            · <a href="${row.sourceUrl}" rel="noopener noreferrer" target="_blank">${t('credits.source')}</a>
+          </p>
+        </section>`,
+        )
+        .join('')}
+      <p class="note">${thanks.note[state.lang]}</p>`;
+
+    credits.querySelector('.close').addEventListener('click', () => {
+      location.hash = lastMap;
+    });
   }
 
   // ── Render ──────────────────────────────────────────────────────────────
 
   function render() {
     const t = translator(state.lang);
+    const here = route();
+    const onMap = here.screen === 'map';
+    if (onMap) lastMap = hashFor(here.view, here.muscle);
 
     document.documentElement.lang = state.lang;
     document.title = t('app.title');
     el('title').textContent = t('app.title');
     map.setAttribute('aria-label', t('map.label'));
     el('hint').textContent = t('map.hint');
-    el('hint').hidden = Boolean(state.muscle);
-
-    for (const view of VIEWS) {
-      const button = el(`view-${view}`);
-      button.textContent = t(`view.${view}`);
-      button.setAttribute('aria-pressed', String(view === state.view));
-      // `hidden` as a property exists only on HTML elements; an SVG element
-      // swallows it silently. Here it has to be the attribute.
-      figures.get(view).toggleAttribute('hidden', view !== state.view);
-    }
-    el('views').setAttribute('aria-label', t('view.label'));
+    el('hint').hidden = !onMap || Boolean(here.muscle);
+    el('credits-link').textContent = t('credits.link');
 
     const lang = el('lang');
     lang.textContent = t('lang.other');
     lang.setAttribute('aria-label', t('lang.switch'));
 
+    map.hidden = !onMap;
+    el('views').hidden = !onMap;
+    credits.hidden = onMap;
+    if (!onMap) {
+      panel.hidden = true;
+      renderCredits(t);
+      return;
+    }
+
+    for (const view of VIEWS) {
+      const button = el(`view-${view}`);
+      button.textContent = t(`view.${view}`);
+      button.setAttribute('aria-pressed', String(view === here.view));
+      // `hidden` as a property exists only on HTML elements; an SVG element
+      // swallows it silently. Here it has to be the attribute.
+      figures.get(view).toggleAttribute('hidden', view !== here.view);
+    }
+    el('views').setAttribute('aria-label', t('view.label'));
+
     // Highlighting is one rule rather than a walk over paths: `~=` because a
     // neck path belongs to two Muscles, `[fill]` to skip the outline twins
     // (filling a detail stroke would smear it) and the tap zones themselves.
-    highlight.textContent = state.muscle
-      ? `[data-muscle~="${state.muscle}"][fill] { fill: var(--highlight); }`
+    highlight.textContent = here.muscle
+      ? `[data-muscle~="${here.muscle}"][fill] { fill: var(--highlight); }`
       : '';
 
-    layTapZones(figures.get(state.view));
-    renderPanel(t);
-  }
-
-  function select(id) {
-    state.muscle = id;
-    render();
+    layTapZones(figures.get(here.view));
+    renderPanel(t, here.muscle);
   }
 
   el('lang').addEventListener('click', () => {
@@ -229,12 +301,19 @@ export async function start() {
     render();
   });
 
+  el('credits-link').addEventListener('click', () => {
+    location.hash = '#/credits';
+  });
+
   for (const view of VIEWS) {
+    // Switching sides drops the open Muscle. Keeping it would be a lie: the
+    // other side does not draw it, so the panel would claim a selection over
+    // a figure with nothing lit.
     el(`view-${view}`).addEventListener('click', () => {
-      state.view = view;
-      render();
+      location.hash = hashFor(view, null);
     });
   }
 
+  addEventListener('hashchange', render);
   render();
 }

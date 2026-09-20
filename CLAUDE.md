@@ -1,4 +1,4 @@
-# Anatomy iOS
+# Agonist
 
 ## Agent skills
 

@@ -255,7 +255,6 @@ export async function start() {
     if (onMap) lastMap = hashFor(here.view, here.muscle);
 
     document.documentElement.lang = state.lang;
-    document.title = t('app.title');
     el('title').textContent = t('app.title');
     map.setAttribute('aria-label', t('map.label'));
     el('hint').textContent = t('map.hint');

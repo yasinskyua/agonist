@@ -17,5 +17,5 @@ Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/
 ## Default tooling
 
 ponytail (global plugin), rtk (global Bash hook), codegraph (`.codegraph/` index
-+ global prompt hook) and caveman (`.claude/settings.json` SessionStart hook) are
++ global prompt hook) and caveman at level `full` (`.claude/settings.json` SessionStart hook) are
 on by default in this repo. Don't disable them without asking.

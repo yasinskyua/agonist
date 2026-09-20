@@ -71,6 +71,34 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
       if (!muscles[muscle]) problems.push(`Вправа "${id}" згадує невідомий М'яз "${muscle}"`);
       if (!ROLES.includes(role)) problems.push(`Вправа "${id}", М'яз "${muscle}": невідома Роль "${role}"`);
     }
+
+    // A review mark points the Trainer at a decision the author is unsure of.
+    // A mark on a muscle the exercise does not list, or one without a reason,
+    // is a dead line: the review never sees it, the author thinks it is flagged.
+    for (const [muscle, note] of Object.entries(exercise.review ?? {})) {
+      if (!exercise.muscles?.[muscle]) {
+        problems.push(`Вправа "${id}": позначка непевності на М'яз "${muscle}", якого в ній немає`);
+      }
+      if (!note) problems.push(`Вправа "${id}", М'яз "${muscle}": позначка непевності без причини`);
+    }
+  }
+
+  // Two exercises with the same full Role set answer every query identically,
+  // so one of them is padding (ADR-0005). Variations are allowed exactly
+  // because Stabilizers differ — where they do not, the exercise adds nothing.
+  const bySignature = new Map();
+  for (const [id, exercise] of Object.entries(exercises)) {
+    const signature = Object.entries(exercise.muscles ?? {})
+      .map(([muscle, role]) => `${role}:${muscle}`)
+      .sort()
+      .join('|');
+    if (!bySignature.has(signature)) bySignature.set(signature, []);
+    bySignature.get(signature).push(id);
+  }
+  for (const ids of bySignature.values()) {
+    if (ids.length > 1) {
+      problems.push(`Вправи ${ids.map((id) => `"${id}"`).join(', ')} мають однаковий набір Ролей`);
+    }
   }
 
   if (problems.length) throw new ContentError(problems);
@@ -171,6 +199,28 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
       );
       return [...seen].map(exerciseView).sort(byEn);
     },
+
+    /**
+     * Review queue: every flagged decision as one flat list, agonists first —
+     * a wrong Agonist costs more than a wrong Stabilizer, so that is where the
+     * Trainer starts (ticket 10).
+     */
+    reviewQueue: () =>
+      Object.keys(exercises)
+        .flatMap((id) =>
+          Object.entries(exercises[id].review ?? {}).map(([muscle, note]) => ({
+            exercise: exerciseView(id),
+            muscle: muscleView(muscle),
+            role: exercises[id].muscles[muscle],
+            note,
+          })),
+        )
+        .sort(
+          (a, b) =>
+            roleOrder(a.role) - roleOrder(b.role) ||
+            byEn(a.exercise, b.exercise) ||
+            byUk(a.muscle, b.muscle),
+        ),
 
     /** Пов'язані вправи — ті, що поділяють Агоніста. Сама Вправа не рахується. */
     relatedExercises(id) {

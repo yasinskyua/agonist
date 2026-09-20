@@ -1,37 +1,28 @@
 {
-  "_": "Вправи й Мапа Ролей. Назва — англійською: саме так Вправи звуться в залі. Ролі: agonist (рівно один на Вправу), synergist, stabilizer. Це насіннєвий контент — шість рухів, щоб довести схему; вичитку Тренером робить тікет 10.",
+  "_": "Вправи й Мапа Ролей — єдиний актив продукту. Назва — англійською: саме так Вправи звуться в залі. Ролі: agonist (рівно один на Вправу), synergist, stabilizer; порожній список Синергістів чи Стабілізаторів припустимий. `review` — рішення, у яких автор чернетки не впевнений: ключ це М'яз цієї ж Вправи, значення — причина сумніву. Чергу вичитки віддає atlas.reviewQueue(), друкує tools/review-queue.mjs; вичитку Тренерами робить тікет 10.",
   "exercises": {
-    "bench-press": {
-      "en": "Barbell Bench Press",
+    "ab-wheel-rollout": {
+      "en": "Ab Wheel Rollout",
       "muscles": {
-        "pectoralis_major": "agonist",
-        "deltoid_anterior": "synergist",
-        "triceps_brachii": "synergist",
-        "serratus_anterior": "stabilizer",
-        "trapezius_middle": "stabilizer"
-      }
-    },
-    "push-up": {
-      "en": "Push-Up",
-      "muscles": {
-        "pectoralis_major": "agonist",
-        "deltoid_anterior": "synergist",
-        "triceps_brachii": "synergist",
-        "serratus_anterior": "synergist",
-        "rectus_abdominis": "stabilizer",
+        "rectus_abdominis": "agonist",
+        "obliques": "synergist",
+        "latissimus_dorsi_teres_major": "synergist",
+        "hip_flexors": "synergist",
         "erector_spinae": "stabilizer",
-        "obliques": "stabilizer"
+        "deltoid_anterior": "stabilizer",
+        "triceps_brachii": "stabilizer"
       }
     },
-    "pull-up": {
-      "en": "Pull-Up",
+    "back-extension": {
+      "en": "Back Extension",
       "muscles": {
-        "latissimus_dorsi_teres_major": "agonist",
-        "biceps_brachii": "synergist",
-        "rhomboids": "synergist",
-        "trapezius_lower": "synergist",
-        "wrist_flexors": "stabilizer",
-        "rectus_abdominis": "stabilizer"
+        "erector_spinae": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "quadratus_lumborum": "synergist"
+      },
+      "review": {
+        "quadratus_lumborum": "Квадратний мʼяз попереку розгинає поперек разом з розгиначами; можливо, Стабілізатор."
       }
     },
     "back-squat": {
@@ -45,6 +36,204 @@
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
         "trapezius_upper": "stabilizer"
+      },
+      "review": {
+        "hip_adductors": "Привідні дають великий внесок у підйомі з нижньої точки; можливо, вони ближчі до Стабілізатора, ніж до Синергіста."
+      }
+    },
+    "barbell-curl": {
+      "en": "Barbell Curl",
+      "muscles": {
+        "biceps_brachii": "agonist",
+        "brachialis": "synergist",
+        "brachioradialis": "synergist",
+        "deltoid_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "barbell-row": {
+      "en": "Barbell Bent-Over Row",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "deltoid_posterior": "synergist",
+        "biceps_brachii": "synergist",
+        "erector_spinae": "stabilizer",
+        "hamstrings": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      }
+    },
+    "barbell-shrug": {
+      "en": "Barbell Shrug",
+      "muscles": {
+        "trapezius_upper": "agonist",
+        "levator_scapulae": "synergist",
+        "rhomboids": "synergist",
+        "wrist_flexors": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "bench-press": {
+      "en": "Barbell Bench Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "stabilizer",
+        "trapezius_middle": "stabilizer"
+      }
+    },
+    "bulgarian-split-squat": {
+      "en": "Bulgarian Split Squat",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "hip_adductors": "synergist",
+        "abductors": "stabilizer",
+        "deep_external_rotators": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer"
+      },
+      "review": {
+        "quadriceps": "На нахиленому тулубі рух стає сідничним — Агоніст залежить від техніки."
+      }
+    },
+    "cable-crossover": {
+      "en": "Cable Crossover",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "serratus_anterior": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "cable-curl": {
+      "en": "Cable Curl",
+      "muscles": {
+        "biceps_brachii": "agonist",
+        "brachialis": "synergist",
+        "brachioradialis": "synergist",
+        "deltoid_anterior": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "cable-external-rotation": {
+      "en": "Cable External Rotation",
+      "muscles": {
+        "infraspinatus_teres_minor": "agonist",
+        "deltoid_posterior": "synergist",
+        "rhomboids": "stabilizer",
+        "trapezius_middle": "stabilizer"
+      }
+    },
+    "cable-glute-kickback": {
+      "en": "Cable Glute Kickback",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "erector_spinae": "stabilizer",
+        "abductors": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "quadriceps": "stabilizer"
+      }
+    },
+    "cable-internal-rotation": {
+      "en": "Cable Internal Rotation",
+      "muscles": {
+        "subscapularis": "agonist",
+        "pectoralis_major": "synergist",
+        "latissimus_dorsi_teres_major": "synergist",
+        "obliques": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "cable-pull-through": {
+      "en": "Cable Pull-Through",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "erector_spinae": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer"
+      }
+    },
+    "cable-woodchop": {
+      "en": "Cable Woodchop",
+      "muscles": {
+        "obliques": "agonist",
+        "rectus_abdominis": "synergist",
+        "deltoid_anterior": "synergist",
+        "latissimus_dorsi_teres_major": "synergist",
+        "gluteus_maximus": "stabilizer",
+        "quadriceps": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "chest-dip": {
+      "en": "Chest Dip",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "triceps_brachii": "synergist",
+        "deltoid_anterior": "synergist",
+        "serratus_anterior": "stabilizer",
+        "trapezius_lower": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "pectoralis_major": "Нахил тулуба вперед робить рух грудним, вертикальне положення — трицепсовим; Агоніст залежить від техніки."
+      }
+    },
+    "chest-press-machine": {
+      "en": "Machine Chest Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "stabilizer"
+      }
+    },
+    "chin-up": {
+      "en": "Chin-Up",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "biceps_brachii": "synergist",
+        "brachialis": "synergist",
+        "trapezius_lower": "synergist",
+        "rhomboids": "synergist",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "latissimus_dorsi_teres_major": "Зворотний хват сильно додає біцепсу; частина Тренерів веде підтягування вузьким зворотним хватом як вправу на руки."
+      }
+    },
+    "close-grip-bench-press": {
+      "en": "Close-Grip Bench Press",
+      "muscles": {
+        "triceps_brachii": "agonist",
+        "pectoralis_major": "synergist",
+        "deltoid_anterior": "synergist",
+        "serratus_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "trapezius_middle": "stabilizer"
+      },
+      "review": {
+        "triceps_brachii": "Вузький хват зміщує роботу на трицепс, але грудні лишаються великими; Агоніст тут — найспірніше рішення серед жимів."
+      }
+    },
+    "crunch": {
+      "en": "Crunch",
+      "muscles": {
+        "rectus_abdominis": "agonist",
+        "obliques": "synergist",
+        "hip_flexors": "stabilizer"
       }
     },
     "deadlift": {
@@ -58,6 +247,355 @@
         "latissimus_dorsi_teres_major": "stabilizer",
         "wrist_flexors": "stabilizer",
         "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "erector_spinae": "Розгиначі записані Агоністом за тікетом 02, але рух веде розгинання таза — багато Тренерів назвали б Агоністом сідничні або задню поверхню стегна. Узгодити разом із sumo-deadlift і trap-bar-deadlift."
+      }
+    },
+    "decline-bench-press": {
+      "en": "Decline Barbell Bench Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "triceps_brachii": "synergist",
+        "deltoid_anterior": "synergist",
+        "serratus_anterior": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "dumbbell-bench-press": {
+      "en": "Dumbbell Bench Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "infraspinatus_teres_minor": "stabilizer",
+        "subscapularis": "stabilizer",
+        "serratus_anterior": "stabilizer",
+        "trapezius_middle": "stabilizer"
+      }
+    },
+    "dumbbell-curl": {
+      "en": "Dumbbell Curl",
+      "muscles": {
+        "biceps_brachii": "agonist",
+        "brachialis": "synergist",
+        "brachioradialis": "synergist",
+        "deltoid_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      }
+    },
+    "dumbbell-fly": {
+      "en": "Dumbbell Fly",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "biceps_brachii": "stabilizer",
+        "infraspinatus_teres_minor": "stabilizer",
+        "serratus_anterior": "stabilizer"
+      },
+      "review": {
+        "biceps_brachii": "Утримує зігнутий лікоть під вагою — межа між Стабілізатором і «просто напружений» тут тонка."
+      }
+    },
+    "dumbbell-pullover": {
+      "en": "Dumbbell Pullover",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "pectoralis_major": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "latissimus_dorsi_teres_major": "Класична суперечка: пулловер називають і грудною, і спинною Вправою. Ділянка залежить від ширини хвату й амплітуди."
+      }
+    },
+    "dumbbell-row": {
+      "en": "One-Arm Dumbbell Row",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "deltoid_posterior": "synergist",
+        "biceps_brachii": "synergist",
+        "brachialis": "synergist",
+        "obliques": "stabilizer",
+        "quadratus_lumborum": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "dumbbell-shoulder-press": {
+      "en": "Dumbbell Shoulder Press",
+      "muscles": {
+        "deltoid_anterior": "agonist",
+        "deltoid_medial_lateral": "synergist",
+        "triceps_brachii": "synergist",
+        "trapezius_upper": "synergist",
+        "serratus_anterior": "synergist",
+        "infraspinatus_teres_minor": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "face-pull": {
+      "en": "Face Pull",
+      "muscles": {
+        "deltoid_posterior": "agonist",
+        "infraspinatus_teres_minor": "synergist",
+        "trapezius_middle": "synergist",
+        "trapezius_lower": "synergist",
+        "rhomboids": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "farmers-walk": {
+      "en": "Farmer's Walk",
+      "muscles": {
+        "wrist_flexors": "agonist",
+        "trapezius_upper": "synergist",
+        "wrist_extensors": "synergist",
+        "erector_spinae": "stabilizer",
+        "obliques": "stabilizer",
+        "quadratus_lumborum": "stabilizer",
+        "abductors": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "wrist_flexors": "Хват відмовляє першим, тож Агоністом записані згиначі — але руху в них немає, і за логікою Ролей це радше Стабілізатор усього тіла без Агоніста взагалі."
+      }
+    },
+    "front-raise": {
+      "en": "Front Raise",
+      "muscles": {
+        "deltoid_anterior": "agonist",
+        "pectoralis_major": "synergist",
+        "trapezius_upper": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "front-squat": {
+      "en": "Barbell Front Squat",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "deltoid_anterior": "stabilizer",
+        "trapezius_upper": "stabilizer"
+      },
+      "review": {
+        "deltoid_anterior": "Утримує фронтальний хват — чи це Роль у Вправі, чи просто положення?"
+      }
+    },
+    "glute-bridge": {
+      "en": "Glute Bridge",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "goblet-squat": {
+      "en": "Goblet Squat",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "deltoid_anterior": "stabilizer"
+      }
+    },
+    "good-morning": {
+      "en": "Good Morning",
+      "muscles": {
+        "hamstrings": "agonist",
+        "gluteus_maximus": "synergist",
+        "erector_spinae": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "trapezius_upper": "stabilizer"
+      }
+    },
+    "hack-squat": {
+      "en": "Machine Hack Squat",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "hammer-curl": {
+      "en": "Hammer Curl",
+      "muscles": {
+        "brachioradialis": "agonist",
+        "brachialis": "synergist",
+        "biceps_brachii": "synergist",
+        "deltoid_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      },
+      "review": {
+        "brachioradialis": "Нейтральний хват виводить плечо-променевий наперед, але за силою рух усе одно може вести двоголовий."
+      }
+    },
+    "hanging-leg-raise": {
+      "en": "Hanging Leg Raise",
+      "muscles": {
+        "rectus_abdominis": "agonist",
+        "hip_flexors": "synergist",
+        "obliques": "synergist",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "deltoid_anterior": "stabilizer"
+      },
+      "review": {
+        "rectus_abdominis": "Ноги піднімають згиначі стегна; прямий мʼяз працює лише там, де таз скручується. Без скручування Агоніст — hip_flexors."
+      }
+    },
+    "hip-abduction-machine": {
+      "en": "Machine Hip Abduction",
+      "muscles": {
+        "abductors": "agonist",
+        "deep_external_rotators": "synergist",
+        "gluteus_maximus": "synergist",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "hip-adduction-machine": {
+      "en": "Machine Hip Adduction",
+      "muscles": {
+        "hip_adductors": "agonist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "hip-thrust": {
+      "en": "Barbell Hip Thrust",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "quadriceps": "synergist",
+        "hip_adductors": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "incline-bench-press": {
+      "en": "Incline Barbell Bench Press",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "stabilizer",
+        "trapezius_middle": "stabilizer",
+        "infraspinatus_teres_minor": "stabilizer"
+      },
+      "review": {
+        "deltoid_anterior": "На нахилі 45° частка передньої дельти близька до грудних; дехто веде цей рух як плечовий."
+      }
+    },
+    "inverted-row": {
+      "en": "Inverted Row",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "biceps_brachii": "synergist",
+        "deltoid_posterior": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "kettlebell-swing": {
+      "en": "Kettlebell Swing",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "erector_spinae": "synergist",
+        "quadriceps": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "deltoid_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      },
+      "review": {
+        "latissimus_dorsi_teres_major": "У хардстайл-техніці найширший активно гальмує гирю вниз — можливо, Синергіст."
+      }
+    },
+    "lat-pulldown": {
+      "en": "Lat Pulldown",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "biceps_brachii": "synergist",
+        "brachialis": "synergist",
+        "rhomboids": "synergist",
+        "trapezius_lower": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "lateral-lunge": {
+      "en": "Lateral Lunge",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "abductors": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "obliques": "stabilizer"
+      },
+      "review": {
+        "hip_adductors": "Привідні тут і розтягуються, і повертають тіло — можливо, вони й Агоніст."
+      }
+    },
+    "lateral-raise": {
+      "en": "Lateral Raise",
+      "muscles": {
+        "deltoid_medial_lateral": "agonist",
+        "supraspinatus": "synergist",
+        "trapezius_upper": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "leg-curl": {
+      "en": "Lying Leg Curl",
+      "muscles": {
+        "hamstrings": "agonist",
+        "gastrocnemius": "synergist"
+      }
+    },
+    "leg-extension": {
+      "en": "Leg Extension",
+      "muscles": {
+        "quadriceps": "agonist"
+      }
+    },
+    "leg-press": {
+      "en": "Leg Press",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "hamstrings": "Внесок залежить від постановки стоп на платформі; можливо, Стабілізатор."
       }
     },
     "overhead-press": {
@@ -72,6 +610,360 @@
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
         "gluteus_maximus": "stabilizer"
+      }
+    },
+    "overhead-triceps-extension": {
+      "en": "Overhead Triceps Extension",
+      "muscles": {
+        "triceps_brachii": "agonist",
+        "deltoid_anterior": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer"
+      }
+    },
+    "pallof-press": {
+      "en": "Pallof Press",
+      "muscles": {
+        "obliques": "agonist",
+        "rectus_abdominis": "synergist",
+        "deltoid_anterior": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "abductors": "stabilizer",
+        "erector_spinae": "stabilizer"
+      },
+      "review": {
+        "obliques": "Антиротація: коси́ мʼязи не створюють руху, а не дають йому статися. Агоніст умовний, як у планці."
+      }
+    },
+    "plank": {
+      "en": "Plank",
+      "muscles": {
+        "rectus_abdominis": "agonist",
+        "obliques": "synergist",
+        "serratus_anterior": "stabilizer",
+        "deltoid_anterior": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "quadriceps": "stabilizer",
+        "erector_spinae": "stabilizer"
+      },
+      "review": {
+        "rectus_abdominis": "Ізометрія: руху немає взагалі, тож Агоніст призначений умовно — щоб Вправа не лишилась без нього."
+      }
+    },
+    "power-clean": {
+      "en": "Power Clean",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "hamstrings": "synergist",
+        "quadriceps": "synergist",
+        "erector_spinae": "synergist",
+        "trapezius_upper": "synergist",
+        "deltoid_medial_lateral": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "abductors": "stabilizer"
+      },
+      "review": {
+        "gluteus_maximus": "Вибухове розгинання таза веде рух, але Тренери часто називають Агоністом трапецію або квадрицепс."
+      }
+    },
+    "preacher-curl": {
+      "en": "Preacher Curl",
+      "muscles": {
+        "biceps_brachii": "agonist",
+        "brachialis": "synergist",
+        "brachioradialis": "synergist",
+        "wrist_flexors": "stabilizer"
+      }
+    },
+    "pull-up": {
+      "en": "Pull-Up",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "biceps_brachii": "synergist",
+        "rhomboids": "synergist",
+        "trapezius_lower": "synergist",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "push-press": {
+      "en": "Push Press",
+      "muscles": {
+        "deltoid_anterior": "agonist",
+        "triceps_brachii": "synergist",
+        "trapezius_upper": "synergist",
+        "quadriceps": "synergist",
+        "gluteus_maximus": "synergist",
+        "deltoid_medial_lateral": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer"
+      },
+      "review": {
+        "quadriceps": "Підсід ногами дає початковий імпульс — Синергіст це чи Стабілізатор, залежить від того, як рахувати передачу зусилля."
+      }
+    },
+    "push-up": {
+      "en": "Push-Up",
+      "muscles": {
+        "pectoralis_major": "agonist",
+        "deltoid_anterior": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "obliques": "stabilizer"
+      }
+    },
+    "rear-delt-fly": {
+      "en": "Rear Delt Fly",
+      "muscles": {
+        "deltoid_posterior": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "infraspinatus_teres_minor": "synergist",
+        "erector_spinae": "stabilizer",
+        "hamstrings": "stabilizer"
+      }
+    },
+    "reverse-lunge": {
+      "en": "Reverse Lunge",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "hip_adductors": "synergist",
+        "abductors": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "quadriceps": "У зворотному випаді частка сідничних більша, ніж у звичайному; Агоніст під питанням."
+      }
+    },
+    "reverse-wrist-curl": {
+      "en": "Reverse Wrist Curl",
+      "muscles": {
+        "wrist_extensors": "agonist"
+      }
+    },
+    "romanian-deadlift": {
+      "en": "Romanian Deadlift",
+      "muscles": {
+        "hamstrings": "agonist",
+        "gluteus_maximus": "synergist",
+        "erector_spinae": "synergist",
+        "trapezius_middle": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "russian-twist": {
+      "en": "Russian Twist",
+      "muscles": {
+        "obliques": "agonist",
+        "rectus_abdominis": "synergist",
+        "hip_flexors": "stabilizer",
+        "erector_spinae": "stabilizer"
+      }
+    },
+    "seated-cable-row": {
+      "en": "Seated Cable Row",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "biceps_brachii": "synergist",
+        "deltoid_posterior": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "seated-calf-raise": {
+      "en": "Seated Calf Raise",
+      "muscles": {
+        "soleus": "agonist",
+        "gastrocnemius": "synergist"
+      },
+      "review": {
+        "gastrocnemius": "На зігнутому коліні литковий укорочений і майже не працює; можливо, його тут не має бути взагалі."
+      }
+    },
+    "side-plank": {
+      "en": "Side Plank",
+      "muscles": {
+        "obliques": "agonist",
+        "quadratus_lumborum": "synergist",
+        "abductors": "synergist",
+        "deltoid_medial_lateral": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "erector_spinae": "stabilizer"
+      },
+      "review": {
+        "obliques": "Те саме, що в планці: рух відсутній, Агоніст призначений умовно."
+      }
+    },
+    "single-leg-romanian-deadlift": {
+      "en": "Single-Leg Romanian Deadlift",
+      "muscles": {
+        "hamstrings": "agonist",
+        "gluteus_maximus": "synergist",
+        "erector_spinae": "synergist",
+        "abductors": "stabilizer",
+        "deep_external_rotators": "stabilizer",
+        "quadratus_lumborum": "stabilizer",
+        "obliques": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      }
+    },
+    "skull-crusher": {
+      "en": "Skull Crusher",
+      "muscles": {
+        "triceps_brachii": "agonist",
+        "deltoid_anterior": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "serratus_anterior": "stabilizer"
+      }
+    },
+    "standing-calf-raise": {
+      "en": "Standing Calf Raise",
+      "muscles": {
+        "gastrocnemius": "agonist",
+        "soleus": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "step-up": {
+      "en": "Step-Up",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "hip_adductors": "synergist",
+        "abductors": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "obliques": "stabilizer",
+        "gastrocnemius": "stabilizer"
+      },
+      "review": {
+        "quadriceps": "Що вища лава, то більше рух стає сідничним; на високій — Агоніст інший."
+      }
+    },
+    "straight-arm-pulldown": {
+      "en": "Straight-Arm Pulldown",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "triceps_brachii": "synergist",
+        "pectoralis_major": "synergist",
+        "rectus_abdominis": "stabilizer",
+        "erector_spinae": "stabilizer"
+      },
+      "review": {
+        "triceps_brachii": "Трицепс тут лише утримує прямий лікоть, а не розгинає його — можливо, Стабілізатор."
+      }
+    },
+    "sumo-deadlift": {
+      "en": "Sumo Deadlift",
+      "muscles": {
+        "gluteus_maximus": "agonist",
+        "quadriceps": "synergist",
+        "hip_adductors": "synergist",
+        "hamstrings": "synergist",
+        "erector_spinae": "synergist",
+        "trapezius_middle": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "gluteus_maximus": "У класичній становій Агоніст — erector_spinae (тікет 02); тут частка ніг більша. Межу має провести Тренер, і обидві Вправи мають узгодитися."
+      }
+    },
+    "t-bar-row": {
+      "en": "T-Bar Row",
+      "muscles": {
+        "latissimus_dorsi_teres_major": "agonist",
+        "rhomboids": "synergist",
+        "trapezius_middle": "synergist",
+        "biceps_brachii": "synergist",
+        "deltoid_posterior": "synergist",
+        "erector_spinae": "stabilizer",
+        "hamstrings": "stabilizer",
+        "wrist_flexors": "stabilizer"
+      }
+    },
+    "trap-bar-deadlift": {
+      "en": "Trap Bar Deadlift",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "erector_spinae": "synergist",
+        "trapezius_upper": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "quadriceps": "Рама ставить тіло між класичною становою і присіданням; Агоніст — питання техніки конкретного Клієнта."
+      }
+    },
+    "triceps-dip": {
+      "en": "Bench Triceps Dip",
+      "muscles": {
+        "triceps_brachii": "agonist",
+        "pectoralis_major": "synergist",
+        "deltoid_anterior": "synergist",
+        "serratus_anterior": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "triceps-pushdown": {
+      "en": "Triceps Pushdown",
+      "muscles": {
+        "triceps_brachii": "agonist",
+        "latissimus_dorsi_teres_major": "stabilizer",
+        "wrist_extensors": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      }
+    },
+    "upright-row": {
+      "en": "Upright Row",
+      "muscles": {
+        "deltoid_medial_lateral": "agonist",
+        "trapezius_upper": "synergist",
+        "biceps_brachii": "synergist",
+        "supraspinatus": "synergist",
+        "erector_spinae": "stabilizer",
+        "rectus_abdominis": "stabilizer"
+      },
+      "review": {
+        "deltoid_medial_lateral": "Вузький хват робить рух трапецієвим, широкий — дельтоподібним; Агоніст залежить від хвату."
+      }
+    },
+    "walking-lunge": {
+      "en": "Walking Lunge",
+      "muscles": {
+        "quadriceps": "agonist",
+        "gluteus_maximus": "synergist",
+        "hamstrings": "synergist",
+        "hip_adductors": "synergist",
+        "abductors": "stabilizer",
+        "rectus_abdominis": "stabilizer",
+        "obliques": "stabilizer",
+        "erector_spinae": "stabilizer",
+        "gastrocnemius": "stabilizer"
+      }
+    },
+    "wrist-curl": {
+      "en": "Wrist Curl",
+      "muscles": {
+        "wrist_flexors": "agonist"
       }
     }
   }

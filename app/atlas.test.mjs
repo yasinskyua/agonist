@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { createAtlas, ContentError } from './atlas.mjs';
+import { createAtlas, ContentError, ROLES } from './atlas.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -160,9 +160,19 @@ test("Вправи М'язової групи — об'єднання по М'я
 });
 
 test("Пов'язані вправи — ті, що поділяють Агоніста, крім самої Вправи", () => {
-  assert.deepEqual(atlas.relatedExercises('bench-press').map((e) => e.id), ['push-up']);
-  assert.deepEqual(atlas.relatedExercises('push-up').map((e) => e.id), ['bench-press']);
-  assert.deepEqual(atlas.relatedExercises('deadlift'), []); // Агоніст тільки в неї
+  const agonist = (id) =>
+    Object.entries(content.exercises[id].muscles).find(([, role]) => role === 'agonist')[0];
+
+  for (const id of ['bench-press', 'deadlift', 'lateral-raise']) {
+    const related = atlas.relatedExercises(id).map((e) => e.id);
+
+    assert.ok(!related.includes(id), 'an exercise is never related to itself');
+    for (const other of related) assert.equal(agonist(other), agonist(id));
+  }
+
+  assert.ok(atlas.relatedExercises('bench-press').some((e) => e.id === 'push-up'));
+  // The only exercise with that Agonist: an empty list, not an error.
+  assert.deepEqual(atlas.relatedExercises('hip-abduction-machine'), []);
 });
 
 test("М'яз віддає вид і групу з атласу, а назву з контенту", () => {
@@ -176,4 +186,47 @@ test("М'яз віддає вид і групу з атласу, а назву �
 test("латинська назва порожня там, де М'яз — функціональна група", () => {
   assert.equal(atlas.muscle('hamstrings').la, '');
   assert.equal(atlas.muscle('pectoralis_major').la, 'Pectoralis major');
+});
+
+test('two exercises with the same full Role set — an error (ADR-0005)', () => {
+  const twin = { ...content.exercises['bench-press'], en: 'Bench Press Twin' };
+  const error = contentError({ exercises: { ...content.exercises, twin } });
+
+  assert.match(error.message, /однаковий набір Ролей/);
+  assert.match(error.message, /bench-press/);
+});
+
+// ── Review marks ─────────────────────────────────────────────────────────
+
+test('a review mark must point at a muscle of that same exercise', () => {
+  const x = {
+    en: 'Odd',
+    muscles: { quadriceps: 'agonist' },
+    review: { hamstrings: 'а раптом' },
+  };
+  const error = contentError({ exercises: { x } });
+
+  assert.match(error.message, /"x": позначка непевності на М'яз "hamstrings"/);
+});
+
+test('a review mark without a reason is an error: the Trainer must know what is in doubt', () => {
+  const x = { en: 'Odd', muscles: { quadriceps: 'agonist' }, review: { quadriceps: '' } };
+
+  assert.throws(() => createAtlas(broken({ exercises: { x } })), /без причини/);
+});
+
+test('the review queue is a flat list with Role and reason, agonists first', () => {
+  const queue = atlas.reviewQueue();
+
+  assert.ok(queue.length > 0, 'чернетка без жодної позначки непевності — підозріло');
+  assert.deepEqual(
+    queue.map((x) => x.role),
+    [...queue.map((x) => x.role)].sort((a, b) => ROLES.indexOf(a) - ROLES.indexOf(b)),
+  );
+
+  for (const { exercise, muscle, role, note } of queue) {
+    assert.equal(content.exercises[exercise.id].muscles[muscle.id], role);
+    assert.equal(content.exercises[exercise.id].review[muscle.id], note);
+    assert.ok(note.length > 0);
+  }
 });

@@ -40,6 +40,18 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
     if (!atlasGroups.has(id)) problems.push(`М'язова група "${id}" не намальована в атласі`);
   }
 
+  // І навпаки: група, у якій атлас тримає наш М'яз, мусить мати назву. Інакше
+  // вона мовчки доїде до екрана порожнім рядком — це той самий клас помилки,
+  // що й одруківка в ідентифікаторі, тільки на рівні групи.
+  for (const [id, muscle] of Object.entries(muscles)) {
+    if (!atlasMuscles[id]) continue; // про це вже сказано вище
+    for (const group of atlasMuscles[id].groups) {
+      if (!groups[group]) {
+        problems.push(`М'яз "${id}" належить до М'язової групи "${group}", якої немає в контенті`);
+      }
+    }
+  }
+
   for (const [id, exercise] of Object.entries(exercises)) {
     const pairs = Object.entries(exercise.muscles ?? {});
 
@@ -71,10 +83,19 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
  * М'язової групи і Пов'язані вправи з нього **виводяться**, а не зберігаються:
  * дві таблиці одного факту рано чи пізно розходяться.
  */
+/** Запис або гучна помилка: тихо порожня відповідь ховає одруківку. */
+function known(table, id, what) {
+  const entry = table[id];
+  if (!entry) throw new Error(`${what} "${id}" не існує`);
+  return entry;
+}
+
+const byUk = (a, b) => a.uk.localeCompare(b.uk, 'uk');
+const byEn = (a, b) => a.en.localeCompare(b.en, 'en');
+const roleOrder = (role) => ROLES.indexOf(role);
+
 export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
   check({ muscles, groups, exercises, atlasMuscles });
-
-  const byRole = (role) => ROLES.indexOf(role);
 
   /** Ребро, обернене: М'яз → [{ exercise, role }]. Будується один раз. */
   const exercisesByMuscle = new Map();
@@ -84,6 +105,10 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
       exercisesByMuscle.get(muscle).push({ exercise: id, role });
     }
   }
+
+  /** Ідентифікатори М'язів М'язової групи. Належність малює атлас. */
+  const groupMembers = (id) =>
+    Object.keys(muscles).filter((muscle) => atlasMuscles[muscle].groups.includes(id));
 
   const muscleView = (id) => ({
     id,
@@ -100,63 +125,61 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
 
   return {
     /** Усі М'язи контенту, за українською назвою. */
-    muscles: () =>
-      Object.keys(muscles)
-        .map(muscleView)
-        .sort((a, b) => a.uk.localeCompare(b.uk, 'uk')),
+    muscles: () => Object.keys(muscles).map(muscleView).sort(byUk),
 
     /** Усі М'язові групи, за українською назвою. */
-    groups: () =>
-      Object.entries(groups)
-        .map(([id, group]) => ({ id, ...group }))
-        .sort((a, b) => a.uk.localeCompare(b.uk, 'uk')),
+    groups: () => Object.entries(groups).map(([id, group]) => ({ id, ...group })).sort(byUk),
 
     /** Усі Вправи, за англійською назвою. */
-    exercises: () =>
-      Object.keys(exercises)
-        .map(exerciseView)
-        .sort((a, b) => a.en.localeCompare(b.en, 'en')),
+    exercises: () => Object.keys(exercises).map(exerciseView).sort(byEn),
 
     muscle: (id) => (muscles[id] ? muscleView(id) : undefined),
     exercise: (id) => (exercises[id] ? exerciseView(id) : undefined),
 
+    // Невідомий ідентифікатор у запиті — помилка коду, а не порожня відповідь.
+    // Порожній список має означати рівно одне: «такого нема», і це правда
+    // тільки для М'яза без Вправ. Перевіряти існування — `muscle()` /
+    // `exercise()`, вони віддають undefined; саме туди йде id з URL.
+
     /** М'язи Вправи з Ролями: Агоніст перший, далі Синергісти, Стабілізатори. */
     exerciseMuscles: (id) =>
-      Object.entries(exercises[id]?.muscles ?? {})
+      Object.entries(known(exercises, id, 'Вправа').muscles)
         .map(([muscle, role]) => ({ muscle: muscleView(muscle), role }))
-        .sort((a, b) => byRole(a.role) - byRole(b.role) || a.muscle.uk.localeCompare(b.muscle.uk, 'uk')),
+        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role) || byUk(a.muscle, b.muscle)),
 
     /** Вправи М'яза з Роллю, яку він у них має. Обернене ребро. */
-    muscleExercises: (id) =>
-      (exercisesByMuscle.get(id) ?? [])
+    muscleExercises(id) {
+      known(muscles, id, "М'яз");
+      return (exercisesByMuscle.get(id) ?? [])
         .map(({ exercise, role }) => ({ exercise: exerciseView(exercise), role }))
-        .sort((a, b) => byRole(a.role) - byRole(b.role) || a.exercise.en.localeCompare(b.exercise.en, 'en')),
+        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role) || byEn(a.exercise, b.exercise));
+    },
 
     /** М'язи М'язової групи. Належність бере атлас. */
-    groupMuscles: (id) =>
-      Object.keys(muscles)
-        .filter((muscle) => atlasMuscles[muscle].groups.includes(id))
-        .map(muscleView)
-        .sort((a, b) => a.uk.localeCompare(b.uk, 'uk')),
+    groupMuscles(id) {
+      known(groups, id, "М'язова група");
+      return groupMembers(id).map(muscleView).sort(byUk);
+    },
 
     /** Вправи М'язової групи — об'єднання по її М'язах, без повторів. */
     groupExercises(id) {
+      known(groups, id, "М'язова група");
       const seen = new Set(
-        Object.keys(muscles)
-          .filter((muscle) => atlasMuscles[muscle].groups.includes(id))
-          .flatMap((muscle) => (exercisesByMuscle.get(muscle) ?? []).map((e) => e.exercise)),
+        groupMembers(id).flatMap((muscle) =>
+          (exercisesByMuscle.get(muscle) ?? []).map((e) => e.exercise),
+        ),
       );
-      return [...seen].map(exerciseView).sort((a, b) => a.en.localeCompare(b.en, 'en'));
+      return [...seen].map(exerciseView).sort(byEn);
     },
 
     /** Пов'язані вправи — ті, що поділяють Агоніста. Сама Вправа не рахується. */
     relatedExercises(id) {
-      if (!exercises[id]) return [];
+      known(exercises, id, 'Вправа');
       const agonist = agonistOf(id);
       return Object.keys(exercises)
         .filter((other) => other !== id && agonistOf(other) === agonist)
         .map(exerciseView)
-        .sort((a, b) => a.en.localeCompare(b.en, 'en'));
+        .sort(byEn);
     },
   };
 }

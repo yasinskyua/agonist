@@ -86,7 +86,17 @@ test("М'язова група поза атласом — помилка", () =
 test('усі проблеми повідомляються за один прохід, не по одній', () => {
   const error = contentError({ exercises: { a: { en: 'A', muscles: {} }, b: { en: 'B', muscles: {} } } });
 
-  assert.equal(error.problems.length, 4); // дві Вправи × (без М'язів + без Агоніста)
+  // Обидві зламані Вправи названі, а не тільки перша.
+  assert.match(error.message, /"a"/);
+  assert.match(error.message, /"b"/);
+});
+
+test("М'язова група без назви в контенті — помилка, а не порожній рядок на екрані", () => {
+  const { chest, ...rest } = content.groups;
+  const error = contentError({ groups: rest });
+
+  assert.match(error.message, /pectoralis_major/);
+  assert.match(error.message, /"chest", якої немає в контенті/);
 });
 
 // ── Запити ───────────────────────────────────────────────────────────────
@@ -110,6 +120,19 @@ test("Вправи М'яза — це обернене ребро, з Роллю
   for (const { exercise, role } of found) {
     assert.equal(content.exercises[exercise.id].muscles.erector_spinae, role);
   }
+});
+
+test('невідомий ідентифікатор у запиті — гучна помилка, а не порожня відповідь', () => {
+  // Порожній список мусить означати рівно одне: «такого нема». Перевіряти
+  // існування — muscle() / exercise(), саме туди йде ідентифікатор з URL.
+  assert.throws(() => atlas.exerciseMuscles('bench-pres'), /Вправа "bench-pres" не існує/);
+  assert.throws(() => atlas.muscleExercises('quadricep'), /М'яз "quadricep" не існує/);
+  assert.throws(() => atlas.groupMuscles('chst'), /М'язова група "chst" не існує/);
+  assert.throws(() => atlas.groupExercises('chst'), /не існує/);
+  assert.throws(() => atlas.relatedExercises('squat'), /не існує/);
+
+  assert.equal(atlas.muscle('quadricep'), undefined);
+  assert.equal(atlas.exercise('bench-pres'), undefined);
 });
 
 test("М'яз без жодної Вправи допустимий", () => {

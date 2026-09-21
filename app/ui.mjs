@@ -570,6 +570,61 @@ export async function start() {
     }
   });
 
+  function fold(folded) {
+    state.folded = folded;
+    drawn = ''; // same screen, new shape: draw it again
+    render();
+  }
+
+  // A sheet is moved by the finger, the way every phone sheet is: down from
+  // its top folds it, up unfolds it. Lower in a scrolled list a downward
+  // swipe is reading, so it scrolls instead.
+  let pull = null;
+  sheet.addEventListener(
+    'touchstart',
+    (e) => {
+      const fromTop = e.target.closest('.grip, .sheet-top') || sheet.scrollTop <= 0 || state.folded;
+      pull = e.touches.length === 1 && fromTop ? { y: e.touches[0].clientY, dy: 0, active: false } : null;
+    },
+    { passive: true },
+  );
+  sheet.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!pull) return;
+      const dy = e.touches[0].clientY - pull.y;
+      if (!pull.active) {
+        if (Math.abs(dy) < 8) return; // a tap wobbles; not yet a swipe
+        const folding = dy > 0 && !state.folded;
+        const unfolding = dy < 0 && state.folded;
+        if (!folding && !unfolding) return (pull = null); // the list scrolling
+        pull.active = true;
+        sheet.classList.add('dragging');
+      }
+      e.preventDefault();
+      pull.dy = dy;
+      // Unfolded, the sheet follows the finger down; folded, it is too short to follow.
+      if (!state.folded) sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+    },
+    { passive: false },
+  );
+  const release = () => {
+    const done = pull?.active ? pull.dy : 0;
+    pull = null;
+    sheet.classList.remove('dragging');
+    sheet.style.transform = '';
+    if (!state.folded && done > 60) fold(true);
+    else if (state.folded && done < -30) fold(false);
+  };
+  sheet.addEventListener('touchend', release);
+  sheet.addEventListener('touchcancel', release);
+
+  // A folded sheet is a handle as a whole: a tap anywhere on it but its
+  // buttons opens it again.
+  sheet.addEventListener('click', (e) => {
+    if (state.folded && !e.target.closest('button')) fold(false);
+  });
+
   // One listener for every row and button in the sheet and the results.
   document.addEventListener('click', (event) => {
     // A tap anywhere outside the search puts its list away.
@@ -580,11 +635,7 @@ export async function start() {
     const target = event.target.closest?.('[data-muscle-id], [data-exercise], [data-act]');
     if (!target) return;
     if (target.dataset.act === 'back') return history.back();
-    if (target.dataset.act === 'fold') {
-      state.folded = !state.folded;
-      drawn = ''; // same screen, new shape: draw it again
-      return render();
-    }
+    if (target.dataset.act === 'fold') return fold(!state.folded);
     if (target.dataset.act === 'fit') {
       zoomed = false;
       document.body.classList.remove('zoomed');

@@ -27,6 +27,11 @@
   box-sizing: border-box;
 }
 
+/* Pinch and double-tap zoom the figure, never the page. */
+html {
+  touch-action: pan-x pan-y;
+}
+
 html,
 body {
   margin: 0;
@@ -132,6 +137,18 @@ body.open #stage {
   display: block;
   width: 100%;
   height: 100%;
+  touch-action: none; /* our own pinch and drag */
+}
+
+#fit {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.6rem;
+  display: none;
+}
+
+body.zoomed #fit {
+  display: block;
 }
 
 body:not(.open) #sides {
@@ -165,6 +182,7 @@ body:not(.open) #sides {
 
 body.open #hint,
 body.open #flip,
+body.zoomed #hint,
 body.open #find {
   display: none;
 }
@@ -355,6 +373,35 @@ body[data-screen='exercise'] .side path.live[fill] {
 
 body.open #sheet {
   transform: none;
+}
+
+/* Folded: the sheet keeps only its name, the figure takes the rest. */
+body.folded {
+  --sheet: 9.5rem;
+}
+
+body.folded #sheet {
+  overflow: hidden;
+}
+
+.grip {
+  display: block;
+  width: 100%;
+  height: 1.6rem;
+  margin: -0.4rem 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.grip::before {
+  content: '';
+  display: block;
+  width: 2.6rem;
+  height: 0.3rem;
+  margin: 0 auto;
+  border-radius: 99px;
+  background: var(--outline);
 }
 
 .sheet-top {

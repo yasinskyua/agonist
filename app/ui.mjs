@@ -84,7 +84,7 @@ export async function start() {
   // Only the language is state. The screen lives in the address, so a link to
   // a Muscle survives being sent to another Trainer, and GitHub Pages needs no
   // server configuration to serve it.
-  const state = { lang: LANGS[0] };
+  const state = { lang: LANGS[0], folded: false, browsing: false };
 
   // ── Routes ──────────────────────────────────────────────────────────────
 
@@ -126,6 +126,100 @@ export async function start() {
     return [];
   }
 
+  // ── Zoom: the figure, not the page ──────────────────────────────────────
+
+  let zoomed = false; // the Trainer moved the figure away from our framing
+  let zoomedAt = ''; // …on this screen; another screen starts framed again
+  let quietUntil = 0; // a drag ends in a click, and that click is not a tap
+
+  const numbers = (text) => text.split(' ').map(Number);
+
+  /**
+   * Scale the viewBox by `r` around the user-space point `u`, then pan by
+   * (dx, dy) screen pixels. Keeping `u` where it was is what makes a pinch
+   * zoom into the fingers rather than into a corner.
+   */
+  function zoomTo(svg, [x0, y0, w0, h0], r, u, dx, dy, s0) {
+    const [wx, wy, ww, wh] = numbers(svg.dataset.whole);
+    const w = Math.min(Math.max(w0 / r, 60), ww * 1.3);
+    const k = w / w0;
+    const h = h0 * k;
+    const s = s0 / k;
+    // Keep part of the figure on screen, however far it is flung.
+    const x = Math.min(Math.max(u.x - (u.x - x0) * k - dx / s, wx - w * 0.6), wx + ww - w * 0.4);
+    const y = Math.min(Math.max(u.y - (u.y - y0) * k - dy / s, wy - h * 0.6), wy + wh - h * 0.4);
+    svg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+    zoomed = true;
+    document.body.classList.add('zoomed');
+  }
+
+  function zoomable(svg) {
+    const fingers = new Map();
+    let from = null;
+
+    const userAt = (x, y) => {
+      const p = svg.createSVGPoint();
+      p.x = x;
+      p.y = y;
+      return p.matrixTransform(svg.getScreenCTM().inverse());
+    };
+    const middle = () => {
+      const all = [...fingers.values()];
+      return {
+        x: all.reduce((a, f) => a + f.x, 0) / all.length,
+        y: all.reduce((a, f) => a + f.y, 0) / all.length,
+        spread: all.length > 1 ? Math.hypot(all[0].x - all[1].x, all[0].y - all[1].y) : 0,
+      };
+    };
+    // Each change in the number of fingers starts the gesture afresh from here.
+    const anchor = () => {
+      const m = middle();
+      from = { box: numbers(svg.getAttribute('viewBox')), m, u: userAt(m.x, m.y), s: svg.getScreenCTM().a, moved: from?.moved ?? false };
+    };
+
+    svg.addEventListener('pointerdown', (e) => {
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (fingers.size === 1) from = null;
+      anchor();
+    });
+    svg.addEventListener('pointermove', (e) => {
+      if (!fingers.has(e.pointerId)) return;
+      fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const m = middle();
+      const dx = m.x - from.m.x;
+      const dy = m.y - from.m.y;
+      // A tap wobbles a few pixels; only past that is it a drag.
+      if (!from.moved && fingers.size < 2 && Math.hypot(dx, dy) < 6) return;
+      if (!from.moved) {
+        from.moved = true;
+        svg.setPointerCapture(e.pointerId);
+      }
+      const r = fingers.size > 1 && from.m.spread ? m.spread / from.m.spread : 1;
+      zoomTo(svg, from.box, r, from.u, dx, dy, from.s);
+    });
+    const lift = (e) => {
+      if (!fingers.delete(e.pointerId)) return;
+      if (from?.moved) quietUntil = performance.now() + 300;
+      if (fingers.size) return anchor();
+      if (from?.moved) rezone();
+      from = null;
+    };
+    svg.addEventListener('pointerup', lift);
+    svg.addEventListener('pointercancel', lift);
+
+    // A mouse wheel or a trackpad pinch zooms into the pointer.
+    svg.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        const r = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
+        zoomTo(svg, numbers(svg.getAttribute('viewBox')), r, userAt(e.clientX, e.clientY), 0, 0, svg.getScreenCTM().a);
+        rezone();
+      },
+      { passive: false },
+    );
+  }
+
   // ── Figures ─────────────────────────────────────────────────────────────
 
   const figures = {};
@@ -142,10 +236,12 @@ export async function start() {
       path.classList.toggle('live', musclesOf(path).some((id) => withExercises.has(id)));
     }
     svg.addEventListener('click', (event) => {
+      if (performance.now() < quietUntil) return; // the end of a drag, not a tap
       const path = event.target.closest?.('[data-muscle]');
       const id = path && musclesOf(path).find((m) => withExercises.has(m));
       if (id) go(`#/muscle/${id}`);
     });
+    zoomable(svg);
     figures[view] = svg;
   });
 
@@ -213,6 +309,7 @@ export async function start() {
 
   /** Frame every figure on screen on what is chosen. Cheap: runs every frame the stage moves. */
   function reframe() {
+    if (zoomed) return; // the Trainer's own framing wins until they reset it
     const here = route();
     const ids = focusOf(here);
     const two = sides.children.length > 1;
@@ -271,7 +368,10 @@ export async function start() {
     const back = (history.state?.depth ?? 0) > 0
       ? `<button class="back" type="button" data-act="back">‹ ${t('back')}</button>`
       : '';
-    return `<div class="sheet-top">${back}<button class="pill" type="button" data-act="whole">${t('whole')}</button></div>`;
+    const fold = state.folded ? t('sheet.expand') : t('sheet.collapse');
+    return `
+      <button class="grip" type="button" data-act="fold" aria-expanded="${!state.folded}" aria-label="${fold}" title="${fold}"></button>
+      <div class="sheet-top">${back}<button class="pill" type="button" data-act="whole">${t('whole')}</button></div>`;
   }
 
   function muscleSheet(t, id) {
@@ -333,6 +433,26 @@ export async function start() {
         </section>` : ''}`;
   }
 
+  /** What an empty search offers: every Muscle by group, then every Exercise. */
+  function index(t) {
+    const agonistOf = (e) => atlas.exerciseMuscles(e.id)[0].muscle.uk;
+    const named = atlas.groups()
+      .map((g) => ({ ...g, muscles: atlas.groupMuscles(g.id) }))
+      .filter((g) => g.muscles.length);
+    return `
+      <h2>${t('search.groups')}</h2>${named.map((g) => `
+        <div class="group"><div class="group-name">${g[state.lang]}</div>
+          <ul>${g.muscles.map(muscleRow).join('')}</ul></div>`).join('')}
+      <h2>${t('search.exercises')}</h2><ul>${atlas.exercises()
+        .map((e) => exerciseRow(e, `${t('search.agonist')}: ${agonistOf(e)}`)).join('')}</ul>`;
+  }
+
+  /** The list above the search field: the index while empty, results once typed. */
+  function list(t) {
+    if (!state.browsing) return '';
+    return query.value.trim() ? found(t, query.value) : index(t);
+  }
+
   function found(t, text) {
     const r = atlas.search(text);
     if (!text.trim()) return '';
@@ -375,6 +495,13 @@ export async function start() {
     query.setAttribute('aria-label', t('search.label'));
     if (!open) el('flip').textContent = t(`view.${VIEWS.find((v) => v !== here.view)}`);
     document.body.classList.toggle('open', open);
+    document.body.classList.toggle('folded', open && state.folded);
+    if (location.hash !== zoomedAt) {
+      zoomed = false;
+      zoomedAt = location.hash;
+      document.body.classList.remove('zoomed');
+    }
+    el('fit').textContent = t('zoom.reset');
     document.body.dataset.screen = here.screen;
 
     const views = sidesFor(here);
@@ -404,8 +531,11 @@ export async function start() {
     shown = key;
 
     // The map shows the search this step was left with: empty for a fresh one.
-    if (!open && document.activeElement !== query) query.value = history.state?.query ?? '';
-    results.innerHTML = open ? '' : found(t, query.value);
+    if (!open && document.activeElement !== query) {
+      query.value = history.state?.query ?? '';
+      state.browsing = Boolean(query.value); // back to the results this step was left with
+    }
+    results.innerHTML = open ? '' : list(t);
     requestAnimationFrame(settle);
   }
 
@@ -425,15 +555,41 @@ export async function start() {
 
   // Only the list redraws while typing: redrawing the page would drop the
   // caret out of the field on every letter.
-  query.addEventListener('input', () => {
-    results.innerHTML = found(translator(state.lang), query.value);
+  const showList = () => {
+    state.browsing = true;
+    results.innerHTML = list(translator(state.lang));
+  };
+  query.addEventListener('input', showList);
+  // A tap on the empty field is already a starting point: the whole index.
+  query.addEventListener('focus', showList);
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.browsing) {
+      state.browsing = false;
+      results.innerHTML = '';
+      query.blur();
+    }
   });
 
   // One listener for every row and button in the sheet and the results.
   document.addEventListener('click', (event) => {
+    // A tap anywhere outside the search puts its list away.
+    if (state.browsing && !event.target.closest?.('#find')) {
+      state.browsing = false;
+      results.innerHTML = '';
+    }
     const target = event.target.closest?.('[data-muscle-id], [data-exercise], [data-act]');
     if (!target) return;
     if (target.dataset.act === 'back') return history.back();
+    if (target.dataset.act === 'fold') {
+      state.folded = !state.folded;
+      drawn = ''; // same screen, new shape: draw it again
+      return render();
+    }
+    if (target.dataset.act === 'fit') {
+      zoomed = false;
+      document.body.classList.remove('zoomed');
+      return settle();
+    }
     if (target.dataset.act === 'whole') {
       const side = sides.firstElementChild?.querySelector('svg')?.dataset.view ?? VIEWS[0];
       return go(`#/${side}`);

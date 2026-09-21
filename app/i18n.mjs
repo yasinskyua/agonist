@@ -17,6 +17,9 @@ const STRINGS = {
   'lang.switch': { uk: 'Switch to English', en: 'Перемкнути на українську' },
   'back': { uk: 'Назад', en: 'Back' },
   'whole': { uk: 'Уся фігура', en: 'Whole body' },
+  'zoom.reset': { uk: 'Скинути масштаб', en: 'Reset zoom' },
+  'sheet.collapse': { uk: 'Згорнути', en: 'Collapse' },
+  'sheet.expand': { uk: 'Розгорнути', en: 'Expand' },
 
   'search.label': { uk: "Пошук м'язів, груп і вправ", en: 'Search muscles, groups and exercises' },
   'search.placeholder': { uk: "М'яз, група або вправа", en: 'Muscle, group or exercise' },

@@ -2,7 +2,9 @@
 <html lang="uk">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The figure zooms on its own (ui.mjs); a page zoom on top of it only
+         pulled the bar and the search off screen. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <!-- The product name, not a translated string: it is the same in both
          languages, and it is what a bookmark and a home-screen icon carry.
@@ -23,6 +25,7 @@
       <div id="sides"></div>
       <p id="hint"><strong id="hint-tap"></strong><span id="hint-legend"></span></p>
       <button id="flip" type="button" class="pill"></button>
+      <button id="fit" type="button" class="pill" data-act="fit"></button>
     </main>
 
     <div id="find">

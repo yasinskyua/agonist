@@ -37,7 +37,8 @@ export function pickerHtml(t) {
       (m) => `
       <button class="g-mode" type="button" data-g="start" data-mode="${m.id}" ${m.ready ? '' : 'disabled'}>
         <b>${t(`mode.${m.id}`)}</b>
-        <small>${m.ready ? t(`mode.${m.id}.says`) : t('game.soon')}</small>
+        <small>${t(`mode.${m.id}.says`)}</small>
+        ${m.ready ? '' : `<em class="g-soon">${t('game.soon')}</em>`}
       </button>`,
     ).join('')}</div>`;
 }
@@ -86,10 +87,10 @@ export function roundHtml(t, lang, atlas, round) {
         <span class="g-streak">${round.streak >= STREAK_SHOWN ? `<span role="img" aria-label="${round.streak} ${t('game.streak')}">🔥 ${round.streak}</span>` : ''}</span>
         ${closeButton(t)}
       </div>
-      <div class="g-q">
+      <h2 class="g-q" tabindex="-1">
         <span class="g-lead">${t(`game.ask.${q.mode}`)}</span>
-        <h2 class="g-big" tabindex="-1">${exercise[lang]}</h2>
-      </div>`,
+        <span class="g-big">${exercise[lang]}</span>
+      </h2>`,
     under: `${legend}<div class="g-opts">${shown.map(option).join('')}</div>${verdict}`,
   };
 }

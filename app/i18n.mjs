@@ -49,7 +49,6 @@ const STRINGS = {
   'role.stabilizer.does': { uk: 'Утримує положення, руху не створює', en: 'Holds position, creates no movement' },
 
   'game.enter': { uk: 'Гра', en: 'Game' },
-  'game.pick': { uk: 'Обери Режим', en: 'Pick a mode' },
   'game.pick.says': {
     uk: '10 питань. Помилки — у довідник.',
     en: '10 questions. Mistakes link to the reference.',

@@ -860,9 +860,18 @@ body[data-detent='low'] .head .name {
 
 body.game #bar,
 body.game #hint,
-body.game #flip,
 body.game #sheet {
   display: none;
+}
+
+/* The Role Distribution can lie on both sides of the body: after an answer
+   the Trainer may turn the figure, from the stage's top corner as on the atlas. */
+body.game #flip {
+  display: none;
+}
+
+body.game.g-roles #flip {
+  display: block;
 }
 
 body.game #stage {
@@ -899,8 +908,7 @@ body.game .side path.live {
   letter-spacing: -0.015em;
 }
 
-.g-title:focus,
-.g-big:focus {
+.g-title:focus {
   outline: none;
 }
 
@@ -965,11 +973,26 @@ body.game .side path.live {
 }
 
 .g-q {
+  margin: 0;
   padding: 0.5rem 0 0.2rem;
   text-align: center;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.g-q:focus {
+  outline: none;
+}
+
+.g-soon {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 600;
 }
 
 .g-big {
+  display: block;
   margin: 0.1rem 0 0;
   font-size: clamp(1.4rem, 7vw, 1.8rem);
   line-height: 1.15;

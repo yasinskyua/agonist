@@ -563,7 +563,8 @@ export async function start() {
     el('hint-legend').textContent = t('map.legend');
     query.placeholder = t('search.placeholder');
     query.setAttribute('aria-label', t('search.label'));
-    if (here.screen === 'map') el('flip').textContent = t(`view.${VIEWS.find((v) => v !== here.view)}`);
+    const flipTo = here.screen === 'game' ? play.view : here.view;
+    if (here.screen === 'map' || playing) el('flip').textContent = t(`view.${VIEWS.find((v) => v !== flipTo)}`);
     // Each step keeps the height its sheet was left at; a fresh one opens a
     // chosen Muscle halfway, keeps the height between two chosen ones, and
     // lowers the sheet back to the search on the map.
@@ -762,6 +763,11 @@ export async function start() {
   // Turning the figure is not a step to go back to: it replaces the address.
   el('flip').addEventListener('click', () => {
     const here = route();
+    if (here.screen === 'game') {
+      // In the Quiz the side lives in the Round, not in the address.
+      play.view = VIEWS.find((v) => v !== play.view);
+      return redrawGame();
+    }
     history.replaceState(history.state, '', `#/${VIEWS.find((v) => v !== here.view)}`);
     render();
   });

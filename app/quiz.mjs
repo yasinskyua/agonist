@@ -136,8 +136,8 @@ export function createQuiz({ atlas, random = Math.random }) {
 
       answer(choice) {
         const question = questions[index];
-        if (given[index]) throw new Error('Питання вже має відповідь (already answered)');
-        if (!question.options.includes(choice)) throw new Error(`"${choice}" не серед варіантів питання`);
+        if (given[index]) throw new Error('the question is already answered');
+        if (!question.options.includes(choice)) throw new Error(`"${choice}" is not one of the question's options`);
 
         const result = RESULTS[mode](question, choice);
         given[index] = result;
@@ -148,13 +148,13 @@ export function createQuiz({ atlas, random = Math.random }) {
       },
 
       next() {
-        if (!given[index]) throw new Error('Спершу треба відповісти (answer the question first)');
-        if (index === questions.length - 1) throw new Error('Партія закінчилась (the Round is over)');
+        if (!given[index]) throw new Error('answer the question first');
+        if (index === questions.length - 1) throw new Error('the Round is over');
         index++;
       },
 
       summary() {
-        if (!finished()) throw new Error('Партія ще не закінчилась (finish the Round first)');
+        if (!finished()) throw new Error('finish the Round first');
         const mistakes = new Map();
         questions.forEach((question, i) => {
           if (results[i] === 'wrong') mistakes.set(subject(question), question);
@@ -172,7 +172,7 @@ export function createQuiz({ atlas, random = Math.random }) {
   return {
     round(mode) {
       const pool = MODE_POOLS[mode];
-      if (!pool || !MODES.find((m) => m.id === mode)?.ready) throw new Error(`Режим "${mode}" не готовий`);
+      if (!pool || !MODES.find((m) => m.id === mode)?.ready) throw new Error(`Mode "${mode}" is not ready`);
       return createRound(mode, shuffle(pool()).slice(0, ROUND_SIZE).map((build) => build()));
     },
   };

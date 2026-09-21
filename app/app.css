@@ -818,9 +818,20 @@ body[data-detent='low'] .head .name {
   --g-name: 1.45rem;
   --g-top-h: calc(env(safe-area-inset-top) + 0.6rem + var(--tap) + 0.4rem + 0.9rem * 1.45 + 2 * var(--g-name) * 1.15 + 0.5rem);
   --g-opt-h: 2.9rem;
+  --g-opt-font: 0.95rem;
   --g-why-font: 0.92rem;
   --g-why-h: calc(2 * var(--g-why-font) * 1.35);
   --g-under-h: calc(0.7rem + 4 * var(--g-opt-h) + 3 * 0.4rem + 0.5rem + var(--g-why-h) + 0.5rem + 3rem + 0.7rem + env(safe-area-inset-bottom));
+}
+
+/* A narrow phone takes one smaller size for every name, so the longest
+   Muscle (57 letters) and Exercise still fit two lines. Per device, never per
+   name: all the options on a screen read the same size. */
+@media (max-width: 359px) {
+  :root {
+    --g-opt-font: 0.8rem;
+    --g-name: 1.2rem;
+  }
 }
 
 /* A short phone (SE and smaller) steps everything down a notch, so the map
@@ -1042,21 +1053,16 @@ body.game .side path.live {
   border-radius: 12px;
   background: var(--paper);
   color: var(--ink);
-  font-size: 0.95rem;
+  /* One size for every name, the longest included: the room is sized for
+     it, and a name never shrinks to fit. */
+  font-size: var(--g-opt-font);
   font-weight: 600;
   line-height: 1.2;
   text-align: left;
   text-wrap: balance;
 }
 
-.g-opt[data-long] {
-  font-size: 0.8rem;
-}
 
-.g-big[data-long] {
-  /* Only the type steps down; the box keeps the height of two full lines. */
-  font-size: calc(var(--g-name) * 0.83);
-}
 
 .g-opt:active:not(:disabled) {
   background: var(--chalk);

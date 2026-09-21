@@ -139,6 +139,8 @@ export async function start() {
   function focusOf(here) {
     if (here.screen === 'muscle') return [here.id];
     if (here.screen === 'exercise') return atlas.exerciseMuscles(here.id).map(({ muscle }) => muscle.id);
+    // In the Quiz the answer zooms onto the right Muscle, as a Muscle page does.
+    if (here.screen === 'game' && answered()) return [answered().answer];
     return [];
   }
 
@@ -571,9 +573,9 @@ export async function start() {
     document.body.classList.toggle('open', open);
     gripLabel();
     el('cancel').setAttribute('aria-label', t('search.cancel'));
-    // Each question of the Quiz starts with the whole figure again; the
-    // answer does not move it, so a zoom the Trainer made survives the answer.
-    const place = playing ? `${location.hash}|${play.step}|${play.round?.index}` : location.hash;
+    // Each question of the Quiz starts with the whole figure, and the answer
+    // frames the right Muscle — over any zoom the Trainer made while choosing.
+    const place = playing ? `${location.hash}|${play.step}|${play.round?.index}|${Boolean(answered())}` : location.hash;
     if (place !== zoomedAt) {
       zoomed = false;
       zoomedAt = place;
@@ -607,7 +609,9 @@ export async function start() {
 
     if (playing) {
       drawGame(t);
-      requestAnimationFrame(settle);
+      // At once, not on the next frame: a question must never show, even for
+      // a frame, the previous answer's zoom — that would give the answer away.
+      settle();
       return;
     }
     // Off to the atlas, the Round is over: Forward must not bring a stale one

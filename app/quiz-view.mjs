@@ -12,10 +12,6 @@ import { MODES } from './quiz.mjs';
 export const STREAK_SHOWN = 2;
 export const STREAK_PRAISED = 3;
 
-/** Past these lengths a name steps down one type size, so it still fits its fixed box. */
-const LONG_NAME = 34;
-const LONG_TITLE = 30;
-
 const closeButton = (t) =>
   `<button class="g-close" type="button" data-g="close" aria-label="${t('close')}">✕</button>`;
 
@@ -73,9 +69,7 @@ export function roundHtml(t, lang, atlas, round) {
     const state = !result ? '' : id === q.answer ? 'ok' : id === result.given ? 'no' : 'dim';
     // A mark and, for a screen reader, words: colour alone says nothing to everyone.
     const mark = state === 'ok' ? '✓ ' : state === 'no' ? '✗ ' : '';
-    const name = atlas.muscle(id).uk;
-    // A long name gets a smaller type, not a taller button.
-    return `<button class="g-opt ${state}" type="button" data-g="pick" data-id="${id}" ${name.length > LONG_NAME ? 'data-long' : ''} ${result ? 'disabled' : ''}>${mark}${name}</button>`;
+    return `<button class="g-opt ${state}" type="button" data-g="pick" data-id="${id}" ${result ? 'disabled' : ''}>${mark}${atlas.muscle(id).uk}</button>`;
   };
 
   // The legend sits over the map's corner, not in the panel: the map needs the height.
@@ -100,7 +94,7 @@ export function roundHtml(t, lang, atlas, round) {
       </div>
       <h2 class="g-q" tabindex="-1">
         <span class="g-lead">${t(`game.ask.${q.mode}`)}</span>
-        <span class="g-big" ${exercise[lang].length > LONG_TITLE ? 'data-long' : ''}>${exercise[lang]}</span>
+        <span class="g-big">${exercise[lang]}</span>
       </h2>`,
     under: `${legend}<div class="g-opts">${q.options.map(option).join('')}</div>${line}${next}`,
   };

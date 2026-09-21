@@ -1,4 +1,4 @@
-// Prints the Role Map review queue — every decision the draft author is unsure
+// Prints the Role Distribution review queue — every decision the draft author is unsure
 // of, agonists first. This is the entry point for ticket 10: the Trainer should
 // not have to scroll 80 exercises of JSON to find the flagged ones.
 //
@@ -22,7 +22,7 @@ const atlas = createAtlas({
 const ROLE_UK = { agonist: 'Агоніст', synergist: 'Синергіст', stabilizer: 'Стабілізатор' };
 const queue = atlas.reviewQueue();
 
-console.log('# Черга вичитки Мапи Ролей\n');
+console.log('# Черга вичитки Розподілу Ролей\n');
 console.log(
   `${queue.length} позначених рішень із ${atlas.exercises().length} Вправ. ` +
     'Агоністи першими: помилка в Агоністі коштує дорожче.\n',

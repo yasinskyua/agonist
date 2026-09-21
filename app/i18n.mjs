@@ -79,3 +79,29 @@ export function translator(lang) {
 
 /** The language the switch button moves to. There are exactly two. */
 export const otherLang = (lang) => LANGS.find((l) => l !== lang);
+
+const LANG_KEY = 'lang';
+
+/**
+ * The remembered language, or the default. Browser storage can be blocked,
+ * cleared or throw on access (private window), and none of that may break the
+ * app: the language is then simply the default. `storage` is a getter because
+ * merely touching `localStorage` can throw.
+ */
+export function loadLang(storage) {
+  try {
+    const lang = storage().getItem(LANG_KEY);
+    return LANGS.includes(lang) ? lang : LANGS[0];
+  } catch {
+    return LANGS[0];
+  }
+}
+
+/** Remember the language. A failed write is not worth an error: it is a convenience. */
+export function saveLang(storage, lang) {
+  try {
+    storage().setItem(LANG_KEY, lang);
+  } catch {
+    // Storage unavailable: the language just won't outlive this session.
+  }
+}

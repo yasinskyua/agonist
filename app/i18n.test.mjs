@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { LANGS, KEYS, translator } from './i18n.mjs';
+import { LANGS, KEYS, translator, loadLang, saveLang } from './i18n.mjs';
 
 test('every string exists in every language and is not blank', () => {
   for (const lang of LANGS) {
@@ -34,4 +34,30 @@ test('an unknown key fails loudly instead of drawing a blank', () => {
 
 test('an unknown language fails loudly', () => {
   assert.throws(() => translator('de'), /de/);
+});
+
+const memory = () => {
+  const map = new Map();
+  return { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) };
+};
+
+test('a saved language comes back after a restart', () => {
+  const store = memory();
+  saveLang(() => store, 'en');
+  assert.equal(loadLang(() => store), 'en');
+});
+
+test('with nothing saved, or junk saved, the language is Ukrainian', () => {
+  const store = memory();
+  assert.equal(loadLang(() => store), 'uk');
+  store.setItem('lang', 'de');
+  assert.equal(loadLang(() => store), 'uk');
+});
+
+test('blocked storage does not break the app', () => {
+  const blocked = () => {
+    throw new Error('SecurityError');
+  };
+  assert.equal(loadLang(blocked), 'uk');
+  assert.doesNotThrow(() => saveLang(blocked, 'en'));
 });

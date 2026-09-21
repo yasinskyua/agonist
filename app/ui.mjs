@@ -7,7 +7,7 @@
 // without emulating a DOM.
 
 import { createAtlas, ROLES } from './atlas.mjs';
-import { LANGS, translator, otherLang } from './i18n.mjs';
+import { LANGS, translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 
 const VIEWS = ['front', 'back'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -82,10 +82,11 @@ export async function start() {
   /** Whether the pointer is a finger. A mouse is hurt by help it did not need. */
   const coarsePointer = matchMedia('(pointer: coarse)');
 
-  // Only the language is state. The screen lives in the address, so a link to
-  // a Muscle survives being sent to another Trainer, and GitHub Pages needs no
-  // server configuration to serve it.
-  const state = { lang: LANGS[0], detent: 'low' };
+  // Only the language is remembered between launches. The screen lives in the
+  // address, so a link to a Muscle survives being sent to another Trainer, and
+  // GitHub Pages needs no server configuration to serve it.
+  const storage = () => localStorage;
+  const state = { lang: loadLang(storage), detent: 'low' };
   const DETENTS = ['low', 'mid', 'high'];
 
   // ── Routes ──────────────────────────────────────────────────────────────
@@ -607,6 +608,7 @@ export async function start() {
 
   el('lang').addEventListener('click', () => {
     state.lang = otherLang(state.lang);
+    saveLang(storage, state.lang);
     render();
   });
 

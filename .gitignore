@@ -1,2 +1,6 @@
 .codegraph/
 .DS_Store
+
+# Source files kept locally, never published: the school manual is
+# copyrighted and the Figma exports are ~180 MB (assets/atlas/README.md).
+Files/

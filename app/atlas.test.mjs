@@ -226,7 +226,7 @@ test('a review mark must point at a muscle of that same exercise', () => {
   assert.match(error.message, /"x": позначка непевності на М'яз "hamstrings"/);
 });
 
-test('a review mark without a reason is an error: the Trainer must know what is in doubt', () => {
+test('a review mark without a reason is an error: the reviewer must know what is in doubt', () => {
   const x = { en: 'Odd', muscles: { quadriceps: 'agonist' }, review: { quadriceps: '' } };
 
   assert.throws(() => createAtlas(broken({ exercises: { x } })), /без причини/);

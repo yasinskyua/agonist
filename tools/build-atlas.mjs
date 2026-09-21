@@ -209,8 +209,7 @@ function buildView({ systems, callouts, figmaView }) {
   const [x, y, w, h] = viewBox(tags);
   const svg = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" fill="none">`,
-    '<!-- Human Anatomy Component System — Ryan Graves, CC BY 4.0. Див. CREDITS.md.',
-    '     Зібрано tools/build-atlas.mjs, руками не правити. -->',
+    '<!-- Зібрано tools/build-atlas.mjs, руками не правити. -->',
     ...body,
     '</svg>',
     '',

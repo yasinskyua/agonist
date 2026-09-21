@@ -1,11 +1,11 @@
 // Prints the Role Distribution review queue — every decision the draft author is unsure
-// of, agonists first. This is the entry point for ticket 10: the Trainer should
+// of, agonists first. This is the entry point for ticket 10: the reviewer should
 // not have to scroll 80 exercises of JSON to find the flagged ones.
 //
 // Run:  node tools/review-queue.mjs            — Markdown on stdout
 //       node tools/review-queue.mjs > out.md   — a file you can send
 //
-// Output is Ukrainian: the reader is a Trainer, not a developer.
+// Output is Ukrainian: the reader is the content author, not a developer.
 
 import { readFileSync } from 'node:fs';
 import { createAtlas, ROLES } from '../app/atlas.mjs';

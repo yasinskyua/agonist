@@ -77,7 +77,7 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
       if (!ROLES.includes(role)) problems.push(`Вправа "${id}", М'яз "${muscle}": невідома Роль "${role}"`);
     }
 
-    // A review mark points the Trainer at a decision the author is unsure of.
+    // A review mark points the reviewer at a decision the author is unsure of.
     // A mark on a muscle the exercise does not list, or one without a reason,
     // is a dead line: the review never sees it, the author thinks it is flagged.
     for (const [muscle, note] of Object.entries(exercise.review ?? {})) {
@@ -224,7 +224,7 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
     /**
      * Review queue: every flagged decision as one flat list, agonists first —
      * a wrong Agonist costs more than a wrong Stabilizer, so that is where the
-     * Trainer starts (ticket 10).
+     * review starts (ticket 10).
      */
     reviewQueue: () =>
       Object.keys(exercises)

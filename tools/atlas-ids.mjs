@@ -73,7 +73,6 @@ export function collectMuscles(views = VIEWS) {
   }
 
   return {
-    source: 'Human Anatomy Component System — Ryan Graves, CC BY 4.0 (див. CREDITS.md)',
     generatedBy: 'tools/atlas-ids.mjs',
     views,
     count: byMuscle.size,

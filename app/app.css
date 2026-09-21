@@ -1167,6 +1167,93 @@ body.game .side path.live {
   gap: 0.15rem 0.7rem;
 }
 
+/* «More» and «Next» share the last row; Next is the one the thumb goes for. */
+.g-go {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.g-go .g-next {
+  margin: 0;
+}
+
+.g-more {
+  min-height: 3rem;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--paper);
+  font-weight: 600;
+}
+
+.g-more[aria-expanded='true'] {
+  background: var(--chalk);
+}
+
+.g-more:disabled {
+  color: var(--dim);
+  cursor: default;
+}
+
+/* The long explanation lies over the map, exactly where the map is, so
+   opening it moves nothing else on screen. */
+#g-more {
+  position: absolute;
+  top: var(--g-top-h);
+  bottom: var(--g-under-h);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem var(--gr) 1.2rem var(--gl);
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  pointer-events: auto;
+}
+
+#g-more[hidden] {
+  display: none;
+}
+
+.g-more-title {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.g-more-title:focus {
+  outline: none;
+}
+
+.g-more-lead {
+  margin: 0 0 0.4rem;
+}
+
+#g-more .roles {
+  margin-top: 0.4rem;
+}
+
+#g-more .role h4 {
+  margin: 0 0 0.1rem;
+  font-size: 1rem;
+}
+
+#g-more .role li {
+  padding: 0.35rem 0;
+}
+
+#g-more .role li.picked {
+  font-weight: 600;
+}
+
+#g-more .why {
+  margin: 0.15rem 0 0;
+  font-weight: 400;
+}
+
 .g-next,
 .g-ghost {
   display: block;

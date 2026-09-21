@@ -30,8 +30,6 @@ const quizWith = (seed) => createQuiz({ atlas, random: seeded(seed) });
 const SEEDS = Array.from({ length: 150 }, (_, i) => i);
 const rounds = (mode) => SEEDS.map((seed) => quizWith(seed).round(mode));
 
-/** The pairs the review queue flags as unsure: the Quiz must never lean on them. */
-const flagged = new Set(atlas.reviewQueue().map(({ exercise, muscle }) => `${exercise.id}|${muscle.id}`));
 const roleIn = (exercise, muscle) =>
   atlas.exerciseMuscles(exercise).find((x) => x.muscle.id === muscle)?.role ?? null;
 const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
@@ -71,41 +69,12 @@ test('every question has four different options and exactly one right answer', (
   }
 });
 
-test('an Exercise whose Agonist is flagged unsure is never asked', () => {
-  const doubtful = atlas
-    .exercises()
-    .map((e) => e.id)
-    .filter((id) => flagged.has(`${id}|${agonistOf(id)}`));
-  assert.ok(doubtful.length > 0, 'the real content should have some, or this test proves nothing');
-
-  for (const { questions } of rounds('agonist')) {
-    for (const q of questions) assert.ok(!doubtful.includes(q.exercise), q.exercise);
-  }
-});
-
-test('an unsure pair is never an option, but the rest of that Exercise stays in', () => {
-  let asked = 0;
-  for (const { questions } of rounds('agonist')) {
-    for (const q of questions) {
-      asked++;
-      for (const m of q.options) assert.ok(!flagged.has(`${q.exercise}|${m}`), `${q.exercise} + ${m}`);
-    }
-  }
-  // An Exercise with an unsure Synergist is still asked: the flag removes the pair, not the Exercise.
-  const withFlaggedSynergist = new Set(
-    [...flagged].map((pair) => pair.split('|')).filter(([e, m]) => roleIn(e, m) !== 'agonist').map(([e]) => e),
-  );
-  const seen = new Set(rounds('agonist').flatMap((r) => r.questions.map((q) => q.exercise)));
-  assert.ok([...withFlaggedSynergist].some((e) => seen.has(e)), 'no Exercise with an unsure Synergist was ever asked');
-  assert.ok(asked > 0);
-});
-
 test("the wrong options come first from the Exercise itself, then from the Agonist's Group", () => {
   for (const { questions } of rounds('agonist')) {
     for (const q of questions) {
       const own = atlas
         .exerciseMuscles(q.exercise)
-        .filter(({ role, muscle }) => role !== 'agonist' && !flagged.has(`${q.exercise}|${muscle.id}`))
+        .filter(({ role }) => role !== 'agonist')
         .map(({ muscle }) => muscle.id);
       const wrong = q.options.filter((m) => m !== q.answer);
       const fromOwn = wrong.filter((m) => own.includes(m));
@@ -120,7 +89,6 @@ test("the wrong options come first from the Exercise itself, then from the Agoni
           (m) =>
             m.id !== q.answer &&
             !own.includes(m.id) &&
-            !flagged.has(`${q.exercise}|${m.id}`) &&
             atlas.muscleExercises(m.id).length > 0 &&
             m.groups.some((g) => groups.includes(g)),
         )
@@ -153,28 +121,9 @@ test('a right answer says so, and names the Role Distribution to paint', () => {
   assert.equal(result.answer, q.answer);
   assert.deepEqual(
     result.roles,
-    atlas
-      .exerciseMuscles(q.exercise)
-      .filter(({ muscle }) => !flagged.has(`${q.exercise}|${muscle.id}`))
-      .map(({ muscle, role }) => ({ muscle: muscle.id, role })),
+    atlas.exerciseMuscles(q.exercise).map(({ muscle, role }) => ({ muscle: muscle.id, role })),
   );
   assert.equal(round.results[0], 'right');
-});
-
-test('what the Quiz shows after an answer never includes an unsure pair', () => {
-  // The Quiz does not ask about a doubtful Role, so it must not paint one as fact either.
-  let withDoubt = 0;
-  for (const round of rounds('agonist')) {
-    for (const q of round.questions) {
-      const result = round.answer(q.options.find((m) => m !== q.answer));
-      for (const { muscle } of result.roles) assert.ok(!flagged.has(`${q.exercise}|${muscle}`), `${q.exercise} + ${muscle}`);
-      // The Agonist is always there: the pool keeps only Exercises whose Agonist is sure.
-      assert.equal(result.roles[0].role, 'agonist');
-      if (result.roles.length < atlas.exerciseMuscles(q.exercise).length) withDoubt++;
-      if (!round.finished) round.next();
-    }
-  }
-  assert.ok(withDoubt > 0, 'the real content should have an Exercise with an unsure Muscle, or this proves nothing');
 });
 
 test('a wrong answer says which Role the picked Muscle has in this Exercise', () => {

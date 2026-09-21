@@ -9,7 +9,7 @@
 import { createAtlas, ROLES } from './atlas.mjs';
 import { LANGS, translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { createQuiz } from './quiz.mjs';
-import { pickerHtml, roundHtml, summaryHtml, announce } from './quiz-view.mjs';
+import { pickerHtml, roundHtml, moreHtml, summaryHtml, announce } from './quiz-view.mjs';
 
 const VIEWS = ['front', 'back'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -96,9 +96,9 @@ export async function start() {
   // counts its changes, so the screen redraws when the state moved and the
   // address did not.
   const quiz = createQuiz({ atlas });
-  const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, focused: '' };
+  const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, focused: '', more: false, moreClosed: false };
   const answered = () => play.step === 'round' && play.round.result;
-  const resetPlay = () => Object.assign(play, { step: 'modes', round: null, view: VIEWS[0], focused: '' });
+  const resetPlay = () => Object.assign(play, { step: 'modes', round: null, view: VIEWS[0], focused: '', more: false });
 
   // ── Routes ──────────────────────────────────────────────────────────────
 
@@ -410,7 +410,7 @@ export async function start() {
     const rule = (id, colour) => `#sides [data-muscle~="${id}"][fill] { fill: var(--${colour}); }`;
     if (here.screen === 'muscle') return rule(here.id, 'agonist');
     // The Quiz shows the answer the way the Exercise page does, but from the
-    // Round's own list of Roles: the Quiz never paints a pair the author is unsure of.
+    // Round's own list of Roles.
     const byRole =
       here.screen === 'exercise'
         ? atlas.exerciseMuscles(here.id).map(({ muscle, role }) => ({ muscle: muscle.id, role }))
@@ -662,13 +662,19 @@ export async function start() {
       el('g-top').innerHTML = pickerHtml(t);
       el('g-under').innerHTML = '';
     } else if (step === 'round') {
-      const { top, under } = roundHtml(t, state.lang, atlas, round);
+      const { top, under } = roundHtml(t, state.lang, atlas, round, play.more);
       el('g-top').innerHTML = top;
       el('g-under').innerHTML = under;
     } else {
       el('g-top').innerHTML = summaryHtml(t, state.lang, atlas, round);
       el('g-under').innerHTML = '';
     }
+
+    const more = el('g-more');
+    const showMore = step === 'round' && play.more && Boolean(round.result);
+    more.hidden = !showMore;
+    more.innerHTML = showMore ? moreHtml(t, atlas, round) : '';
+    if (showMore) more.scrollTop = 0;
 
     // A new question or screen starts from its heading, so a screen reader
     // reads it out and Tab goes on from there; an answer hands the focus to
@@ -677,9 +683,12 @@ export async function start() {
     if (place !== play.focused) {
       play.focused = place;
       layer.querySelector('h2')?.focus({ preventScroll: true });
+    } else if (showMore) {
+      more.querySelector('h3')?.focus({ preventScroll: true });
     } else if (answered()) {
-      layer.querySelector('[data-g="next"]')?.focus({ preventScroll: true });
+      layer.querySelector(play.moreClosed ? '[data-g="more"]' : '[data-g="next"]')?.focus({ preventScroll: true });
     }
+    play.moreClosed = false;
   }
 
   const redrawGame = () => {
@@ -698,6 +707,7 @@ export async function start() {
   function pick(muscle) {
     if (play.step !== 'round' || play.round.result) return;
     const result = play.round.answer(muscle);
+    play.more = false;
     // The figure turns to the side where the Agonist can be seen.
     play.view = atlas.muscle(result.answer).views[0];
     say(announce(translator(state.lang), atlas, result));
@@ -707,12 +717,21 @@ export async function start() {
   function advance() {
     const { round } = play;
     if (route().screen !== 'game' || play.step !== 'round' || !round.result) return;
+    play.more = false;
     if (round.finished) play.step = 'summary';
     else {
       round.next();
       play.view = VIEWS[0];
     }
     say('');
+    redrawGame();
+  }
+
+  /** Open or close the long explanation over the map; closing gives the focus back to its button. */
+  function toggleMore() {
+    if (!answered()) return;
+    play.more = !play.more;
+    play.moreClosed = !play.more;
     redrawGame();
   }
 
@@ -742,7 +761,8 @@ export async function start() {
       play.focused = '';
       say('');
       redrawGame();
-    } else if (act === 'pick') pick(button.dataset.id);
+    } else if (act === 'more') toggleMore();
+    else if (act === 'pick') pick(button.dataset.id);
     else if (act === 'next') advance();
   });
 
@@ -871,7 +891,7 @@ export async function start() {
       if (e.key === '-' || e.key === '−' || e.key === '_') return zoomBy(1 / STEP);
     }
     if (e.key !== 'Escape') return;
-    if (route().screen === 'game') return leaveGame();
+    if (route().screen === 'game') return play.more ? toggleMore() : leaveGame();
     if (document.body.classList.contains('searching')) cancelSearch();
     else if (document.body.classList.contains('open')) close();
   });

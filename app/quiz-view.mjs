@@ -56,7 +56,7 @@ const dots = (t, round) => `
   </div>`;
 
 /** A question: the top (progress, the question) and the under part (answers, verdict). */
-export function roundHtml(t, lang, atlas, round) {
+export function roundHtml(t, lang, atlas, round, open = false) {
   const q = round.current;
   const result = round.result;
   const exercise = atlas.exercise(q.exercise);
@@ -84,6 +84,8 @@ export function roundHtml(t, lang, atlas, round) {
     : `<p class="g-why"><b class="g-verdict ${result.right ? 'ok' : 'no'}">${result.right ? `✓ ${t('game.right')}` : `✗ ${t('game.wrong')}`}.</b> ${explain(t, result)}</p>`;
 
   const next = `<button class="g-next" type="button" data-g="next" ${result ? '' : 'disabled'}>${round.index === round.total - 1 ? t('game.finish') : t('game.next')}</button>`;
+  // The long explanation opens over the map, so the panel keeps its height.
+  const more = `<button class="g-more" type="button" data-g="more" aria-controls="g-more" aria-expanded="${Boolean(open)}" ${result ? '' : 'disabled'}>${open ? t('game.more.hide') : t('game.more')}</button>`;
 
   return {
     top: `
@@ -96,8 +98,38 @@ export function roundHtml(t, lang, atlas, round) {
         <span class="g-lead">${t(`game.ask.${q.mode}`)}</span>
         <span class="g-big">${exercise[lang]}</span>
       </h2>`,
-    under: `${legend}<div class="g-opts">${q.options.map(option).join('')}</div>${line}${next}`,
+    under: `${legend}<div class="g-opts">${q.options.map(option).join('')}</div>${line}<div class="g-go">${more}${next}</div>`,
   };
+}
+
+/**
+ * «More» after an answer: what the Agonist does, and every Muscle of the
+ * Exercise by Role with the author's note on why, where there is one. Plain
+ * text, not links: reading it must not throw the Trainer out of the Round.
+ */
+export function moreHtml(t, atlas, round) {
+  const { exercise } = round.current;
+  const { answer, given, roles } = round.result;
+  const notes = atlas.exercise(exercise).notes ?? {};
+  const agonist = atlas.muscle(answer);
+  const byRole = ROLES.map((role) => ({ role, muscles: roles.filter((x) => x.role === role).map((x) => x.muscle) }))
+    .filter((x) => x.muscles.length);
+  const heading = (role, n) => (role === 'agonist' || n === 1 ? t(`role.${role}`) : t(`roles.${role}`));
+  const mark = (id) => (id === answer ? '✓ ' : id === given ? '✗ ' : '');
+
+  return `
+    <h3 class="g-more-title" tabindex="-1">${t('game.more.agonist')}</h3>
+    <p class="g-more-lead"><b>${agonist.uk}.</b> ${agonist.action}</p>
+    <h3 class="g-more-title">${t('game.more.roles')}</h3>
+    <div class="roles">${byRole.map(({ role, muscles }) => `
+      <section class="role" data-role="${role}">
+        <h4>${heading(role, muscles.length)}</h4>
+        <p>${t(`role.${role}.does`)}</p>
+        <ul>${muscles.map((id) => `
+          <li${id === given ? ' class="picked"' : ''}>${mark(id)}${atlas.muscle(id).uk}${notes[id] ? `<p class="why">${notes[id]}</p>` : ''}</li>`).join('')}
+        </ul>
+      </section>`).join('')}
+    </div>`;
 }
 
 export function summaryHtml(t, lang, atlas, round) {

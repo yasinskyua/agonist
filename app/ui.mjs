@@ -111,9 +111,23 @@ export async function start() {
     }
   }
 
+  /**
+   * The Muscle under a tap. What is drawn under the finger wins; a tap zone only
+   * catches what fell beside it. Zones are a finger wide, on a figure not much
+   * wider than five fingers: let them outrank the picture and the small Muscles'
+   * zones swallow the middle of the big ones (measured: 33 taps in 54, on a
+   * point lying on the Muscle, went to a neighbour).
+   */
+  function muscleAt(x, y) {
+    const under = document.elementsFromPoint(x, y).filter((e) => e.matches('#map [data-muscle]'));
+    const hit = under.find((e) => !e.matches('rect.tap')) ?? under[0];
+    return hit && musclesOf(hit).find((m) => withExercises.has(m));
+  }
+
   map.addEventListener('click', (event) => {
-    const path = event.target.closest?.('[data-muscle]');
-    const id = path && musclesOf(path).find((m) => withExercises.has(m));
+    // The map holds a button of its own («All muscles»): what lies under it is not tapped.
+    if (!event.target.closest('.fig')) return;
+    const id = muscleAt(event.clientX, event.clientY);
     if (id) go(muscleHref(id));
   });
 
@@ -143,10 +157,9 @@ export async function start() {
    * a thumb sits over the Muscles beside a thin one and takes their clicks, so
    * on a mouse the path itself is the target and a 7 px Muscle is hit exactly.
    *
-   * ponytail: a zone always outranks whatever it covers, so on a touch screen
-   * a big Muscle loses the patch a small neighbour's zone sits on. It stays
-   * reachable everywhere else, and the alternative — no zone — makes the small
-   * Muscle unreachable entirely.
+   * ponytail: a zone only catches taps that land on no Muscle (see `muscleAt`),
+   * so a Muscle narrower than a finger, lying between bigger ones, is hit only
+   * by aiming at it. Zooming the map (ticket 03) is what makes it easy.
    */
   function layTapZones(svg) {
     for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();

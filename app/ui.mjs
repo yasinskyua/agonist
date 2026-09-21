@@ -139,8 +139,6 @@ export async function start() {
   function focusOf(here) {
     if (here.screen === 'muscle') return [here.id];
     if (here.screen === 'exercise') return atlas.exerciseMuscles(here.id).map(({ muscle }) => muscle.id);
-    // In the Quiz the figure is framed on the answer once there is one.
-    if (here.screen === 'game' && answered()) return answered().roles.map(({ muscle }) => muscle);
     return [];
   }
 
@@ -367,7 +365,7 @@ export async function start() {
       box: ids.length ? boxOn(host.querySelector('svg'), ids) : null,
     }));
     for (const { svg, aspect, box } of hosts) {
-      if (here.screen === 'exercise' || here.screen === 'game') frame(svg, box, aspect, 1.25, 420);
+      if (here.screen === 'exercise') frame(svg, box, aspect, 1.25, 420);
       else frame(svg, box, aspect, two ? 2.6 : 3.2, two ? 380 : 320);
     }
   }
@@ -391,15 +389,7 @@ export async function start() {
     sheet.style.setProperty('--stuck-h', `${stuck?.offsetHeight ?? 0}px`);
   }
 
-  /** The map takes the room the Quiz's top and bottom leave it. Measured, not guessed: they wrap with the words. */
-  function fitStage() {
-    if (route().screen !== 'game') return;
-    document.body.style.setProperty('--g-top', `${el('g-top').offsetHeight}px`);
-    document.body.style.setProperty('--g-under', `${el('g-under').offsetHeight}px`);
-  }
-
   function settle() {
-    fitStage();
     reframe();
     rezone();
     padScroll();
@@ -581,8 +571,9 @@ export async function start() {
     document.body.classList.toggle('open', open);
     gripLabel();
     el('cancel').setAttribute('aria-label', t('search.cancel'));
-    // Each question of the Quiz starts framed again, like a new screen.
-    const place = playing ? `${location.hash}|${play.rev}` : location.hash;
+    // Each question of the Quiz starts with the whole figure again; the
+    // answer does not move it, so a zoom the Trainer made survives the answer.
+    const place = playing ? `${location.hash}|${play.step}|${play.round?.index}` : location.hash;
     if (place !== zoomedAt) {
       zoomed = false;
       zoomedAt = place;

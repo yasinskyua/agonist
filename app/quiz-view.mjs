@@ -12,21 +12,30 @@ import { MODES } from './quiz.mjs';
 export const STREAK_SHOWN = 2;
 export const STREAK_PRAISED = 3;
 
+/** Past these lengths a name steps down one type size, so it still fits its fixed box. */
+const LONG_NAME = 34;
+const LONG_TITLE = 30;
+
 const closeButton = (t) =>
   `<button class="g-close" type="button" data-g="close" aria-label="${t('close')}">✕</button>`;
 
-/** The words for what a picked Muscle is in an Exercise — as the line and as what a screen reader hears. */
-export function explain(t, atlas, result) {
-  const muscle = atlas.muscle(result.given).uk;
+/**
+ * What the picked Muscle is in this Exercise. The line does not repeat the
+ * Muscle's name: it is marked ✓ or ✗ right above, and a 57-letter name would
+ * make the line as long as the room it has.
+ */
+export function explain(t, result) {
   return result.givenRole
-    ? t('game.explain.role').replace('{muscle}', muscle).replace('{role}', t(`role.${result.givenRole}`).toLowerCase())
-    : t('game.explain.absent').replace('{muscle}', muscle);
+    ? t('game.explain.role').replace('{role}', t(`role.${result.givenRole}`).toLowerCase())
+    : t('game.explain.absent');
 }
 
 /** What a screen reader is told once an answer is in. */
 export function announce(t, atlas, result) {
-  if (result.right) return `${t('game.right')}. ${explain(t, atlas, result)}`;
-  return `${t('game.wrong')}. ${t('game.wrong.agonist')} ${atlas.muscle(result.answer).uk}. ${explain(t, atlas, result)}`;
+  // Heard, not seen: the marks on the options are not read out, so the names are.
+  const picked = `${atlas.muscle(result.given).uk}. ${explain(t, result)}`;
+  if (result.right) return `${t('game.right')}. ${picked}`;
+  return `${t('game.wrong')}. ${picked} ${t('game.wrong.agonist')} ${atlas.muscle(result.answer).uk}.`;
 }
 
 export function pickerHtml(t) {
@@ -56,15 +65,18 @@ export function roundHtml(t, lang, atlas, round) {
   const result = round.result;
   const exercise = atlas.exercise(q.exercise);
 
-  // Once answered, only the right one and the wrong pick stay: the four
-  // options have done their job, and the room goes to the map.
+  // One shape for the whole question, before the answer and after it: the
+  // four options stay where they were (marked, not removed), the line under
+  // them holds the prompt and then the verdict, and «Next» is always there —
+  // idle until an answer is in. Nothing on screen appears, vanishes or resizes.
   const option = (id) => {
-    const state = !result ? '' : id === q.answer ? 'ok' : 'no';
+    const state = !result ? '' : id === q.answer ? 'ok' : id === result.given ? 'no' : 'dim';
     // A mark and, for a screen reader, words: colour alone says nothing to everyone.
     const mark = state === 'ok' ? '✓ ' : state === 'no' ? '✗ ' : '';
-    return `<button class="g-opt ${state}" type="button" data-g="pick" data-id="${id}" ${result ? 'disabled' : ''}>${mark}${atlas.muscle(id).uk}</button>`;
+    const name = atlas.muscle(id).uk;
+    // A long name gets a smaller type, not a taller button.
+    return `<button class="g-opt ${state}" type="button" data-g="pick" data-id="${id}" ${name.length > LONG_NAME ? 'data-long' : ''} ${result ? 'disabled' : ''}>${mark}${name}</button>`;
   };
-  const shown = !result ? q.options : q.options.filter((id) => id === q.answer || id === result.given);
 
   // The legend sits over the map's corner, not in the panel: the map needs the height.
   const legend = result
@@ -73,13 +85,11 @@ export function roundHtml(t, lang, atlas, round) {
         .join('')}</ul>`
     : '';
 
-  // Right or wrong, the same shape and the same room: a verdict, what the
-  // picked Muscle is in this Exercise, and «Next». Nothing moves on by itself —
-  // the Trainer reads the solution and goes on when ready.
-  const verdict = !result
-    ? ''
-    : `<p class="g-why"><b class="g-verdict ${result.right ? 'ok' : 'no'}">${result.right ? `✓ ${t('game.right')}` : `✗ ${t('game.wrong')}`}.</b> ${explain(t, atlas, result)}</p>
-       <button class="g-next" type="button" data-g="next">${round.finished ? t('game.finish') : t('game.next')}</button>`;
+  const line = !result
+    ? `<p class="g-why g-hint">${t(`game.hint.${q.mode}`)}</p>`
+    : `<p class="g-why"><b class="g-verdict ${result.right ? 'ok' : 'no'}">${result.right ? `✓ ${t('game.right')}` : `✗ ${t('game.wrong')}`}.</b> ${explain(t, result)}</p>`;
+
+  const next = `<button class="g-next" type="button" data-g="next" ${result ? '' : 'disabled'}>${round.index === round.total - 1 ? t('game.finish') : t('game.next')}</button>`;
 
   return {
     top: `
@@ -90,9 +100,9 @@ export function roundHtml(t, lang, atlas, round) {
       </div>
       <h2 class="g-q" tabindex="-1">
         <span class="g-lead">${t(`game.ask.${q.mode}`)}</span>
-        <span class="g-big">${exercise[lang]}</span>
+        <span class="g-big" ${exercise[lang].length > LONG_TITLE ? 'data-long' : ''}>${exercise[lang]}</span>
       </h2>`,
-    under: `${legend}<div class="g-opts">${shown.map(option).join('')}</div>${verdict}`,
+    under: `${legend}<div class="g-opts">${q.options.map(option).join('')}</div>${line}${next}`,
   };
 }
 

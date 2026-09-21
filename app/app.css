@@ -809,9 +809,30 @@ body[data-detent='low'] .head .name {
   font-weight: 700;
 }
 
-/* A layer over the atlas: its own top and bottom are real boxes, and the map
-   fills what lies between them (ui.mjs measures them into --g-top/--g-under).
+/* A layer over the atlas. In a Round its top and bottom have fixed heights,
+   the same for every question and before and after the answer, and the map
+   fills exactly what lies between them — nothing is measured, so nothing
+   jumps. Words fit their boxes by clamping, not by growing them.
    The picker and the summary have no map: they take the whole screen. */
+:root {
+  --g-name: 1.45rem;
+  --g-top-h: calc(env(safe-area-inset-top) + 0.6rem + var(--tap) + 0.4rem + 0.9rem * 1.45 + 2 * var(--g-name) * 1.15 + 0.5rem);
+  --g-opt-h: 2.9rem;
+  --g-why-font: 0.92rem;
+  --g-why-h: calc(2 * var(--g-why-font) * 1.35);
+  --g-under-h: calc(0.7rem + 4 * var(--g-opt-h) + 3 * 0.4rem + 0.5rem + var(--g-why-h) + 0.5rem + 3rem + 0.7rem + env(safe-area-inset-bottom));
+}
+
+/* A short phone (SE and smaller) steps everything down a notch, so the map
+   keeps some room. Chosen per device, not per question: nothing jumps. */
+@media (max-height: 740px) {
+  :root {
+    --g-name: 1.25rem;
+    --g-opt-h: 2.6rem;
+    --g-why-font: 0.85rem;
+  }
+}
+
 #game {
   position: absolute;
   inset: 0;
@@ -832,12 +853,15 @@ body[data-detent='low'] .head .name {
 }
 
 #g-top {
-  padding: calc(0.6rem + env(safe-area-inset-top)) var(--gr) 0.4rem var(--gl);
+  height: var(--g-top-h);
+  overflow: hidden;
+  padding: calc(0.6rem + env(safe-area-inset-top)) var(--gr) 0 var(--gl);
 }
 
 #g-under {
   position: relative;
-  padding: 0.8rem var(--gr) calc(1rem + env(safe-area-inset-bottom)) var(--gl);
+  height: var(--g-under-h);
+  padding: 0.7rem var(--gr) calc(0.7rem + env(safe-area-inset-bottom)) var(--gl);
   background: var(--paper);
   border-radius: 1.25rem 1.25rem 0 0;
   box-shadow: 0 -1px 0 var(--rule), 0 -12px 32px rgb(26 35 48 / 0.08);
@@ -853,6 +877,7 @@ body[data-detent='low'] .head .name {
 }
 
 #game.full #g-top {
+  height: auto;
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -864,19 +889,13 @@ body.game #sheet {
   display: none;
 }
 
-/* The Role Distribution can lie on both sides of the body: after an answer
-   the Trainer may turn the figure, from the stage's top corner as on the atlas. */
-body.game #flip {
-  display: none;
-}
-
-body.game.g-roles #flip {
-  display: block;
-}
+/* The Role Distribution can lie on both sides of the body, so the figure can
+   be turned all through the Round — the button is always there, not only
+   after the answer, so it never pops in. */
 
 body.game #stage {
-  top: var(--g-top, 0px);
-  bottom: var(--g-under, 40%);
+  top: var(--g-top-h);
+  bottom: var(--g-under-h);
   transition: none;
 }
 
@@ -976,7 +995,7 @@ body.game .side path.live {
 
 .g-q {
   margin: 0;
-  padding: 0.5rem 0 0.2rem;
+  padding: 0.4rem 0 0;
   text-align: center;
   font-size: inherit;
   font-weight: inherit;
@@ -994,9 +1013,13 @@ body.game .side path.live {
 }
 
 .g-big {
-  display: block;
-  margin: 0.1rem 0 0;
-  font-size: clamp(1.4rem, 7vw, 1.8rem);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: calc(2 * var(--g-name) * 1.15);
+  margin: 0;
+  font-size: var(--g-name);
   line-height: 1.15;
   font-weight: 700;
   text-wrap: balance;
@@ -1004,25 +1027,35 @@ body.game .side path.live {
   overflow-wrap: anywhere;
 }
 
+/* One column, full width: the longest Muscle name (57 letters) fits two
+   lines even on a 320 px screen, which a half-width button cannot promise. */
 .g-opts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  grid-auto-rows: var(--g-opt-h);
+  gap: 0.4rem;
 }
 
 .g-opt {
-  min-height: 3.6rem;
-  padding: 0.4rem 0.6rem;
+  min-width: 0;
+  padding: 0.2rem 0.7rem;
   border: 1px solid var(--rule);
   border-radius: 12px;
   background: var(--paper);
   color: var(--ink);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.2;
-  text-align: center;
-  hyphens: auto;
-  overflow-wrap: anywhere;
+  text-align: left;
+  text-wrap: balance;
+}
+
+.g-opt[data-long] {
+  font-size: 0.8rem;
+}
+
+.g-big[data-long] {
+  /* Only the type steps down; the box keeps the height of two full lines. */
+  font-size: calc(var(--g-name) * 0.83);
 }
 
 .g-opt:active:not(:disabled) {
@@ -1041,8 +1074,9 @@ body.game .side path.live {
   color: #fff;
 }
 
-.g-opt:only-child {
-  grid-column: 1 / -1;
+
+.g-opt.dim {
+  opacity: 0.5;
 }
 
 .g-opt:disabled {
@@ -1050,8 +1084,6 @@ body.game .side path.live {
 }
 
 .g-verdict {
-  margin: 0.6rem 0 0.1rem;
-  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -1064,15 +1096,19 @@ body.game .side path.live {
 }
 
 .g-why {
-  margin: 0.6rem 0 0.1rem;
-  font-size: 0.95rem;
-  /* Room for three lines whatever the answer: the panel is the same height
-     for a right answer and a wrong one, so the map does not jump between them. */
-  min-height: calc(3 * 1.45 * 0.95rem);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  /* Two lines, always: the prompt before the answer, the verdict after it. */
+  height: var(--g-why-h);
+  margin: 0.5rem 0 0;
+  font-size: var(--g-why-font);
+  line-height: 1.35;
 }
 
-.g-why .g-verdict {
-  font-size: 1.05rem;
+.g-hint {
+  color: var(--dim);
 }
 
 /* Over the map's bottom-left corner, clear of the zoom buttons on the right. */
@@ -1103,6 +1139,13 @@ body.game .side path.live {
 .g-next {
   background: var(--ink);
   color: #fff;
+}
+
+/* Waiting for an answer: in its place already, so it does not pop in. */
+.g-next:disabled {
+  background: var(--rule);
+  color: var(--dim);
+  cursor: default;
 }
 
 .g-ghost {

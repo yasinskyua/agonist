@@ -880,7 +880,9 @@ body.game #stage {
   transition: none;
 }
 
-body:has(#game.full) #stage {
+/* Only while the Quiz is on: `#game` keeps its class when hidden, and the
+   reference opened from the summary needs its map. */
+body.game:has(#game.full) #stage {
   visibility: hidden;
 }
 

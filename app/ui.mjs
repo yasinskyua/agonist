@@ -600,11 +600,53 @@ export async function start() {
     el('status').textContent = query.value.trim() ? `${t('search.count')}: ${results.querySelectorAll('.row').length}` : '';
     searching();
   });
-  // Typing needs room above the keyboard: the sheet goes all the way up.
-  query.addEventListener('focus', () => {
+  // Typing needs room above the keyboard: the sheet goes all the way up —
+  // at the touch, before the field takes focus. Raised after focus, the field
+  // rises out of the view iOS has just scrolled to show it, and stays hidden
+  // until the keyboard goes.
+  const raiseForTyping = () => {
+    if (state.detent === 'high') return;
+    document.body.classList.add('instant');
     setDetent('high');
+    requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('instant')));
+  };
+  // On a touch, the tap is taken over: raised during the touch, the sheet
+  // would put another row under the lifting finger and the tap would open
+  // that. So the tap is cancelled, the sheet raised, and the field focused
+  // by hand — inside the touch, which still lets iOS open the keyboard.
+  let tapAt = null;
+  query.addEventListener('touchstart', (e) => {
+    tapAt = document.activeElement === query ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  query.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0];
+    if (!tapAt || Math.hypot(t.clientX - tapAt.x, t.clientY - tapAt.y) > 10) return; // a drag, not a tap
+    e.preventDefault();
+    raiseForTyping();
+    query.focus({ preventScroll: true });
+  });
+  query.addEventListener('mousedown', raiseForTyping);
+  query.addEventListener('focus', () => {
+    raiseForTyping();
     searching();
   });
+
+  /**
+   * The app is as tall as the space it has. With the keyboard up that is the
+   * visual viewport, not the window, so the tall sheet ends above the keys.
+   * iOS also scrolls the page to show a focused field; the app is one screen,
+   * so it is kept at the top.
+   */
+  const viewport = window.visualViewport;
+  const fit = () => {
+    document.documentElement.style.setProperty('--app-h', `${viewport.height}px`);
+    if (scrollY || viewport.offsetTop) scrollTo(0, 0);
+  };
+  if (viewport) {
+    viewport.addEventListener('resize', fit);
+    viewport.addEventListener('scroll', fit);
+    fit();
+  }
   query.addEventListener('blur', searching);
 
   /** Leave the search the way iOS does: empty, keyboard gone, sheet down. */

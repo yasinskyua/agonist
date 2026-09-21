@@ -2,7 +2,9 @@
 <html lang="uk">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- interactive-widget: on Android the keyboard shrinks the layout, so the
+         sheet ends above it. iOS ignores it; ui.mjs follows visualViewport. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="color-scheme" content="light" />
     <!-- The product name, not a translated string: it is the same in both
          languages, and it is what a bookmark and a home-screen icon carry.

@@ -20,9 +20,12 @@
   --stabilizer: #e9b300;
   --tap: 44px;
   --bar: 3.25rem;
+  /* The height left for the app: the screen, less the keyboard when it is up
+     (ui.mjs sets --app-h from visualViewport). */
+  --app: var(--app-h, 100dvh);
   --low: calc(6rem + env(safe-area-inset-bottom));
-  --mid: 56dvh;
-  --high: calc(100dvh - var(--bar) - env(safe-area-inset-top) - 0.5rem);
+  --mid: calc(var(--app) * 0.56);
+  --high: calc(var(--app) - var(--bar) - env(safe-area-inset-top) - 0.5rem);
   --sheet-h: var(--low);
 }
 
@@ -44,6 +47,13 @@ body[data-detent='high'] {
   box-sizing: border-box;
 }
 
+/* The app is one screen tall, measured by the space it really has: the
+   stage and the sheet are placed against the body, not the whole window,
+   so with the keyboard up they end above it. */
+body {
+  position: relative;
+}
+
 /* A pinch on the figure zooms the figure (its own touch-action is none); a
    pinch anywhere else still zooms the page, for anyone who needs larger
    text. Only double-tap zoom goes: it fired on quick taps of buttons. */
@@ -54,7 +64,7 @@ html {
 html,
 body {
   margin: 0;
-  height: 100dvh;
+  height: var(--app);
   overflow: hidden;
   background: var(--chalk);
   color: var(--ink);
@@ -265,6 +275,18 @@ body[data-screen='exercise'] .side path.live[fill] {
   gap: 0.5rem;
 }
 
+/* The search row and the card's first line stay put under the grip while the
+   list scrolls, instead of sliding under it half cut. */
+.find-row,
+.head {
+  position: sticky;
+  top: 1.5rem;
+  z-index: 1;
+  margin: 0 -1.25rem;
+  padding: 0.2rem 1.25rem 0.5rem;
+  background: var(--paper);
+}
+
 /* Cancel shows while the search is in use, as it does on iOS. */
 #cancel {
   display: none;
@@ -293,6 +315,14 @@ body.searching #cancel {
     no-repeat 0.95rem 50% / 1.15rem;
   font: inherit;
   color: var(--ink);
+  outline: none;
+}
+
+/* Focus drawn inside the field: an outline outside it is clipped by the
+   sheet and covered by the grip. */
+#q:focus {
+  border-color: var(--synergist);
+  box-shadow: inset 0 0 0 1px var(--synergist);
 }
 
 #results {
@@ -375,6 +405,11 @@ body.searching #cancel {
   background: var(--chalk);
 }
 
+/* Rows run edge to edge of the sheet; their focus ring goes inside them. */
+.row:focus-visible {
+  outline-offset: -3px;
+}
+
 /* ── The sheet: always there, at one of three heights ────────────────── */
 
 #sheet {
@@ -418,7 +453,9 @@ body[data-detent='low'] .card-body {
 
 /* While a finger holds the sheet it follows at once, not a beat behind. */
 body.dragging #sheet,
-body.dragging #stage {
+body.dragging #stage,
+body.instant #sheet,
+body.instant #stage {
   transition: none;
 }
 
@@ -456,6 +493,12 @@ body.dragging #stage {
 .head .name {
   flex: 1;
   padding-top: 0.35rem;
+}
+
+/* The name takes focus so a screen reader starts from it; it is not a
+   control, so it shows no ring. */
+.head .name:focus {
+  outline: none;
 }
 
 body[data-detent='low'] .head .name {

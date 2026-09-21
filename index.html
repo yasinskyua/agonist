@@ -10,6 +10,19 @@
          languages, and it is what a bookmark and a home-screen icon carry.
          The heading inside the app stays descriptive. -->
     <title>Agonist</title>
+    <!-- Start the requests now instead of when the module has been parsed and
+         reaches its own fetch() calls. Paths and the crossorigin flag must
+         match those calls, or the browser fetches everything twice. The
+         module's own imports are listed too, so they do not queue behind it. -->
+    <link rel="modulepreload" href="app/ui.mjs" />
+    <link rel="modulepreload" href="app/atlas.mjs" />
+    <link rel="modulepreload" href="app/i18n.mjs" />
+    <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
+    <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
+    <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
+    <link rel="preload" as="fetch" crossorigin href="assets/atlas/muscle-ids.json" />
+    <link rel="preload" as="fetch" crossorigin href="assets/atlas/front.svg" />
+    <link rel="preload" as="fetch" crossorigin href="assets/atlas/back.svg" />
     <link rel="stylesheet" href="app/app.css" />
     <!-- ui.mjs writes the colour rules here: the selection, or an Exercise's
          Muscles by Role. One selector per Muscle instead of a walk over paths. -->
@@ -17,7 +30,9 @@
   </head>
   <body>
     <header id="bar">
-      <h1 id="title"></h1>
+      <!-- Until the data arrives the bar says so, in the default language; the
+           app replaces it with its title on the first draw. -->
+      <h1 id="title">Завантаження…</h1>
       <button id="lang" type="button"></button>
     </header>
 
@@ -53,7 +68,15 @@
         document.body.classList.add('open');
         document.body.dataset.detent = 'high';
         card.className = 'failure';
-        card.textContent = error?.message ?? String(error);
+        document.getElementById('title').textContent = 'Agonist';
+        // The raw message is for the developer; the sentence above it is for
+        // the Trainer. This runs when the module itself may not have loaded,
+        // so it cannot use the dictionary: the default language only.
+        const next = document.createElement('p');
+        next.textContent = 'Не вдалося завантажити. Перезавантажте сторінку; якщо не допомогло — перевірте зв\'язок або напишіть розробнику.';
+        const raw = document.createElement('p');
+        raw.textContent = error?.message ?? String(error);
+        card.replaceChildren(next, raw);
       };
       start().catch(fail);
       // A failure after start — in a later screen — must not leave it half-drawn in silence.

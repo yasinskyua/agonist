@@ -77,6 +77,9 @@ export async function start() {
   /** The finger minimum. One source: the CSS that sizes the buttons too. */
   const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
 
+  /** Whether the pointer is a finger. A mouse is hurt by help it did not need. */
+  const coarsePointer = matchMedia('(pointer: coarse)');
+
   // Only the language is state. The screen lives in the hash, so a link to a
   // Muscle survives being sent to another Trainer, and GitHub Pages needs no
   // server configuration to serve it.
@@ -134,16 +137,27 @@ export async function start() {
    * Tap zones over the figure, recomputed on every resize: 44 px is screen
    * pixels, while a Muscle's box lives in viewBox units.
    *
-   * ponytail: a zone always outranks whatever it covers, so a big Muscle
-   * loses the patch a small neighbour's zone sits on. It stays reachable
-   * everywhere else, and the alternative — no zone — makes the small Muscle
-   * unreachable entirely. Revisit if a Trainer reports missing a big one.
+   * Only for a finger. A mouse points where it points: a zone wide enough for
+   * a thumb sits over the Muscles beside a thin one and takes their clicks, so
+   * on a mouse the path itself is the target and a 7 px Muscle is hit exactly.
+   *
+   * ponytail: a zone always outranks whatever it covers, so on a touch screen
+   * a big Muscle loses the patch a small neighbour's zone sits on. It stays
+   * reachable everywhere else, and the alternative — no zone — makes the small
+   * Muscle unreachable entirely.
    */
   function layTapZones(svg) {
+    const stale = svg.querySelectorAll('rect.tap');
+
+    if (!coarsePointer.matches) {
+      for (const zone of stale) zone.remove();
+      return;
+    }
+
     const scale = svg.getScreenCTM()?.a;
     if (!scale) return; // this view is hidden — we will measure when it shows
 
-    for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
+    for (const zone of stale) zone.remove();
 
     const min = minTapPx / scale;
     const small = [];
@@ -314,5 +328,8 @@ export async function start() {
   }
 
   addEventListener('hashchange', render);
+  // Plugging in a mouse, or picking the tablet up off its keyboard, changes
+  // what the tap targets should be.
+  coarsePointer.addEventListener('change', render);
   render();
 }

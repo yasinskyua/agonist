@@ -279,17 +279,28 @@ p.sub[translate='no'] { font-style: italic; }
 #page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 #page[data-screen='game'] #map { display: none; }
 
-/* Both sides in one layer, so one transform can move them together. */
+/* The map takes every gesture: a finger drags it or pinches it. Ui.mjs scrolls
+   the page by hand when the map is not zoomed, so it still feels like the page. */
+#map { touch-action: none; }
+
+/* Both sides in one layer, so one transform can move and zoom them together.
+   Steps (buttons, double tap, framing) glide; a finger moves the map at once. */
 .layer {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   height: 100%;
+  transform-origin: 0 0;
+}
+
+.layer.glide { transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .layer.glide { transition: none; }
 }
 
 .fig { min-width: 0; min-height: 0; }
 
-/* A finger dragging the map scrolls the page: the figure asks for no gestures. */
 .fig svg { display: block; width: 100%; height: 100%; }
 
 /* The figure, restyled from the atlas's own colours. */
@@ -333,6 +344,17 @@ p.sub[translate='no'] { font-style: italic; }
   font-weight: 600;
   white-space: nowrap;
 }
+
+.zoom {
+  position: absolute;
+  z-index: 1;
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.zoom .ic { width: var(--tap); height: var(--tap); }
 
 /* ── Back, where the thumb is ──────────────────────────────────────────── */
 

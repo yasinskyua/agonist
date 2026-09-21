@@ -27,6 +27,7 @@
     <link rel="modulepreload" href="app/route.mjs" />
     <link rel="modulepreload" href="app/screens.mjs" />
     <link rel="modulepreload" href="app/spy.mjs" />
+    <link rel="modulepreload" href="app/zoom.mjs" />
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
     <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
@@ -75,6 +76,12 @@
           </div>
           <!-- Shown while a row is lit: back to the whole picture. -->
           <button class="all" type="button" data-act="all" hidden></button>
+          <!-- «Whole body» shows only once the map is zoomed. -->
+          <div class="zoom">
+            <button class="ic" type="button" data-act="fit" hidden></button>
+            <button class="ic" type="button" data-act="zoom-out"></button>
+            <button class="ic" type="button" data-act="zoom-in"></button>
+          </div>
         </figure>
         <div id="list"></div>
       </main>

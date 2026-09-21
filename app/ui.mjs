@@ -13,9 +13,20 @@ import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, HOME, GAME } from './route.mjs';
 import { pageTopHtml, pageListHtml, paintRules, litRules } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
+import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
 
 const VIEWS = ['front', 'back'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Two taps this close are a double tap; the first one's Muscle waits to see. */
+const DOUBLE_TAP_MS = 300;
+const DOUBLE_TAP_ZOOM = 2.5;
+/** What a button step zooms by. */
+const STEP = 1.6;
+/** A trackpad pinch's wheel ticks that make the map grow by a factor of e. */
+const WHEEL_PER_E = 100;
+/** A finger that moved more than this has dragged: it did not tap. */
+const DRAG_SLOP = 6;
 
 /** The box covering all the given ones. A Muscle is several paths. */
 export function union(boxes) {
@@ -124,13 +135,6 @@ export async function start() {
     return hit && musclesOf(hit).find((m) => withExercises.has(m));
   }
 
-  map.addEventListener('click', (event) => {
-    // The map holds a button of its own («All muscles»): what lies under it is not tapped.
-    if (!event.target.closest('.fig')) return;
-    const id = muscleAt(event.clientX, event.clientY);
-    if (id) go(muscleHref(id));
-  });
-
   // A Muscle's box in viewBox units does not move with the layout, and the SVG
   // is fixed for the session, so each is measured once per figure.
   const boxes = new WeakMap();
@@ -150,8 +154,19 @@ export async function start() {
   }
 
   /**
-   * Tap zones over the figure, recomputed whenever its size changes: 44 px is
-   * screen pixels, while a Muscle's box lives in viewBox units.
+   * Screen pixels per viewBox unit, the map's zoom included. Read off the figure's
+   * box rather than `getScreenCTM`, which not every browser gives the CSS
+   * transform of an ancestor to.
+   */
+  function pixelsPerUnit(svg) {
+    const { width, height } = svg.getBoundingClientRect();
+    const { baseVal: box } = svg.viewBox;
+    return Math.min(width / box.width, height / box.height);
+  }
+
+  /**
+   * Tap zones over the figure, recomputed whenever its size or the zoom changes:
+   * 44 px is screen pixels, while a Muscle's box lives in viewBox units.
    *
    * Only for a finger. A mouse points where it points: a zone wide enough for
    * a thumb sits over the Muscles beside a thin one and takes their clicks, so
@@ -159,11 +174,12 @@ export async function start() {
    *
    * ponytail: a zone only catches taps that land on no Muscle (see `muscleAt`),
    * so a Muscle narrower than a finger, lying between bigger ones, is hit only
-   * by aiming at it. Zooming the map (ticket 03) is what makes it easy.
+   * by aiming at it. Zooming the map is what makes it easy: the zones shrink as
+   * the map grows, until only the Muscles still narrower than a finger have one.
    */
   function layTapZones(svg) {
     for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
-    const scale = coarsePointer.matches && svg.getScreenCTM()?.a;
+    const scale = coarsePointer.matches && pixelsPerUnit(svg);
     if (!scale) return;
 
     const min = minTapPx / scale;
@@ -191,14 +207,166 @@ export async function start() {
   function rezone() {
     clearTimeout(zoning);
     zoning = setTimeout(() => {
-      for (const svg of map.querySelectorAll('svg')) layTapZones(svg);
+      for (const svg of map.querySelectorAll('.fig svg')) layTapZones(svg);
     }, 150);
   }
 
-  new ResizeObserver(rezone).observe(map);
   // Plugging in a mouse, or picking the tablet up off its keyboard, changes
   // what the tap targets should be.
   coarsePointer.addEventListener('change', rezone);
+
+  // ── Zoom ────────────────────────────────────────────────────────────────
+
+  const layer = map.querySelector('.layer');
+  const fit = map.querySelector('[data-act="fit"]');
+  const zoomIn = map.querySelector('[data-act="zoom-in"]');
+  const zoomOut = map.querySelector('[data-act="zoom-out"]');
+  let zoom = IDENTITY;
+
+  for (const [button, name] of [[fit, 'fit'], [zoomIn, 'plus'], [zoomOut, 'minus']]) {
+    button.innerHTML = icon(name);
+  }
+
+  const mapSize = () => ({ width: map.clientWidth, height: map.clientHeight });
+  /** A point of the page in the map's own pixels. */
+  function local({ x, y }) {
+    const box = map.getBoundingClientRect();
+    return { x: x - box.left, y: y - box.top };
+  }
+
+  /** Draw a zoom. `glide` eases the step (buttons, double tap, framing); a finger moves the map at once. */
+  function show(next, glide = false) {
+    zoom = next;
+    layer.classList.toggle('glide', glide);
+    layer.style.transform = `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+    fit.hidden = !isZoomed(zoom);
+    // The button that was just pressed is gone; the keyboard's place goes to its neighbour.
+    if (fit.hidden && document.activeElement === fit) zoomIn.focus();
+    // The tap zones are measured in screen pixels, which zooming has just changed.
+    rezone();
+  }
+
+  const zoomBy = (factor) => {
+    const size = mapSize();
+    show(zoomAt(zoom, factor, { x: size.width / 2, y: size.height / 2 }, size), true);
+  };
+
+  // A step that glides is measured again where it ends up, not on the way.
+  layer.addEventListener('transitionend', rezone);
+
+  // The map's size changes with the phone's turning: keep the body inside it.
+  new ResizeObserver(() => {
+    const fitted = clampPan(zoom, mapSize());
+    if (fitted.x === zoom.x && fitted.y === zoom.y) return rezone();
+    show(fitted);
+  }).observe(map);
+
+  /**
+   * A Muscle page opens already on its Muscle, if it is small: on the side it is
+   * drawn (one drawn on both would span the whole map), measured on the whole
+   * body, which is how the map stands when a page opens.
+   */
+  function frameMuscle(id) {
+    const side = atlas.muscle(id).views[0];
+    const drawn = [...map.querySelectorAll(`[data-view="${side}"] path[data-muscle~="${id}"][fill]`)];
+    const mine = map.getBoundingClientRect();
+    if (!drawn.length || !mine.width) return;
+    const box = union(drawn.map((p) => p.getBoundingClientRect()));
+    show(frameOn({ ...box, x: box.x - mine.left, y: box.y - mine.top }, mapSize()), true);
+  }
+
+  // Fingers on the map: one drags a zoomed map — or, when it is not zoomed,
+  // scrolls the page under it — and two pinch. A drag is not a tap.
+  //
+  // ponytail: the page is scrolled by hand, so it has no fling after the finger
+  // lifts. Native scrolling needs `touch-action: pan-y` while not zoomed, and a
+  // pinch that starts with a slip upward then goes to the browser.
+  const fingers = new Map(); // pointer id → where it is on the page
+  let downAt = null;
+  let dragged = false;
+  let pinched = false; // two fingers were down: the one left is not the page's hand
+
+  /** A drag is not a tap: not this gesture's own, and not one still waiting for its double. */
+  function drag() {
+    dragged = true;
+    clearTimeout(pendingTap);
+    pendingTap = null;
+  }
+
+  map.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('button')) return;
+    fingers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (fingers.size === 1) {
+      downAt = { x: event.clientX, y: event.clientY };
+      dragged = false;
+      pinched = false;
+    }
+  });
+
+  addEventListener('pointermove', (event) => {
+    const was = fingers.get(event.pointerId);
+    if (!was) return;
+    const now = { x: event.clientX, y: event.clientY };
+    const pair = fingers.size === 2 ? [...fingers.values()].map(local) : null;
+    fingers.set(event.pointerId, now);
+
+    if (fingers.size > 1) {
+      drag();
+      pinched = true;
+      if (pair) show(pinch(zoom, pair, [...fingers.values()].map(local), mapSize()));
+      return;
+    }
+    if (Math.hypot(now.x - downAt.x, now.y - downAt.y) > DRAG_SLOP) drag();
+    if (isZoomed(zoom)) show(panBy(zoom, now.x - was.x, now.y - was.y, mapSize()));
+    // A mouse has a wheel for the page; only a finger or a pen is the page's hand.
+    else if (event.pointerType !== 'mouse' && !pinched) scrollBy(0, was.y - now.y);
+  });
+
+  const lift = (event) => fingers.delete(event.pointerId);
+  addEventListener('pointerup', lift);
+  addEventListener('pointercancel', lift);
+
+  // A trackpad pinch arrives as a wheel with the ctrl key held.
+  map.addEventListener(
+    'wheel',
+    (event) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      show(zoomAt(zoom, Math.exp(-event.deltaY / WHEEL_PER_E), local({ x: event.clientX, y: event.clientY }), mapSize()));
+    },
+    { passive: false },
+  );
+
+  // Safari on a Mac sends it as gesture events instead. Fingers on a screen are
+  // already handled above, so those are told apart by having fingers down.
+  let gestured = 1;
+  map.addEventListener('gesturestart', (event) => {
+    event.preventDefault();
+    gestured = 1;
+  });
+  map.addEventListener('gesturechange', (event) => {
+    event.preventDefault();
+    if (!fingers.size) show(zoomAt(zoom, event.scale / gestured, local({ x: event.clientX, y: event.clientY }), mapSize()));
+    gestured = event.scale;
+  });
+
+  /** The first tap of a double tap, waiting to see whether a second follows. */
+  let pendingTap = null;
+
+  map.addEventListener('click', (event) => {
+    // The map holds buttons of its own: what lies under them is not tapped.
+    if (!event.target.closest('.fig') || dragged) return;
+    if (pendingTap) {
+      clearTimeout(pendingTap);
+      pendingTap = null;
+      return show(isZoomed(zoom) ? IDENTITY : zoomAt(zoom, DOUBLE_TAP_ZOOM, local({ x: event.clientX, y: event.clientY }), mapSize()), true);
+    }
+    const id = muscleAt(event.clientX, event.clientY);
+    pendingTap = setTimeout(() => {
+      pendingTap = null;
+      if (id) go(muscleHref(id));
+    }, DOUBLE_TAP_MS);
+  });
 
   // ── Steps ───────────────────────────────────────────────────────────────
 
@@ -273,7 +441,10 @@ export async function start() {
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
-    for (const svg of map.querySelectorAll('svg')) {
+    for (const [button, key] of [[fit, 'zoom.fit'], [zoomIn, 'zoom.in'], [zoomOut, 'zoom.out']]) {
+      button.setAttribute('aria-label', t(key));
+    }
+    for (const svg of map.querySelectorAll('.fig svg')) {
       svg.setAttribute('aria-label', `${t('map.label')}, ${t(`view.${svg.parentElement.dataset.view}`).toLowerCase()}`);
     }
 
@@ -301,6 +472,12 @@ export async function start() {
     makeRoom();
 
     if (fresh) {
+      // A step opens on the whole body — or, on a Muscle's page, glides onto the
+      // Muscle. A tap still waiting for its double is for the screen we leave.
+      clearTimeout(pendingTap);
+      pendingTap = null;
+      show(IDENTITY);
+      if (here.screen === 'muscle') frameMuscle(here.id);
       scrollTo(0, history.state?.scroll ?? 0);
       settled = scrollY;
       // The row that was pressed is gone with the old page; without this the
@@ -420,6 +597,9 @@ export async function start() {
     back: goBack,
     home: goHome,
     all: unlight,
+    fit: () => show(IDENTITY, true),
+    'zoom-in': () => zoomBy(STEP),
+    'zoom-out': () => zoomBy(1 / STEP),
     play: () => go(GAME),
     clear: clearSearch,
     lang() {

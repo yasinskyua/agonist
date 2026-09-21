@@ -59,6 +59,11 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
       problems.push(`Вправа "${id}" не має жодного М'яза`);
     }
 
+    // Each interface language names the exercise its own way, so a missing
+    // name is a blank line on one of the two screens.
+    if (!exercise.uk?.trim()) problems.push(`Вправа "${id}" не має української назви`);
+    if (!exercise.en?.trim()) problems.push(`Вправа "${id}" не має англійської назви`);
+
     const agonists = pairs.filter(([, role]) => role === 'agonist');
     if (agonists.length !== 1) {
       problems.push(
@@ -119,7 +124,6 @@ function known(table, id, what) {
 }
 
 const byUk = (a, b) => a.uk.localeCompare(b.uk, 'uk');
-const byEn = (a, b) => a.en.localeCompare(b.en, 'en');
 const roleOrder = (role) => ROLES.indexOf(role);
 
 export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
@@ -158,8 +162,8 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
     /** Усі М'язові групи, за українською назвою. */
     groups: () => Object.entries(groups).map(([id, group]) => ({ id, ...group })).sort(byUk),
 
-    /** Усі Вправи, за англійською назвою. */
-    exercises: () => Object.keys(exercises).map(exerciseView).sort(byEn),
+    /** All exercises, by Ukrainian name: the Trainer's working language. */
+    exercises: () => Object.keys(exercises).map(exerciseView).sort(byUk),
 
     muscle: (id) => (muscles[id] ? muscleView(id) : undefined),
     exercise: (id) => (exercises[id] ? exerciseView(id) : undefined),
@@ -180,7 +184,7 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
       known(muscles, id, "М'яз");
       return (exercisesByMuscle.get(id) ?? [])
         .map(({ exercise, role }) => ({ exercise: exerciseView(exercise), role }))
-        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role) || byEn(a.exercise, b.exercise));
+        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role) || byUk(a.exercise, b.exercise));
     },
 
     /** М'язи М'язової групи. Належність бере атлас. */
@@ -197,7 +201,7 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
           (exercisesByMuscle.get(muscle) ?? []).map((e) => e.exercise),
         ),
       );
-      return [...seen].map(exerciseView).sort(byEn);
+      return [...seen].map(exerciseView).sort(byUk);
     },
 
     /**
@@ -218,7 +222,7 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
         .sort(
           (a, b) =>
             roleOrder(a.role) - roleOrder(b.role) ||
-            byEn(a.exercise, b.exercise) ||
+            byUk(a.exercise, b.exercise) ||
             byUk(a.muscle, b.muscle),
         ),
 
@@ -229,7 +233,7 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
       return Object.keys(exercises)
         .filter((other) => other !== id && agonistOf(other) === agonist)
         .map(exerciseView)
-        .sort(byEn);
+        .sort(byUk);
     },
   };
 }

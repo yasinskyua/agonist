@@ -34,6 +34,6 @@ for (const role of ROLES) {
 
   console.log(`## ${ROLE_UK[role]} (${block.length})\n`);
   for (const { exercise, muscle, note } of block) {
-    console.log(`- **${exercise.en}** — ${muscle.uk} \`${muscle.id}\`  \n  ${note}\n`);
+    console.log(`- **${exercise.uk}** (${exercise.en}) — ${muscle.uk} \`${muscle.id}\`  \n  ${note}\n`);
   }
 }

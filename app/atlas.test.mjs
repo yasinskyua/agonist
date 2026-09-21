@@ -188,6 +188,23 @@ test("латинська назва порожня там, де М'яз — фу
   assert.equal(atlas.muscle('pectoralis_major').la, 'Pectoralis major');
 });
 
+test('every exercise carries a Ukrainian and an English name', () => {
+  // The interface names an exercise in its own language: a Ukrainian trainer
+  // says «Жим штанги лежачи», an English one says Barbell Bench Press.
+  for (const exercise of atlas.exercises()) {
+    assert.match(exercise.uk ?? '', /\S/, `${exercise.id}: no Ukrainian name`);
+    assert.match(exercise.en ?? '', /\S/, `${exercise.id}: no English name`);
+  }
+});
+
+test('an exercise without a Ukrainian name is an error, not a blank on screen', () => {
+  const { uk, ...nameless } = content.exercises['bench-press'];
+  const error = contentError({ exercises: { ...content.exercises, 'bench-press': nameless } });
+
+  assert.match(error.message, /bench-press/);
+  assert.match(error.message, /українськ/);
+});
+
 test('two exercises with the same full Role set — an error (ADR-0005)', () => {
   const twin = { ...content.exercises['bench-press'], en: 'Bench Press Twin' };
   const error = contentError({ exercises: { ...content.exercises, twin } });

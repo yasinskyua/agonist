@@ -204,7 +204,7 @@ export async function start() {
     const muscle = atlas.muscle(selected);
     const byRole = new Map(ROLES.map((role) => [role, []]));
     for (const { exercise, role } of atlas.muscleExercises(muscle.id)) {
-      byRole.get(role).push(exercise.en);
+      byRole.get(role).push(exercise[state.lang]);
     }
 
     panel.hidden = false;

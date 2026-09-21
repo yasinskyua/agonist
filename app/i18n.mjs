@@ -18,6 +18,8 @@ const STRINGS = {
   'back': { uk: 'Назад', en: 'Back' },
   'close': { uk: 'Закрити', en: 'Close' },
   'zoom.reset': { uk: 'Скинути масштаб', en: 'Reset zoom' },
+  'zoom.in': { uk: 'Збільшити', en: 'Zoom in' },
+  'zoom.out': { uk: 'Зменшити', en: 'Zoom out' },
   'sheet.grip': { uk: 'Змінити висоту шторки', en: 'Resize the sheet' },
   'search.cancel': { uk: 'Скасувати', en: 'Cancel' },
   'search.count': { uk: 'Знайдено', en: 'Found' },

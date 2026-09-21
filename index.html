@@ -48,7 +48,11 @@
       <div id="sides"></div>
       <p id="hint"><strong id="hint-tap"></strong><span id="hint-legend"></span></p>
       <button id="flip" type="button" class="pill"></button>
-      <button id="fit" type="button" class="pill" data-act="fit"></button>
+      <div id="zoom">
+        <button id="fit" type="button" class="pill" data-act="fit"></button>
+        <button id="zoom-out" type="button" class="pill" data-act="zoom" data-step="-1">−</button>
+        <button id="zoom-in" type="button" class="pill" data-act="zoom" data-step="1">+</button>
+      </div>
     </main>
 
     <!-- One sheet, always there, at one of three heights. On the map it holds

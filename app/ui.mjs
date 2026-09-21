@@ -155,6 +155,17 @@ export async function start() {
     document.body.classList.add('zoomed');
   }
 
+  /** One step of the buttons and keys: the same zoom as a pinch, about the middle of each figure. */
+  const STEP = 1.5;
+  function zoomBy(r) {
+    for (const host of sides.children) {
+      const svg = host.querySelector('svg');
+      const [x, y, w, h] = numbers(svg.getAttribute('viewBox'));
+      zoomTo(svg, [x, y, w, h], r, { x: x + w / 2, y: y + h / 2 }, 0, 0, svg.getScreenCTM().a);
+    }
+    rezone();
+  }
+
   function zoomable(svg) {
     const fingers = new Map();
     let from = null;
@@ -542,6 +553,8 @@ export async function start() {
       document.body.classList.remove('zoomed');
     }
     el('fit').textContent = t('zoom.reset');
+    el('zoom-in').setAttribute('aria-label', t('zoom.in'));
+    el('zoom-out').setAttribute('aria-label', t('zoom.out'));
     document.body.dataset.screen = here.screen;
 
     const views = sidesFor(here);
@@ -703,6 +716,11 @@ export async function start() {
     setDetent('low');
   }
   addEventListener('keydown', (e) => {
+    // "=" is the unshifted "+"; a modified key is the browser's own page zoom.
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.target.closest?.('input, textarea')) {
+      if (e.key === '+' || e.key === '=') return zoomBy(STEP);
+      if (e.key === '-' || e.key === '−' || e.key === '_') return zoomBy(1 / STEP);
+    }
     if (e.key !== 'Escape') return;
     if (document.body.classList.contains('searching')) cancelSearch();
     else if (document.body.classList.contains('open')) close();
@@ -781,6 +799,7 @@ export async function start() {
     if (target.dataset.act === 'grip') return setDetent(DETENTS[(DETENTS.indexOf(state.detent) + 1) % DETENTS.length]);
     if (target.dataset.act === 'close') return close();
     if (target.dataset.act === 'cancel') return cancelSearch();
+    if (target.dataset.act === 'zoom') return zoomBy(STEP ** Number(target.dataset.step));
     if (target.dataset.act === 'fit') {
       zoomed = false;
       document.body.classList.remove('zoomed');

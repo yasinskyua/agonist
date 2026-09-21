@@ -118,12 +118,26 @@ function check({ muscles, groups, exercises, atlasMuscles }) {
  */
 /** Запис або гучна помилка: тихо порожня відповідь ховає одруківку. */
 function known(table, id, what) {
-  const entry = table[id];
-  if (!entry) throw new Error(`${what} "${id}" не існує`);
-  return entry;
+  if (!Object.hasOwn(table, id)) throw new Error(`${what} "${id}" не існує`);
+  return table[id];
 }
 
 const byUk = (a, b) => a.uk.localeCompare(b.uk, 'uk');
+
+/**
+ * Fold away what a phone keyboard varies between two spellings of one word:
+ * case, the apostrophe's shape or its absence («м'яз», «м’яз», «мяз»), and
+ * marks it drops (ї typed as і, й as и, ґ as г).
+ */
+const fold = (text) =>
+  (text ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/['’ʼ`]/g, '')
+    .replace(/ґ/g, 'г')
+    .replace(/\s+/g, ' ')
+    .trim();
 const roleOrder = (role) => ROLES.indexOf(role);
 
 export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
@@ -165,8 +179,10 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
     /** All exercises, by Ukrainian name: the Trainer's working language. */
     exercises: () => Object.keys(exercises).map(exerciseView).sort(byUk),
 
-    muscle: (id) => (muscles[id] ? muscleView(id) : undefined),
-    exercise: (id) => (exercises[id] ? exerciseView(id) : undefined),
+    // Own keys only: an id from the address bar such as «constructor» must not
+    // pass for a Muscle just because every object has one.
+    muscle: (id) => (Object.hasOwn(muscles, id) ? muscleView(id) : undefined),
+    exercise: (id) => (Object.hasOwn(exercises, id) ? exerciseView(id) : undefined),
 
     // Невідомий ідентифікатор у запиті — помилка коду, а не порожня відповідь.
     // Порожній список має означати рівно одне: «такого нема», і це правда
@@ -225,6 +241,33 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
             byUk(a.exercise, b.exercise) ||
             byUk(a.muscle, b.muscle),
         ),
+
+    /**
+     * One field for everything: Muscles by Ukrainian or Latin name, Muscle
+     * groups by name — each opening into its Muscles, the way a Trainer goes
+     * from «back» down to the rhomboids — and Exercises in either language.
+     */
+    search(query) {
+      const q = fold(query);
+      if (!q) return { groups: [], muscles: [], exercises: [] };
+      const hit = (...names) => names.some((name) => fold(name).includes(q));
+
+      return {
+        groups: Object.entries(groups)
+          .filter(([, group]) => hit(group.uk, group.en))
+          .map(([id, group]) => ({ id, ...group, muscles: groupMembers(id).map(muscleView).sort(byUk) }))
+          .filter((group) => group.muscles.length)
+          .sort(byUk),
+        muscles: Object.keys(muscles)
+          .filter((id) => hit(muscles[id].uk, muscles[id].la))
+          .map(muscleView)
+          .sort(byUk),
+        exercises: Object.keys(exercises)
+          .filter((id) => hit(exercises[id].uk, exercises[id].en))
+          .map(exerciseView)
+          .sort(byUk),
+      };
+    },
 
     /** Пов'язані вправи — ті, що поділяють Агоніста. Сама Вправа не рахується. */
     relatedExercises(id) {

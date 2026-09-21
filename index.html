@@ -9,41 +9,44 @@
          The heading inside the app stays descriptive. -->
     <title>Agonist</title>
     <link rel="stylesheet" href="app/app.css" />
-    <!-- ui.mjs writes the highlight rule here: one selector instead of a
-         walk over paths. -->
-    <style id="highlight"></style>
+    <!-- ui.mjs writes the colour rules here: the selection, or an Exercise's
+         Muscles by Role. One selector per Muscle instead of a walk over paths. -->
+    <style id="paint"></style>
   </head>
   <body>
-    <header>
+    <header id="bar">
       <h1 id="title"></h1>
-      <button id="credits-link" type="button" class="quiet"></button>
       <button id="lang" type="button"></button>
     </header>
 
-    <main id="map"></main>
+    <main id="stage">
+      <div id="sides"></div>
+      <p id="hint"><strong id="hint-tap"></strong><span id="hint-legend"></span></p>
+      <button id="flip" type="button" class="pill"></button>
+    </main>
 
-    <p id="hint"></p>
+    <div id="find">
+      <div id="results" aria-live="polite"></div>
+      <input id="q" type="search" autocomplete="off" enterkeyhint="search" />
+    </div>
 
-    <section id="panel" aria-live="polite" hidden></section>
-
-    <section id="credits" hidden></section>
-
-    <nav id="views">
-      <button id="view-front" type="button"></button>
-      <button id="view-back" type="button"></button>
-    </nav>
+    <section id="sheet" aria-live="polite"></section>
 
     <script type="module">
       import { start } from './app/ui.mjs';
 
       // A typo in a Muscle id must break loudly. Without this the promise
       // rejects into the console and the Trainer just gets a blank figure.
-      start().catch((error) => {
-        const panel = document.getElementById('panel');
-        panel.hidden = false;
-        panel.className = 'failure';
-        panel.textContent = error.message;
-      });
+      const fail = (error) => {
+        const sheet = document.getElementById('sheet');
+        document.body.classList.add('open');
+        sheet.className = 'failure';
+        sheet.textContent = error?.message ?? String(error);
+      };
+      start().catch(fail);
+      // A failure after start — in a later screen — must not leave it half-drawn in silence.
+      addEventListener('error', (event) => fail(event.error ?? event.message));
+      addEventListener('unhandledrejection', (event) => fail(event.reason));
     </script>
   </body>
 </html>

@@ -247,3 +247,54 @@ test('the review queue is a flat list with Role and reason, agonists first', () 
     assert.ok(note.length > 0);
   }
 });
+
+// ── Search ───────────────────────────────────────────────────────────────
+// A trainer types on a phone between sets: no capitals, the apostrophe comes
+// out in whatever shape the keyboard gives or not at all, «ї» comes out as «і».
+
+const ids = (list) => list.map((x) => x.id);
+
+test('search finds a muscle by its Ukrainian name', () => {
+  assert.ok(ids(atlas.search('великий грудний').muscles).includes('pectoralis_major'));
+});
+
+test('search finds a muscle by its Latin name', () => {
+  assert.ok(ids(atlas.search('latissimus').muscles).includes('latissimus_dorsi_teres_major'));
+});
+
+test('search finds an exercise by its English and by its Ukrainian name', () => {
+  assert.ok(ids(atlas.search('bench press').exercises).includes('bench-press'));
+  assert.ok(ids(atlas.search('жим штанги лежачи').exercises).includes('bench-press'));
+});
+
+test('a muscle group found by name opens into its muscles', () => {
+  const back = atlas.search('спина').groups.find((g) => g.id === 'back');
+
+  assert.ok(back, 'group «Спина» not found');
+  assert.ok(ids(back.muscles).includes('rhomboids'));
+});
+
+test('search ignores case, apostrophe shape and a missing apostrophe', () => {
+  for (const query of ['М’ЯЗИ ЗАДНЬОЇ', "м'язи задньої", 'мязи задньої']) {
+    assert.ok(ids(atlas.search(query).muscles).includes('hamstrings'), query);
+  }
+});
+
+test('search ignores diacritics a phone keyboard drops: ї typed as і, й as и', () => {
+  assert.ok(ids(atlas.search('мязи задньоі').muscles).includes('hamstrings'));
+  assert.ok(ids(atlas.search('прямии мяз живота').muscles).includes('rectus_abdominis'));
+});
+
+test('an empty query finds nothing rather than everything', () => {
+  assert.deepEqual(atlas.search('   '), { groups: [], muscles: [], exercises: [] });
+});
+
+test('an id that names a built-in object property is not a muscle or an exercise', () => {
+  // Ids come out of the address bar. `muscles[id]` alone would take
+  // «constructor» or «__proto__» for real entries and crash the screen.
+  for (const id of ['constructor', '__proto__', 'toString', 'hasOwnProperty']) {
+    assert.equal(atlas.muscle(id), undefined, id);
+    assert.equal(atlas.exercise(id), undefined, id);
+    assert.throws(() => atlas.muscleExercises(id), new RegExp(id));
+  }
+});

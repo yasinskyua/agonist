@@ -8,6 +8,8 @@
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { LANGS, translator, otherLang, loadLang, saveLang } from './i18n.mjs';
+import { createQuiz } from './quiz.mjs';
+import { pickerHtml, roundHtml, summaryHtml, announce } from './quiz-view.mjs';
 
 const VIEWS = ['front', 'back'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -89,6 +91,14 @@ export async function start() {
   const state = { lang: loadLang(storage), detent: 'low' };
   const DETENTS = ['low', 'mid', 'high'];
 
+  // The Quiz lives in the page's memory only: a reload on its address opens the
+  // Mode picker, and an interrupted Round costs nothing but the Round. `rev`
+  // counts its changes, so the screen redraws when the state moved and the
+  // address did not.
+  const quiz = createQuiz({ atlas });
+  const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, timer: 0, focused: '' };
+  const answered = () => play.step === 'round' && play.round.result;
+
   // ── Routes ──────────────────────────────────────────────────────────────
 
   /** The screen the address bar asks for. Anything unknown falls back to the map. */
@@ -97,6 +107,7 @@ export async function start() {
     // An id out of a URL is untrusted: a stale link must show the map, not throw.
     if (first === 'muscle' && atlas.muscle(second)) return { screen: 'muscle', id: second };
     if (first === 'exercise' && atlas.exercise(second)) return { screen: 'exercise', id: second };
+    if (first === 'game') return { screen: 'game' };
     // Links from before the sheet: #/front/pectoralis_major.
     if (VIEWS.includes(first) && atlas.muscle(second)) return { screen: 'muscle', id: second };
     return { screen: 'map', view: VIEWS.includes(first) ? first : VIEWS[0] };
@@ -117,6 +128,7 @@ export async function start() {
   /** The sides a screen shows: a Muscle on every side that draws it. */
   function sidesFor(here) {
     if (here.screen === 'map') return [here.view];
+    if (here.screen === 'game') return [play.view];
     if (here.screen === 'muscle') return VIEWS.filter((v) => atlas.muscle(here.id).views.includes(v));
     const drawn = atlas.exerciseMuscles(here.id).flatMap(({ muscle }) => muscle.views);
     return VIEWS.filter((v) => drawn.includes(v));
@@ -126,6 +138,8 @@ export async function start() {
   function focusOf(here) {
     if (here.screen === 'muscle') return [here.id];
     if (here.screen === 'exercise') return atlas.exerciseMuscles(here.id).map(({ muscle }) => muscle.id);
+    // In the Quiz the figure is framed on the answer once there is one.
+    if (here.screen === 'game' && answered()) return atlas.exerciseMuscles(play.round.current.exercise).map(({ muscle }) => muscle.id);
     return [];
   }
 
@@ -254,6 +268,7 @@ export async function start() {
     }
     svg.addEventListener('click', (event) => {
       if (performance.now() < quietUntil) return; // the end of a drag, not a tap
+      if (route().screen === 'game') return; // a tap in the Quiz is not a way into the reference
       const path = event.target.closest?.('[data-muscle]');
       const id = path && musclesOf(path).find((m) => withExercises.has(m));
       if (id) go(`#/muscle/${id}`);
@@ -351,7 +366,7 @@ export async function start() {
       box: ids.length ? boxOn(host.querySelector('svg'), ids) : null,
     }));
     for (const { svg, aspect, box } of hosts) {
-      if (here.screen === 'exercise') frame(svg, box, aspect, 1.25, 420);
+      if (here.screen === 'exercise' || here.screen === 'game') frame(svg, box, aspect, 1.25, 420);
       else frame(svg, box, aspect, two ? 2.6 : 3.2, two ? 380 : 320);
     }
   }
@@ -375,7 +390,15 @@ export async function start() {
     sheet.style.setProperty('--stuck-h', `${stuck?.offsetHeight ?? 0}px`);
   }
 
+  /** The map takes the room the Quiz's top and bottom leave it. Measured, not guessed: they wrap with the words. */
+  function fitStage() {
+    if (route().screen !== 'game') return;
+    document.body.style.setProperty('--g-top', `${el('g-top').offsetHeight}px`);
+    document.body.style.setProperty('--g-under', `${el('g-under').offsetHeight}px`);
+  }
+
   function settle() {
+    fitStage();
     reframe();
     rezone();
     padScroll();
@@ -393,6 +416,8 @@ export async function start() {
   function paintFor(here) {
     const rule = (id, colour) => `#sides [data-muscle~="${id}"][fill] { fill: var(--${colour}); }`;
     if (here.screen === 'muscle') return rule(here.id, 'agonist');
+    // The Quiz shows the answer the way the Exercise page does: the whole Role Distribution.
+    if (here.screen === 'game') return answered() ? paintFor({ screen: 'exercise', id: play.round.current.exercise }) : '';
     if (here.screen !== 'exercise') return '';
     const byRole = atlas.exerciseMuscles(here.id);
     return [...ROLES]
@@ -518,16 +543,18 @@ export async function start() {
     // Going back fires both popstate and hashchange; one screen, one drawing,
     // or a screen reader reads the sheet out twice.
     const depth = history.state?.depth ?? 0;
-    const signature = `${location.hash}|${state.lang}|${depth}`;
+    const here = route();
+    const playing = here.screen === 'game';
+    const signature = `${location.hash}|${state.lang}|${depth}|${playing ? play.rev : ''}`;
     if (signature === drawn) return;
     drawn = signature;
 
     const t = translator(state.lang);
-    const here = route();
-    const open = here.screen !== 'map';
+    const open = here.screen === 'muscle' || here.screen === 'exercise';
 
     document.documentElement.lang = state.lang;
     el('title').textContent = t('app.title');
+    el('play').textContent = `▶ ${t('game.enter')}`;
     el('lang').textContent = t('lang.other');
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
@@ -536,27 +563,32 @@ export async function start() {
     el('hint-legend').textContent = t('map.legend');
     query.placeholder = t('search.placeholder');
     query.setAttribute('aria-label', t('search.label'));
-    if (!open) el('flip').textContent = t(`view.${VIEWS.find((v) => v !== here.view)}`);
+    if (here.screen === 'map') el('flip').textContent = t(`view.${VIEWS.find((v) => v !== here.view)}`);
     // Each step keeps the height its sheet was left at; a fresh one opens a
     // chosen Muscle halfway, keeps the height between two chosen ones, and
     // lowers the sheet back to the search on the map.
     const key = open ? `${here.screen}/${here.id}` : '';
-    if (key !== shown) {
+    if (!playing && key !== shown) {
       const wasOpen = shown !== '';
       setDetent(history.state?.detent ?? (open ? (wasOpen ? state.detent : 'mid') : 'low'));
     }
     document.body.classList.toggle('open', open);
     gripLabel();
     el('cancel').setAttribute('aria-label', t('search.cancel'));
-    if (location.hash !== zoomedAt) {
+    // Each question of the Quiz starts framed again, like a new screen.
+    const place = playing ? `${location.hash}|${play.rev}` : location.hash;
+    if (place !== zoomedAt) {
       zoomed = false;
-      zoomedAt = location.hash;
+      zoomedAt = place;
       document.body.classList.remove('zoomed');
     }
     el('fit').textContent = t('zoom.reset');
     el('zoom-in').setAttribute('aria-label', t('zoom.in'));
     el('zoom-out').setAttribute('aria-label', t('zoom.out'));
     document.body.dataset.screen = here.screen;
+    document.body.classList.toggle('game', playing);
+    document.body.classList.toggle('g-roles', playing && Boolean(answered()));
+    el('game').hidden = !playing;
 
     const views = sidesFor(here);
     sides.replaceChildren(
@@ -575,6 +607,13 @@ export async function start() {
       }),
     );
     paint.textContent = paintFor(here);
+
+    if (playing) {
+      drawGame(t);
+      requestAnimationFrame(settle);
+      return;
+    }
+    clearTimeout(play.timer);
 
     // A new Muscle or Exercise starts its sheet where this step was left — the
     // top for a fresh one, the bookmark on the way back; a language switch
@@ -603,6 +642,114 @@ export async function start() {
     shown = key;
     requestAnimationFrame(settle);
   }
+
+  // ── The Quiz ────────────────────────────────────────────────────────────
+
+  /** A right answer moves on by itself after a beat; a wrong one waits to be read. */
+  const RIGHT_PAUSE = 1100;
+
+  /** Say something to a screen reader. The region is emptied between questions, or the same words twice would be silent. */
+  const say = (words) => (el('g-say').textContent = words);
+
+  function drawGame(t) {
+    const { step, round } = play;
+    const layer = el('game');
+    layer.classList.toggle('full', step !== 'round');
+
+    if (step === 'modes') {
+      el('g-top').innerHTML = pickerHtml(t);
+      el('g-under').innerHTML = '';
+    } else if (step === 'round') {
+      const { top, under } = roundHtml(t, state.lang, atlas, round);
+      el('g-top').innerHTML = top;
+      el('g-under').innerHTML = under;
+    } else {
+      el('g-top').innerHTML = summaryHtml(t, state.lang, atlas, round);
+      el('g-under').innerHTML = '';
+    }
+
+    // A new question or screen starts from its heading, so a screen reader
+    // reads it out and Tab goes on from there; a wrong answer hands the focus
+    // to «Next», which is what the keyboard does next.
+    const place = `${step}|${round?.index}`;
+    if (place !== play.focused) {
+      play.focused = place;
+      layer.querySelector('h2')?.focus({ preventScroll: true });
+    } else if (answered() && !answered().right) {
+      layer.querySelector('[data-g="next"]')?.focus({ preventScroll: true });
+    }
+
+    clearTimeout(play.timer);
+    if (answered()?.right) play.timer = setTimeout(advance, RIGHT_PAUSE);
+  }
+
+  const redrawGame = () => {
+    play.rev++;
+    render();
+  };
+
+  function begin(mode) {
+    play.round = quiz.round(mode);
+    play.step = 'round';
+    play.view = VIEWS[0];
+    say('');
+    redrawGame();
+  }
+
+  function pick(muscle) {
+    if (play.step !== 'round' || play.round.result) return;
+    const result = play.round.answer(muscle);
+    // The figure turns to the side where the Agonist can be seen.
+    play.view = atlas.muscle(result.answer).views[0];
+    say(announce(translator(state.lang), atlas, result));
+    redrawGame();
+  }
+
+  function advance() {
+    clearTimeout(play.timer);
+    const { round } = play;
+    if (route().screen !== 'game' || play.step !== 'round' || !round.result) return;
+    if (round.finished) play.step = 'summary';
+    else {
+      round.next();
+      play.view = VIEWS[0];
+    }
+    say('');
+    redrawGame();
+  }
+
+  /** Leave the Quiz the way any screen is left: Back, or the map when there is no Back. */
+  function leaveGame() {
+    clearTimeout(play.timer);
+    if ((history.state?.depth ?? 0) > 0) return history.back();
+    history.replaceState(history.state, '', `#/${VIEWS[0]}`);
+    render();
+  }
+
+  el('play').addEventListener('click', () => {
+    play.step = 'modes';
+    play.round = null;
+    play.focused = '';
+    say('');
+    go('#/game');
+  });
+
+  // Rows in the summary are ordinary links: the atlas's own handler below opens them.
+  el('game').addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-g]');
+    if (!button) return;
+    const act = button.dataset.g;
+    if (act === 'close') leaveGame();
+    else if (act === 'start') begin(button.dataset.mode);
+    else if (act === 'again') begin(play.round.mode);
+    else if (act === 'modes') {
+      play.step = 'modes';
+      play.focused = '';
+      say('');
+      redrawGame();
+    } else if (act === 'pick') pick(button.dataset.id);
+    else if (act === 'next') advance();
+  });
 
   // ── Events ──────────────────────────────────────────────────────────────
 
@@ -724,6 +871,7 @@ export async function start() {
       if (e.key === '-' || e.key === '−' || e.key === '_') return zoomBy(1 / STEP);
     }
     if (e.key !== 'Escape') return;
+    if (route().screen === 'game') return leaveGame();
     if (document.body.classList.contains('searching')) cancelSearch();
     else if (document.body.classList.contains('open')) close();
   });

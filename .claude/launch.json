@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8777"],
       "port": 8777
+    },
+    {
+      "name": "game",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8788", "--bind", "0.0.0.0"],
+      "port": 8788
     }
   ]
 }

@@ -25,6 +25,8 @@
     <link rel="modulepreload" href="app/ui.mjs" />
     <link rel="modulepreload" href="app/atlas.mjs" />
     <link rel="modulepreload" href="app/i18n.mjs" />
+    <link rel="modulepreload" href="app/quiz.mjs" />
+    <link rel="modulepreload" href="app/quiz-view.mjs" />
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
     <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
@@ -41,6 +43,7 @@
       <!-- Until the data arrives the bar says so, in the default language; the
            app replaces it with its title on the first draw. -->
       <h1 id="title">Завантаження…</h1>
+      <button id="play" type="button" class="pill"></button>
       <button id="lang" type="button"></button>
     </header>
 
@@ -69,6 +72,14 @@
       </div>
       <div id="card"></div>
     </section>
+
+    <!-- The Quiz: a layer over the atlas while a Round is on. Its top and its
+         bottom are real boxes, and the map takes the room left between them. -->
+    <div id="game" hidden>
+      <div id="g-top"></div>
+      <div id="g-under"></div>
+      <p id="g-say" class="sr" role="status"></p>
+    </div>
 
     <script type="module">
       import { start } from './app/ui.mjs';

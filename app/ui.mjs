@@ -639,7 +639,15 @@ export async function start() {
    */
   const viewport = window.visualViewport;
   const fit = () => {
-    document.documentElement.style.setProperty('--app-h', `${viewport.height}px`);
+    const height = `${viewport.height}px`;
+    if (document.documentElement.style.getPropertyValue('--app-h') !== height) {
+      // The keyboard is not a gesture to animate. The sheet hangs from the
+      // bottom, which the keyboard moves at once; easing its height on top of
+      // that flung the sheet 300 px off the top and slid it back.
+      document.body.classList.add('instant');
+      document.documentElement.style.setProperty('--app-h', height);
+      requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('instant')));
+    }
     if (scrollY || viewport.offsetTop) scrollTo(0, 0);
   };
   if (viewport) {

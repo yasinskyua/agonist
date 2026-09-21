@@ -96,7 +96,7 @@ export async function start() {
   // counts its changes, so the screen redraws when the state moved and the
   // address did not.
   const quiz = createQuiz({ atlas });
-  const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, timer: 0, focused: '' };
+  const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, focused: '' };
   const answered = () => play.step === 'round' && play.round.result;
   const resetPlay = () => Object.assign(play, { step: 'modes', round: null, view: VIEWS[0], focused: '' });
 
@@ -619,7 +619,6 @@ export async function start() {
       requestAnimationFrame(settle);
       return;
     }
-    clearTimeout(play.timer);
     // Off to the atlas, the Round is over: Forward must not bring a stale one
     // back. A step into the reference keeps it, so Back lands on the summary.
     if (here.screen === 'map') resetPlay();
@@ -654,9 +653,6 @@ export async function start() {
 
   // ── The Quiz ────────────────────────────────────────────────────────────
 
-  /** A right answer moves on by itself after a beat; a wrong one waits to be read. */
-  const RIGHT_PAUSE = 1100;
-
   /** Say something to a screen reader. The region is emptied between questions, or the same words twice would be silent. */
   const say = (words) => (el('g-say').textContent = words);
 
@@ -678,18 +674,15 @@ export async function start() {
     }
 
     // A new question or screen starts from its heading, so a screen reader
-    // reads it out and Tab goes on from there; a wrong answer hands the focus
-    // to «Next», which is what the keyboard does next.
+    // reads it out and Tab goes on from there; an answer hands the focus to
+    // «Next», which is what the keyboard does next.
     const place = `${step}|${round?.index}`;
     if (place !== play.focused) {
       play.focused = place;
       layer.querySelector('h2')?.focus({ preventScroll: true });
-    } else if (answered() && !answered().right) {
+    } else if (answered()) {
       layer.querySelector('[data-g="next"]')?.focus({ preventScroll: true });
     }
-
-    clearTimeout(play.timer);
-    if (answered()?.right) play.timer = setTimeout(advance, RIGHT_PAUSE);
   }
 
   const redrawGame = () => {
@@ -715,7 +708,6 @@ export async function start() {
   }
 
   function advance() {
-    clearTimeout(play.timer);
     const { round } = play;
     if (route().screen !== 'game' || play.step !== 'round' || !round.result) return;
     if (round.finished) play.step = 'summary';
@@ -729,7 +721,6 @@ export async function start() {
 
   /** Leave the Quiz the way any screen is left: Back, or the map when there is no Back. */
   function leaveGame() {
-    clearTimeout(play.timer);
     if ((history.state?.depth ?? 0) > 0) return history.back();
     history.replaceState(history.state, '', `#/${VIEWS[0]}`);
     render();

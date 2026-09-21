@@ -25,7 +25,7 @@ export function explain(t, atlas, result) {
 
 /** What a screen reader is told once an answer is in. */
 export function announce(t, atlas, result) {
-  if (result.right) return t('game.right');
+  if (result.right) return `${t('game.right')}. ${explain(t, atlas, result)}`;
   return `${t('game.wrong')}. ${t('game.wrong.agonist')} ${atlas.muscle(result.answer).uk}. ${explain(t, atlas, result)}`;
 }
 
@@ -73,12 +73,13 @@ export function roundHtml(t, lang, atlas, round) {
         .join('')}</ul>`
     : '';
 
+  // Right or wrong, the same shape and the same room: a verdict, what the
+  // picked Muscle is in this Exercise, and «Next». Nothing moves on by itself —
+  // the Trainer reads the solution and goes on when ready.
   const verdict = !result
     ? ''
-    : result.right
-      ? `<p class="g-verdict ok">✓ ${t('game.right')}</p>`
-      : `<p class="g-why"><b class="g-verdict no">✗ ${t('game.wrong')}.</b> ${explain(t, atlas, result)}</p>
-         <button class="g-next" type="button" data-g="next">${round.finished ? t('game.finish') : t('game.next')}</button>`;
+    : `<p class="g-why"><b class="g-verdict ${result.right ? 'ok' : 'no'}">${result.right ? `✓ ${t('game.right')}` : `✗ ${t('game.wrong')}`}.</b> ${explain(t, atlas, result)}</p>
+       <button class="g-next" type="button" data-g="next">${round.finished ? t('game.finish') : t('game.next')}</button>`;
 
   return {
     top: `

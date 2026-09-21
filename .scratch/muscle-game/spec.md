@@ -53,8 +53,8 @@ Status: ready-for-agent
 8. As a Тренер, I want a progress bar that shows which questions I got right and wrong so far, so that I see how the Round is going.
 9. As a Тренер, I want a streak counter once I have two or more right in a row, so that a good run feels rewarding.
 10. As a Тренер, I want no question to repeat within one Round, so that ten questions mean ten different things.
-11. As a Тренер, I want a right answer to move on by itself after about a second, so that the pace stays quick when I know the material.
-12. As a Тренер, I want a wrong answer to wait for my «Далі», so that I have time to read why I was wrong.
+11. As a Тренер, I want every answer — right or wrong — to wait for my «Далі» and never move on by itself, so that I have time to read the solution even when I was right.
+12. As a Тренер, I want the screen to have the same size and layout after a right answer and after a wrong one, so that the map does not jump and I know where «Далі» is.
 13. As a Тренер, I want the right answer shown on the body map after every answer, so that I connect the name with the place.
 14. As a Тренер, I want one line of explanation after a mistake, so that I learn the reason, not just the answer.
 15. As a Тренер, I want the question and the answers in the interface language, so that the Quiz speaks the same language as the rest of the app.
@@ -159,7 +159,7 @@ Status: ready-for-agent
 - **Екран Гри** (вердикт прототипу): вхід — кнопка в шапці поруч із перемикачем мови; Партія — повноекранний шар над атласом з власною шапкою (прогрес, серія, закрити), великим питанням, мапою посередині й великими кнопками внизу. Шторка атласу й підказка на мапі на час Гри ховаються. Мапа — та сама, що в атласі (ті самі фігури, масштабування, тап-зони); під час Гри тап по ній — відповідь, а не перехід у довідник.
 - **Підсвічування** йде тим самим механізмом правил фарбування, що й екрани М'яза й Вправи. Ролі — кольорами Ролей атласу. Для Режиму 1 правильний і хибний М'язи мають власні кольори, які не збігаються з кольорами Ролей.
 - **Рядки інтерфейсу** — через наявний словник, обома мовами. Назви М'язів — українською, як і всюди в застосунку; назви Вправ — мовою інтерфейсу.
-- **Правильна відповідь** автоматично переходить далі приблизно через секунду; хибна чекає на «Далі».
+- **Після відповіді** — правильної чи хибної — екран однаковий за розміром і складом: вердикт, рядок «що цей М'яз у цій Вправі» і «Далі». Автопереходу немає: Тренер сам вирішує, коли йти далі (рішення після першої Партії на телефоні; спершу правильна відповідь переходила через секунду).
 
 ## Testing Decisions
 

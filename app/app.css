@@ -1066,6 +1066,9 @@ body.game .side path.live {
 .g-why {
   margin: 0.6rem 0 0.1rem;
   font-size: 0.95rem;
+  /* Room for three lines whatever the answer: the panel is the same height
+     for a right answer and a wrong one, so the map does not jump between them. */
+  min-height: calc(3 * 1.45 * 0.95rem);
 }
 
 .g-why .g-verdict {

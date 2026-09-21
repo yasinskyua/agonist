@@ -365,9 +365,9 @@ export async function start() {
   // ── Words ───────────────────────────────────────────────────────────────
 
   const exerciseRow = (e, small = '') =>
-    `<li><button class="row" type="button" data-exercise="${e.id}">${e[state.lang]}${small ? `<small>${small}</small>` : ''}</button></li>`;
+    `<li><a class="row" href="#/exercise/${e.id}" data-exercise="${e.id}">${e[state.lang]}${small ? `<small>${small}</small>` : ''}</a></li>`;
   const muscleRow = (m) =>
-    `<li><button class="row" type="button" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la">${m.la}</small>` : ''}</button></li>`;
+    `<li><a class="row" href="#/muscle/${m.id}" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la">${m.la}</small>` : ''}</a></li>`;
 
   /** The card's first line — back, the name, close — which the low sheet shows. */
   function head(t, name) {
@@ -734,13 +734,15 @@ export async function start() {
   // Low, the whole sheet is a handle: a tap on it (not on its buttons or the
   // search field) raises it halfway.
   sheet.addEventListener('click', (e) => {
-    if (state.detent === 'low' && !e.target.closest('button, input')) setDetent('mid');
+    if (state.detent === 'low' && !e.target.closest('a, button, input')) setDetent('mid');
   });
 
   // One listener for every row and button in the sheet and the results.
   document.addEventListener('click', (event) => {
     const target = event.target.closest?.('[data-muscle-id], [data-exercise], [data-act]');
     if (!target) return;
+    // Cmd/Ctrl/Shift-click on a row is the browser's own: a new tab or window.
+    if (target.matches('a') && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return;
     if (target.dataset.act === 'back') return history.back();
     // The grip steps through the heights for a thumb that taps rather than
     // drags, and for a keyboard, which cannot drag at all.
@@ -754,6 +756,7 @@ export async function start() {
     }
     // Leaving the search for a result: let the keyboard go. The query stays in
     // the step we leave, so Back returns to the same results.
+    event.preventDefault();
     query.blur();
     go(target.dataset.muscleId ? `#/muscle/${target.dataset.muscleId}` : `#/exercise/${target.dataset.exercise}`);
   });

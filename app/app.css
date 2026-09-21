@@ -372,7 +372,9 @@ body.searching #cancel {
   padding: 0.5rem 2rem 0.5rem 1rem;
   border: 0;
   background: none;
+  color: inherit;
   text-align: left;
+  text-decoration: none;
 }
 
 .row small {

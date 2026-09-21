@@ -6,7 +6,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Зона натискання ✕ не менша за оголошений мінімум (44 px) в обох вимірах
 - [ ] Візуальний розмір кружечка й позиція ✕ не змінилися

@@ -555,12 +555,20 @@ body[data-detent='low'] .head .name {
 }
 
 .icon[data-act='close'] {
+  position: relative;
   margin-right: -0.6rem;
   background: var(--chalk);
   width: 2.3rem;
   height: 2.3rem;
   margin-top: 0.2rem;
   font-size: 1rem;
+}
+
+/* The circle stays small; an invisible layer grows the hit area to --tap. */
+.icon[data-act='close']::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--tap) - 2.3rem) / -2);
 }
 
 .name {

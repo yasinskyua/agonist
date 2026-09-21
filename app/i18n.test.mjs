@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { LANGS, KEYS, translator, loadLang, saveLang } from './i18n.mjs';
+import { LANGS, KEYS, translator, exerciseCount, loadLang, saveLang } from './i18n.mjs';
 
 test('every string exists in every language and is not blank', () => {
   for (const lang of LANGS) {
@@ -60,4 +60,22 @@ test('blocked storage does not break the app', () => {
   };
   assert.equal(loadLang(blocked), 'uk');
   assert.doesNotThrow(() => saveLang(blocked, 'en'));
+});
+
+test('a count of Exercises declines the way each language does', () => {
+  const words = (...counts) => counts.map((n) => exerciseCount('uk', n));
+
+  assert.deepEqual(words(1, 2, 4, 5, 11, 12, 21, 22, 25), [
+    '1 вправа',
+    '2 вправи',
+    '4 вправи',
+    '5 вправ',
+    '11 вправ',
+    '12 вправ',
+    '21 вправа',
+    '22 вправи',
+    '25 вправ',
+  ]);
+  assert.equal(exerciseCount('en', 1), '1 exercise');
+  assert.equal(exerciseCount('en', 12), '12 exercises');
 });

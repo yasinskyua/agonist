@@ -2,13 +2,11 @@
 <html lang="uk">
   <head>
     <meta charset="utf-8" />
-    <!-- interactive-widget: on Android the keyboard shrinks the layout, so the
-         sheet ends above it. iOS ignores it; ui.mjs follows visualViewport. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
-    <!-- The browser bar takes the app's own background (--chalk in app.css), so
+    <!-- The browser bar takes the app's own background (--bg in app.css), so
          the bar and the page read as one surface. -->
-    <meta name="theme-color" content="#f2f4f6" />
+    <meta name="theme-color" content="#ffffff" />
     <!-- SVG for tabs (sharp at 16-32 px); a 180 px PNG for the iOS/Android home
          screen, which do not take SVG. Relative paths: the app lives under a
          subpath on Pages. -->
@@ -25,61 +23,57 @@
     <link rel="modulepreload" href="app/ui.mjs" />
     <link rel="modulepreload" href="app/atlas.mjs" />
     <link rel="modulepreload" href="app/i18n.mjs" />
-    <link rel="modulepreload" href="app/quiz.mjs" />
-    <link rel="modulepreload" href="app/quiz-view.mjs" />
+    <link rel="modulepreload" href="app/icons.mjs" />
+    <link rel="modulepreload" href="app/route.mjs" />
+    <link rel="modulepreload" href="app/screens.mjs" />
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
     <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/muscle-ids.json" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/front.svg" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/back.svg" />
+    <!-- The fonts are a nicety: they load without blocking the first paint
+         (print until loaded, then all) and swap in; until then, and if they
+         never arrive, the system fonts in app.css carry the page. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      media="print"
+      onload="this.media = 'all'"
+    />
     <link rel="stylesheet" href="app/app.css" />
-    <!-- ui.mjs writes the colour rules here: the selection, or an Exercise's
-         Muscles by Role. One selector per Muscle instead of a walk over paths. -->
+    <!-- ui.mjs writes the colour rules here: a Muscle's or an Exercise's Muscles
+         by Role. One selector per Muscle instead of a walk over paths. -->
     <style id="paint"></style>
   </head>
   <body>
-    <header id="bar">
-      <!-- Until the data arrives the bar says so, in the default language; the
-           app replaces it with its title on the first draw. -->
-      <h1 id="title">Завантаження…</h1>
-      <button id="play" type="button" class="pill"></button>
-      <button id="lang" type="button"></button>
-    </header>
+    <div id="app">
+      <header id="bar">
+        <button id="brand" type="button" data-act="home">Agonist</button>
+        <span class="bar-end">
+          <button id="play" type="button" data-act="play"></button>
+          <button id="lang" type="button" data-act="lang"></button>
+        </span>
+      </header>
 
-    <main id="stage">
-      <div id="sides"></div>
-      <p id="hint"><strong id="hint-tap"></strong><span id="hint-legend"></span></p>
-      <button id="flip" type="button" class="pill"></button>
-      <div id="zoom">
-        <button id="fit" type="button" class="pill" data-act="fit"></button>
-        <button id="zoom-out" type="button" class="pill" data-act="zoom" data-step="-1">−</button>
-        <button id="zoom-in" type="button" class="pill" data-act="zoom" data-step="1">+</button>
-      </div>
-    </main>
+      <main id="page" data-screen="home">
+        <!-- Until the data arrives the page says so, in the default language;
+             the app replaces it on the first draw. -->
+        <div id="top"><p class="loading">Завантаження…</p></div>
+        <!-- Both sides of the body, pinned under the top of the page while the
+             list below scrolls. -->
+        <figure id="map">
+          <div class="layer">
+            <div class="fig" data-view="front"></div>
+            <div class="fig" data-view="back"></div>
+          </div>
+        </figure>
+        <div id="list"></div>
+      </main>
 
-    <!-- One sheet, always there, at one of three heights. On the map it holds
-         the search and the index; with something chosen, its card. -->
-    <section id="sheet">
-      <button id="grip" class="grip" type="button" data-act="grip"></button>
-      <div id="find">
-        <div class="find-row">
-          <input id="q" name="q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" />
-          <button id="cancel" class="icon" type="button" data-act="cancel">✕</button>
-        </div>
-        <p id="status" class="sr" role="status"></p>
-        <div id="results"></div>
-      </div>
-      <div id="card"></div>
-    </section>
-
-    <!-- The Quiz: a layer over the atlas while a Round is on. Its top and its
-         bottom are real boxes, and the map takes the room left between them. -->
-    <div id="game" hidden>
-      <div id="g-top"></div>
-      <section id="g-more" hidden></section>
-      <div id="g-under"></div>
-      <p id="g-say" class="sr" role="status"></p>
+      <div id="bottom"></div>
     </div>
 
     <script type="module">
@@ -88,11 +82,6 @@
       // A typo in a Muscle id must break loudly. Without this the promise
       // rejects into the console and the Trainer just gets a blank figure.
       const fail = (error) => {
-        const card = document.getElementById('card');
-        document.body.classList.add('open');
-        document.body.dataset.detent = 'high';
-        card.className = 'failure';
-        document.getElementById('title').textContent = 'Agonist';
         // The raw message is for the developer; the sentence above it is for
         // the Trainer. This runs when the module itself may not have loaded,
         // so it cannot use the dictionary: the default language only.
@@ -100,7 +89,9 @@
         next.textContent = 'Не вдалося завантажити. Перезавантажте сторінку; якщо не допомогло — перевірте зв\'язок або напишіть розробнику.';
         const raw = document.createElement('p');
         raw.textContent = error?.message ?? String(error);
-        card.replaceChildren(next, raw);
+        const top = document.getElementById('top');
+        top.className = 'failure';
+        top.replaceChildren(next, raw);
       };
       start().catch(fail);
       // A failure after start — in a later screen — must not leave it half-drawn in silence.

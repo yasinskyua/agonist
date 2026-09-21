@@ -16,17 +16,10 @@ const STRINGS = {
   'lang.other': { uk: 'EN', en: 'УКР' },
   'lang.switch': { uk: 'Switch to English', en: 'Перемкнути на українську' },
   'back': { uk: 'Назад', en: 'Back' },
+  'home': { uk: 'На головну', en: 'Home' },
   'close': { uk: 'Закрити', en: 'Close' },
-  'zoom.reset': { uk: 'Скинути масштаб', en: 'Reset zoom' },
-  'zoom.in': { uk: 'Збільшити', en: 'Zoom in' },
-  'zoom.out': { uk: 'Зменшити', en: 'Zoom out' },
-  'sheet.grip': { uk: 'Змінити висоту шторки', en: 'Resize the sheet' },
-  'search.cancel': { uk: 'Скасувати', en: 'Cancel' },
+  'search.clear': { uk: 'Очистити пошук', en: 'Clear search' },
   'search.count': { uk: 'Знайдено', en: 'Found' },
-  'sheet.now': { uk: 'Зараз', en: 'Now' },
-  'detent.low': { uk: 'низька', en: 'low' },
-  'detent.mid': { uk: 'середня', en: 'half' },
-  'detent.high': { uk: 'висока', en: 'full' },
 
   'search.label': { uk: "Пошук м'язів, груп і вправ", en: 'Search muscles, groups and exercises' },
   'search.placeholder': { uk: 'Жим лежачи, біцепс…', en: 'Bench press, biceps…' },
@@ -60,6 +53,9 @@ const STRINGS = {
     en: 'Holds the joint from the opposite side',
   },
 
+  // The header's way into the Game (ADR-0007): the two grades of a Card.
+  'flash.enter': { uk: 'Знав / Не знав', en: 'Knew it / Didn\'t' },
+  'flash.soon': { uk: 'Картки «Знав / Не знав» скоро з’являться.', en: 'The «Knew it / Didn\'t» cards are coming soon.' },
   'game.enter': { uk: 'Гра', en: 'Game' },
   'game.pick.says': {
     uk: '10 питань. Помилки — у довідник.',
@@ -99,10 +95,11 @@ const STRINGS = {
   'game.again': { uk: 'Ще раз', en: 'Play again' },
   'game.modes': { uk: 'Інший Режим', en: 'Another mode' },
 
-  'muscle.plates': {
-    uk: "У скількох вправах цей м'яз у кожній ролі",
-    en: 'In how many exercises this muscle plays each role',
-  },
+  // «{n}» is the number: the noun after it declines by it (see `exerciseCount`).
+  'exercises.one': { uk: '{n} вправа', en: '{n} exercise' },
+  'exercises.few': { uk: '{n} вправи', en: '{n} exercises' },
+  'exercises.many': { uk: '{n} вправ', en: '{n} exercises' },
+  'exercises.other': { uk: '{n} вправи', en: '{n} exercises' },
   'muscle.none': { uk: "Вправ для цього м'яза поки немає.", en: 'No exercises for this muscle yet.' },
   'exercise.legend': { uk: 'Кольори ролей', en: 'Role colours' },
   'related.heading': { uk: "Пов'язані вправи", en: 'Related exercises' },
@@ -126,6 +123,14 @@ export function translator(lang) {
     if (!string) throw new Error(`no string "${key}" for language "${lang}"`);
     return string;
   };
+}
+
+/**
+ * «3 вправи», «12 вправ», «1 вправа»: the noun follows the number by the
+ * language's own plural rules, which Ukrainian has four of.
+ */
+export function exerciseCount(lang, n) {
+  return translator(lang)(`exercises.${new Intl.PluralRules(lang).select(n)}`).replace('{n}', n);
 }
 
 /** The language the switch button moves to. There are exactly two. */

@@ -101,13 +101,17 @@ test('a Muscle Group with no name in the content is an error, not an empty strin
 
 // ── Queries ──────────────────────────────────────────────────────────────────
 
-test("an Exercise's Muscles run Agonist → Synergists → Stabilizers", () => {
+test("an Exercise's Muscles run Agonist → Synergists → the three kinds of Stabilizer", () => {
   const roles = atlas.exerciseMuscles('bench-press').map((x) => x.role);
 
   assert.equal(roles[0], 'agonist');
   assert.equal(roles.filter((r) => r === 'agonist').length, 1);
   // Roles come in blocks, not mixed.
-  assert.deepEqual(roles, ['agonist', 'synergist', 'synergist', 'stabilizer']);
+  assert.deepEqual(roles, ['agonist', 'synergist', 'synergist', 'dynamic_stabilizer']);
+  assert.deepEqual(
+    [...new Set(atlas.exerciseMuscles('barbell-row').map((x) => x.role))],
+    ['agonist', 'synergist', 'dynamic_stabilizer', 'stabilizer', 'antagonist_stabilizer'],
+  );
   assert.equal(atlas.exerciseMuscles('bench-press')[0].muscle.id, 'pectoralis_major');
 });
 

@@ -387,7 +387,7 @@ export async function start() {
    * Colour rules, one selector per Muscle: `~=` because a neck path belongs to
    * two Muscles, `[fill]` to skip the outline twins (filling a detail stroke
    * would smear it) and the tap zones. `#sides` outranks the resting colours.
-   * An Exercise's Roles go stabilizer first, agonist last, so where two Roles
+   * An Exercise's Roles go lightest first, agonist last, so where two Roles
    * share a path the heavier one shows.
    */
   function paintFor(here) {

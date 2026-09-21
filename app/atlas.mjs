@@ -9,8 +9,11 @@
 //   import { createAtlas } from './atlas.mjs';
 //   const atlas = createAtlas({ muscles, groups, exercises, atlasMuscles });
 
-/** The Roles a Muscle plays in an Exercise, most important first — the order they are shown in. */
-export const ROLES = ['agonist', 'synergist', 'stabilizer'];
+/**
+ * The Roles a Muscle plays in an Exercise, most important first — the order they
+ * are shown in. The five are ExRx's categories (ADR-0006).
+ */
+export const ROLES = ['agonist', 'synergist', 'dynamic_stabilizer', 'stabilizer', 'antagonist_stabilizer'];
 
 /**
  * A content error. A class of its own because the reader is the content

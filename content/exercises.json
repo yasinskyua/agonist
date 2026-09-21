@@ -1,5 +1,5 @@
 {
-  "_": "Вправи й Розподіл Ролей — єдиний актив продукту. Назва — двома мовами: `uk` для українського інтерфейсу (усталена назва, яку український Тренер знайде в мережі), `en` для англійського. Ролі: agonist (рівно один на Вправу), synergist, stabilizer; порожній список Синергістів чи Стабілізаторів припустимий. Джерело Ролей — ExRx.net, звірено 21.09.2026; повні категорії ExRx і сторінки — у docs/research/exrx-roles.json. Зведення: Target — agonist, Synergists — synergist, Stabilizers, Dynamic Stabilizers і Antagonist Stabilizers — stabilizer. `notes` — пояснення для Тренера, чому М'яз має таку Роль саме в цій Вправі: ключ — М'яз цієї ж Вправи, значення — речення українською. Застосунок показує його під М'язом.",
+  "_": "Вправи й Розподіл Ролей — єдиний актив продукту. Назва — двома мовами: `uk` для українського інтерфейсу (усталена назва, яку український Тренер знайде в мережі), `en` для англійського. Ролі: agonist (рівно один на Вправу), synergist, dynamic_stabilizer, stabilizer, antagonist_stabilizer — п'ять категорій ExRx (ADR-0006); порожній список будь-якої, крім Агоніста, припустимий. Джерело Ролей — ExRx.net, звірено 21.09.2026; повні категорії ExRx і сторінки — у docs/research/exrx-roles.json. Відповідність: Target — agonist, Synergists — synergist, Dynamic Stabilizers — dynamic_stabilizer, Stabilizers — stabilizer, Antagonist Stabilizers — antagonist_stabilizer. `notes` — пояснення для Тренера, чому М'яз має таку Роль саме в цій Вправі: ключ — М'яз цієї ж Вправи, значення — речення українською. Застосунок показує його під М'язом.",
   "exercises": {
     "ab-wheel-rollout": {
       "uk": "Розкочування ролика для преса",
@@ -40,11 +40,11 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "barbell-curl": {
@@ -74,19 +74,18 @@
         "brachialis": "synergist",
         "brachioradialis": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "hamstrings": "stabilizer",
         "gluteus_maximus": "stabilizer",
         "hip_adductors": "stabilizer",
         "quadriceps": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
-        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти.",
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти."
       }
     },
     "barbell-shrug": {
@@ -106,7 +105,7 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "bulgarian-split-squat": {
@@ -117,8 +116,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "abductors": "stabilizer"
       },
@@ -141,7 +140,7 @@
         "wrist_flexors": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
-        "erector_spinae": "stabilizer"
+        "erector_spinae": "antagonist_stabilizer"
       },
       "notes": {
         "latissimus_dorsi_teres_major": "Руки зводяться згори вниз, тож найширший допомагає їх опускати."
@@ -183,7 +182,7 @@
         "obliques": "stabilizer",
         "quadratus_lumborum": "stabilizer",
         "abductors": "stabilizer",
-        "rectus_abdominis": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer"
       }
     },
     "cable-internal-rotation": {
@@ -209,8 +208,8 @@
         "hip_adductors": "synergist",
         "erector_spinae": "stabilizer",
         "quadriceps": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "hamstrings": "Задня поверхня стегна тут працює помітно менше, ніж у румунській тязі, а сідничний — так само."
@@ -261,7 +260,7 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "chin-up": {
@@ -278,11 +277,8 @@
         "trapezius_middle": "synergist",
         "pectoralis_major": "synergist",
         "pectoralis_minor": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer"
-      },
-      "notes": {
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer"
       }
     },
     "close-grip-bench-press": {
@@ -292,7 +288,7 @@
         "triceps_brachii": "agonist",
         "deltoid_anterior": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "crunch": {
@@ -312,14 +308,14 @@
         "hip_adductors": "synergist",
         "hamstrings": "synergist",
         "soleus": "synergist",
-        "gastrocnemius": "stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_middle": "stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
         "rhomboids": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "erector_spinae": "Тримає спину рівною без руху: тягу веде розгинання таза, тому розгиначі тут Стабілізатор, а не Агоніст."
@@ -332,7 +328,7 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "dumbbell-bench-press": {
@@ -342,7 +338,7 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "dumbbell-curl": {
@@ -405,16 +401,15 @@
         "brachialis": "synergist",
         "brachioradialis": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer",
         "obliques": "stabilizer",
         "hip_flexors": "stabilizer",
         "quadratus_lumborum": "stabilizer",
         "erector_spinae": "stabilizer"
       },
       "notes": {
-        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти.",
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти."
       }
     },
     "dumbbell-shoulder-press": {
@@ -429,7 +424,7 @@
         "trapezius_lower": "synergist",
         "serratus_anterior": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer"
       }
@@ -446,10 +441,10 @@
         "rhomboids": "synergist",
         "brachialis": "synergist",
         "brachioradialis": "synergist",
-        "biceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "farmers-walk": {
@@ -495,8 +490,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "deltoid_anterior": "stabilizer",
         "deltoid_medial_lateral": "stabilizer",
@@ -507,8 +502,8 @@
         "levator_scapulae": "stabilizer",
         "trapezius_lower": "stabilizer",
         "serratus_anterior": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "glute-bridge": {
@@ -517,11 +512,11 @@
       "muscles": {
         "gluteus_maximus": "agonist",
         "quadriceps": "synergist",
-        "hamstrings": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "abductors": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "hamstrings": "Що ближче стопи до таза, то менше працює задня поверхня стегна."
@@ -535,14 +530,14 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_upper": "stabilizer",
         "trapezius_middle": "stabilizer",
         "levator_scapulae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "good-morning": {
@@ -553,8 +548,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "erector_spinae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "hack-squat": {
@@ -565,8 +560,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer"
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer"
       }
     },
     "hammer-curl": {
@@ -592,7 +587,7 @@
         "abductors": "synergist",
         "hip_adductors": "synergist",
         "sartorius": "synergist",
-        "quadriceps": "stabilizer",
+        "quadriceps": "dynamic_stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer"
       },
@@ -622,10 +617,10 @@
       "muscles": {
         "gluteus_maximus": "agonist",
         "quadriceps": "synergist",
-        "hamstrings": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "incline-bench-press": {
@@ -635,7 +630,7 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer"
+        "biceps_brachii": "dynamic_stabilizer"
       }
     },
     "inverted-row": {
@@ -651,17 +646,16 @@
         "brachialis": "synergist",
         "brachioradialis": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "hamstrings": "stabilizer",
         "gluteus_maximus": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
-        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти.",
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти."
       }
     },
     "kettlebell-swing": {
@@ -673,7 +667,7 @@
         "hip_adductors": "synergist",
         "quadriceps": "synergist",
         "soleus": "synergist",
-        "gastrocnemius": "stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "latissimus_dorsi_teres_major": "stabilizer",
         "trapezius_middle": "stabilizer",
@@ -681,9 +675,9 @@
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
         "abductors": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer",
-        "wrist_flexors": "stabilizer"
+        "wrist_flexors": "stabilizer",
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "hamstrings": "За ЕМГ працює майже нарівні з сідничним.",
@@ -705,7 +699,7 @@
         "trapezius_lower": "synergist",
         "trapezius_middle": "synergist",
         "pectoralis_minor": "synergist",
-        "triceps_brachii": "stabilizer"
+        "triceps_brachii": "dynamic_stabilizer"
       }
     },
     "lateral-lunge": {
@@ -716,8 +710,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "abductors": "stabilizer",
         "quadratus_lumborum": "stabilizer",
@@ -750,8 +744,8 @@
         "gastrocnemius": "synergist",
         "sartorius": "synergist",
         "hip_adductors": "synergist",
-        "tibialis_anterior": "stabilizer",
-        "quadriceps": "stabilizer"
+        "tibialis_anterior": "antagonist_stabilizer",
+        "quadriceps": "antagonist_stabilizer"
       }
     },
     "leg-extension": {
@@ -775,8 +769,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer"
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer"
       }
     },
     "overhead-press": {
@@ -790,7 +784,7 @@
         "trapezius_middle": "synergist",
         "trapezius_lower": "synergist",
         "serratus_anterior": "synergist",
-        "biceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer"
       }
@@ -837,10 +831,10 @@
         "pectoralis_major": "stabilizer",
         "serratus_anterior": "stabilizer",
         "pectoralis_minor": "stabilizer",
-        "erector_spinae": "stabilizer",
-        "trapezius_middle": "stabilizer",
-        "trapezius_lower": "stabilizer",
-        "rhomboids": "stabilizer"
+        "erector_spinae": "antagonist_stabilizer",
+        "trapezius_middle": "antagonist_stabilizer",
+        "trapezius_lower": "antagonist_stabilizer",
+        "rhomboids": "antagonist_stabilizer"
       },
       "notes": {
         "rectus_abdominis": "Руху немає, м'язи працюють ізометрично. Агоніст — той, що несе головне навантаження: не дає тулубу прогнутися."
@@ -865,13 +859,13 @@
         "biceps_brachii": "synergist",
         "brachialis": "synergist",
         "brachioradialis": "synergist",
-        "gastrocnemius": "stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_middle": "stabilizer",
         "rhomboids": "stabilizer",
         "wrist_flexors": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "trapezius_upper": "Завершує тягу, піднімаючи плечі. У довіднику ExRx висяче взяття стоїть серед вправ на верхню трапецію, але рух веде розгинання таза."
@@ -905,7 +899,7 @@
         "trapezius_lower": "synergist",
         "trapezius_middle": "synergist",
         "pectoralis_minor": "synergist",
-        "triceps_brachii": "stabilizer"
+        "triceps_brachii": "dynamic_stabilizer"
       }
     },
     "push-press": {
@@ -923,14 +917,14 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
+        "biceps_brachii": "dynamic_stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
-        "biceps_brachii": "stabilizer",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
         "erector_spinae": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "quadriceps": "Ноги дають штанзі основний поштовх, а жим завершують плечі, тож квадрицепс тут — майже рівноправний кандидат в Агоністи."
@@ -943,13 +937,13 @@
         "pectoralis_major": "agonist",
         "deltoid_anterior": "synergist",
         "triceps_brachii": "synergist",
-        "biceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
         "serratus_anterior": "stabilizer",
         "pectoralis_minor": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
         "quadriceps": "stabilizer",
-        "erector_spinae": "stabilizer"
+        "erector_spinae": "antagonist_stabilizer"
       }
     },
     "rear-delt-fly": {
@@ -969,8 +963,8 @@
         "gluteus_maximus": "stabilizer",
         "hip_adductors": "stabilizer",
         "quadriceps": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "reverse-lunge": {
@@ -981,8 +975,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_upper": "stabilizer",
         "trapezius_lower": "stabilizer",
@@ -1014,8 +1008,8 @@
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
         "trapezius_lower": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       }
     },
     "russian-twist": {
@@ -1043,15 +1037,14 @@
         "brachialis": "synergist",
         "brachioradialis": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer",
         "hamstrings": "stabilizer",
         "gluteus_maximus": "stabilizer",
         "hip_adductors": "stabilizer"
       },
       "notes": {
-        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти.",
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти."
       }
     },
     "seated-calf-raise": {
@@ -1097,7 +1090,7 @@
         "abductors": "stabilizer",
         "quadratus_lumborum": "stabilizer",
         "obliques": "stabilizer",
-        "rectus_abdominis": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer"
       },
       "notes": {
         "gluteus_maximus": "На одній нозі сідничний ще й тримає таз, тож ExRx ставить його Агоністом. У класичній румунській тязі Агоніст — задня поверхня стегна."
@@ -1135,7 +1128,7 @@
         "hip_adductors": "synergist",
         "soleus": "synergist",
         "gastrocnemius": "synergist",
-        "hamstrings": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_upper": "stabilizer",
         "trapezius_middle": "stabilizer",
@@ -1143,7 +1136,7 @@
         "abductors": "stabilizer",
         "quadratus_lumborum": "stabilizer",
         "obliques": "stabilizer",
-        "rectus_abdominis": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer"
       },
       "notes": {
         "gluteus_maximus": "Що вища платформа, то більша частка сідничного."
@@ -1176,7 +1169,7 @@
         "quadriceps": "synergist",
         "hip_adductors": "synergist",
         "hamstrings": "synergist",
-        "gastrocnemius": "stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "tibialis_anterior": "stabilizer",
         "deep_external_rotators": "stabilizer",
         "erector_spinae": "stabilizer",
@@ -1184,8 +1177,8 @@
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
         "rhomboids": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "quadriceps": "У сумо квадрицепс працює більше, ніж у класичній становій, а литковий — менше."
@@ -1204,19 +1197,18 @@
         "brachialis": "synergist",
         "brachioradialis": "synergist",
         "pectoralis_major": "synergist",
-        "biceps_brachii": "stabilizer",
-        "triceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
+        "triceps_brachii": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "hamstrings": "stabilizer",
         "gluteus_maximus": "stabilizer",
         "hip_adductors": "stabilizer",
         "quadriceps": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
-        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти.",
-        "biceps_brachii": "Працює активно, але поки згинає лікоть, у плечі розтягується — довжина майже не змінюється. ExRx зараховує такі м'язи до динамічних стабілізаторів."
+        "latissimus_dorsi_teres_major": "ExRx вважає Агоністом тяги всю спину разом. Тут це найширший, а решта м'язів спини — Синергісти."
       }
     },
     "trap-bar-deadlift": {
@@ -1227,15 +1219,15 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_upper": "stabilizer",
         "trapezius_middle": "stabilizer",
         "levator_scapulae": "stabilizer",
         "rhomboids": "stabilizer",
-        "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer"
+        "rectus_abdominis": "antagonist_stabilizer",
+        "obliques": "antagonist_stabilizer"
       },
       "notes": {
         "quadriceps": "Гриф довкола тіла дозволяє сісти глибше, ніж у класичній становій, тож рух ближчий до присідання: ExRx зараховує його до вправ на квадрицепс."
@@ -1252,7 +1244,7 @@
         "rhomboids": "synergist",
         "levator_scapulae": "synergist",
         "latissimus_dorsi_teres_major": "synergist",
-        "biceps_brachii": "stabilizer",
+        "biceps_brachii": "dynamic_stabilizer",
         "trapezius_lower": "stabilizer"
       }
     },
@@ -1269,7 +1261,7 @@
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
         "wrist_flexors": "stabilizer",
-        "erector_spinae": "stabilizer"
+        "erector_spinae": "antagonist_stabilizer"
       }
     },
     "upright-row": {
@@ -1298,8 +1290,8 @@
         "gluteus_maximus": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "hamstrings": "stabilizer",
-        "gastrocnemius": "stabilizer",
+        "hamstrings": "dynamic_stabilizer",
+        "gastrocnemius": "dynamic_stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_upper": "stabilizer",
         "trapezius_lower": "stabilizer",

@@ -27,7 +27,7 @@ const STRINGS = {
   'detent.high': { uk: 'висока', en: 'full' },
 
   'search.label': { uk: "Пошук м'язів, груп і вправ", en: 'Search muscles, groups and exercises' },
-  'search.placeholder': { uk: "М'яз, група або вправа", en: 'Muscle, group or exercise' },
+  'search.placeholder': { uk: 'Жим лежачи, біцепс…', en: 'Bench press, biceps…' },
   'search.empty': {
     uk: "Нічого не знайдено. М'язи шукаються українською й латиною, вправи — українською й англійською.",
     en: 'Nothing found. Muscles are searched in Ukrainian and Latin, exercises in Ukrainian and English.',

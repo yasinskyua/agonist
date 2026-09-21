@@ -7,7 +7,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Автовиправлення, автоукрупнення й перевірка орфографії в полі пошуку вимкнені
 - [ ] Полю пошуку дано осмислене ім'я

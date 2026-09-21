@@ -403,10 +403,12 @@ export async function start() {
 
   // ── Words ───────────────────────────────────────────────────────────────
 
-  const exerciseRow = (e, small = '') =>
-    `<li><a class="row" href="#/exercise/${e.id}" data-exercise="${e.id}">${e[state.lang]}${small ? `<small>${small}</small>` : ''}</a></li>`;
-  const muscleRow = (m) =>
-    `<li><a class="row" href="#/muscle/${m.id}" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la" translate="no">${m.la}</small>` : ''}</a></li>`;
+  const exerciseRow = (e, small = '', note = '') =>
+    `<li><a class="row" href="#/exercise/${e.id}" data-exercise="${e.id}">${e[state.lang]}${small ? `<small>${small}</small>` : ''}</a>${why(note)}</li>`;
+  const muscleRow = (m, note = '') =>
+    `<li><a class="row" href="#/muscle/${m.id}" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la" translate="no">${m.la}</small>` : ''}</a>${why(note)}</li>`;
+  /** Why this Muscle has this Role in this Exercise — under the row, outside the link. */
+  const why = (note) => (note ? `<p class="why">${note}</p>` : '');
 
   /** The card's first line — back, the name, close — which the low sheet shows. */
   function head(t, name) {
@@ -440,7 +442,7 @@ export async function start() {
             <section class="role" data-role="${r}">
               <h3>${t(`role.${r}`)}</h3>
               <p>${t(`role.${r}.does`)}</p>
-              <ul>${byRole.get(r).map((e) => exerciseRow(e)).join('')}</ul>
+              <ul>${byRole.get(r).map((e) => exerciseRow(e, '', e.notes?.[id])).join('')}</ul>
             </section>`).join('')}
         </div>` : `<p class="note">${t('muscle.none')}</p>`}
       </div>`;
@@ -466,7 +468,7 @@ export async function start() {
           <section class="role" data-role="${r}">
             <h3>${heading(r)}</h3>
             <p>${t(`role.${r}.does`)}</p>
-            <ul>${byRole.get(r).map(muscleRow).join('')}</ul>
+            <ul>${byRole.get(r).map((m) => muscleRow(m, e.notes?.[m.id])).join('')}</ul>
           </section>`).join('')}
       </div>
       ${related.length ? `
@@ -487,7 +489,7 @@ export async function start() {
     return `
       <h2>${t('search.groups')}</h2>${named.map((g) => `
         <div class="group"><h3 class="group-name">${g[state.lang]}</h3>
-          <ul>${g.muscles.map(muscleRow).join('')}</ul></div>`).join('')}
+          <ul>${g.muscles.map((m) => muscleRow(m)).join('')}</ul></div>`).join('')}
       <h2>${t('search.exercises')}</h2><ul>${atlas.exercises()
         .map((e) => exerciseRow(e, `${t('search.agonist')}: ${agonistOf(e)}`)).join('')}</ul>`;
   }
@@ -503,8 +505,8 @@ export async function start() {
     return `
       ${r.groups.length ? `<h2>${t('search.groups')}</h2>${r.groups.map((g) => `
         <div class="group"><h3 class="group-name">${g[state.lang]}</h3>
-          <ul>${g.muscles.map(muscleRow).join('')}</ul></div>`).join('')}` : ''}
-      ${r.muscles.length ? `<h2>${t('search.muscles')}</h2><ul>${r.muscles.map(muscleRow).join('')}</ul>` : ''}
+          <ul>${g.muscles.map((m) => muscleRow(m)).join('')}</ul></div>`).join('')}` : ''}
+      ${r.muscles.length ? `<h2>${t('search.muscles')}</h2><ul>${r.muscles.map((m) => muscleRow(m)).join('')}</ul>` : ''}
       ${r.exercises.length ? `<h2>${t('search.exercises')}</h2><ul>${r.exercises
         .map((e) => exerciseRow(e, `${t('search.agonist')}: ${agonistOf(e)}`)).join('')}</ul>` : ''}`;
   }

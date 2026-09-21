@@ -791,6 +791,14 @@ body[data-detent='low'] .head .name {
   padding-left: 0;
 }
 
+/* Why this Muscle has this Role here: under its row, not part of the link. */
+.why {
+  margin: -0.35rem 2rem 0.6rem 0;
+  color: var(--dim);
+  font-size: 0.9rem;
+  max-width: 44ch;
+}
+
 .related {
   margin-top: 1.6rem;
 }

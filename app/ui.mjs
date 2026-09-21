@@ -337,9 +337,17 @@ export async function start() {
     }, 150);
   }
 
+  // What the sheet keeps stuck at its top is as tall as the card's first line,
+  // which wraps with the name; the browser must scroll a focused row clear of it.
+  function padScroll() {
+    const stuck = [...sheet.querySelectorAll('.find-row, .head')].find((e) => e.offsetHeight);
+    sheet.style.setProperty('--stuck-h', `${stuck?.offsetHeight ?? 0}px`);
+  }
+
   function settle() {
     reframe();
     rezone();
+    padScroll();
   }
 
   new ResizeObserver(settle).observe(el('stage'));

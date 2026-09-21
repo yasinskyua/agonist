@@ -440,6 +440,9 @@ body.searching #cancel {
   padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* Tab and scrollIntoView keep a row clear of the grip and the sticky line
+     above it (--stuck-h, set in ui.mjs) and of the home indicator below. */
+  scroll-padding: calc(1.5rem + var(--stuck-h, 0px)) 0 calc(0.5rem + env(safe-area-inset-bottom));
   background: var(--paper);
   border-radius: 1.25rem 1.25rem 0 0;
   box-shadow: 0 -1px 0 var(--rule), 0 -12px 32px rgb(26 35 48 / 0.08);

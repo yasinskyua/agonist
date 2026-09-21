@@ -98,6 +98,7 @@ export async function start() {
   const quiz = createQuiz({ atlas });
   const play = { step: 'modes', round: null, view: VIEWS[0], rev: 0, timer: 0, focused: '' };
   const answered = () => play.step === 'round' && play.round.result;
+  const resetPlay = () => Object.assign(play, { step: 'modes', round: null, view: VIEWS[0], focused: '' });
 
   // ── Routes ──────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ export async function start() {
     if (here.screen === 'muscle') return [here.id];
     if (here.screen === 'exercise') return atlas.exerciseMuscles(here.id).map(({ muscle }) => muscle.id);
     // In the Quiz the figure is framed on the answer once there is one.
-    if (here.screen === 'game' && answered()) return atlas.exerciseMuscles(play.round.current.exercise).map(({ muscle }) => muscle.id);
+    if (here.screen === 'game' && answered()) return answered().roles.map(({ muscle }) => muscle);
     return [];
   }
 
@@ -416,13 +417,17 @@ export async function start() {
   function paintFor(here) {
     const rule = (id, colour) => `#sides [data-muscle~="${id}"][fill] { fill: var(--${colour}); }`;
     if (here.screen === 'muscle') return rule(here.id, 'agonist');
-    // The Quiz shows the answer the way the Exercise page does: the whole Role Distribution.
-    if (here.screen === 'game') return answered() ? paintFor({ screen: 'exercise', id: play.round.current.exercise }) : '';
-    if (here.screen !== 'exercise') return '';
-    const byRole = atlas.exerciseMuscles(here.id);
+    // The Quiz shows the answer the way the Exercise page does, but from the
+    // Round's own list of Roles: the Quiz never paints a pair the author is unsure of.
+    const byRole =
+      here.screen === 'exercise'
+        ? atlas.exerciseMuscles(here.id).map(({ muscle, role }) => ({ muscle: muscle.id, role }))
+        : here.screen === 'game' && answered()
+          ? answered().roles
+          : [];
     return [...ROLES]
       .reverse()
-      .flatMap((role) => byRole.filter((x) => x.role === role).map((x) => rule(x.muscle.id, role)))
+      .flatMap((role) => byRole.filter((x) => x.role === role).map((x) => rule(x.muscle, role)))
       .join('\n');
   }
 
@@ -615,6 +620,9 @@ export async function start() {
       return;
     }
     clearTimeout(play.timer);
+    // Off to the atlas, the Round is over: Forward must not bring a stale one
+    // back. A step into the reference keeps it, so Back lands on the summary.
+    if (here.screen === 'map') resetPlay();
 
     // A new Muscle or Exercise starts its sheet where this step was left — the
     // top for a fresh one, the bookmark on the way back; a language switch
@@ -728,9 +736,7 @@ export async function start() {
   }
 
   el('play').addEventListener('click', () => {
-    play.step = 'modes';
-    play.round = null;
-    play.focused = '';
+    resetPlay();
     say('');
     go('#/game');
   });

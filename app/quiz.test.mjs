@@ -144,7 +144,7 @@ test('the same seed gives the same Round, another seed another one', () => {
 
 // ── Answering ────────────────────────────────────────────────────────────
 
-test('a right answer says so, and names the whole Role Distribution to paint', () => {
+test('a right answer says so, and names the Role Distribution to paint', () => {
   const round = quizWith(3).round('agonist');
   const q = round.current;
   const result = round.answer(q.answer);
@@ -153,9 +153,28 @@ test('a right answer says so, and names the whole Role Distribution to paint', (
   assert.equal(result.answer, q.answer);
   assert.deepEqual(
     result.roles,
-    atlas.exerciseMuscles(q.exercise).map(({ muscle, role }) => ({ muscle: muscle.id, role })),
+    atlas
+      .exerciseMuscles(q.exercise)
+      .filter(({ muscle }) => !flagged.has(`${q.exercise}|${muscle.id}`))
+      .map(({ muscle, role }) => ({ muscle: muscle.id, role })),
   );
   assert.equal(round.results[0], 'right');
+});
+
+test('what the Quiz shows after an answer never includes an unsure pair', () => {
+  // The Quiz does not ask about a doubtful Role, so it must not paint one as fact either.
+  let withDoubt = 0;
+  for (const round of rounds('agonist')) {
+    for (const q of round.questions) {
+      const result = round.answer(q.options.find((m) => m !== q.answer));
+      for (const { muscle } of result.roles) assert.ok(!flagged.has(`${q.exercise}|${muscle}`), `${q.exercise} + ${muscle}`);
+      // The Agonist is always there: the pool keeps only Exercises whose Agonist is sure.
+      assert.equal(result.roles[0].role, 'agonist');
+      if (result.roles.length < atlas.exerciseMuscles(q.exercise).length) withDoubt++;
+      if (!round.finished) round.next();
+    }
+  }
+  assert.ok(withDoubt > 0, 'the real content should have an Exercise with an unsure Muscle, or this proves nothing');
 });
 
 test('a wrong answer says which Role the picked Muscle has in this Exercise', () => {

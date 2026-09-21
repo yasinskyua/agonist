@@ -44,8 +44,14 @@ export function createQuiz({ atlas, random = Math.random }) {
   // A Muscle with no Exercises has nothing to ask about, so it is not offered either.
   const live = atlas.muscles().filter((m) => atlas.muscleExercises(m.id).length > 0);
 
+  // The one door to an Exercise's Roles: the Quiz shows only what the author
+  // is sure of — in a question, in the options and in the picture after the
+  // answer. An unsure pair is not asked about, and not painted as fact either.
   const rolesOf = (exercise) =>
-    atlas.exerciseMuscles(exercise).map(({ muscle, role }) => ({ muscle: muscle.id, role }));
+    atlas
+      .exerciseMuscles(exercise)
+      .filter(({ muscle }) => !isUnsure(exercise, muscle.id))
+      .map(({ muscle, role }) => ({ muscle: muscle.id, role }));
 
   // ── Who is the Agonist? ──────────────────────────────────────────────
 
@@ -58,7 +64,7 @@ export function createQuiz({ atlas, random = Math.random }) {
     // Exercise (so the Trainer learns to tell an Agonist from the helpers),
     // then the Agonist's own Group, then anything. An unsure pair never
     // qualifies, and a Muscle is never offered twice.
-    const own = shuffle(roles.slice(1).map((x) => x.muscle));
+    const own = shuffle(roles.slice(1).map((x) => x.muscle)); // sure pairs only: see rolesOf
     const kin = shuffle(live.filter((m) => m.groups.some((g) => groups.includes(g))).map((m) => m.id));
     const rest = shuffle(live.map((m) => m.id));
 

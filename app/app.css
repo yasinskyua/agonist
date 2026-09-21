@@ -64,6 +64,8 @@ html {
 html,
 body {
   margin: 0;
+  /* Our own pressed state (.row:active) is the only tap feedback: no grey flash on iOS. */
+  -webkit-tap-highlight-color: transparent;
   height: var(--app);
   overflow: hidden;
   background: var(--chalk);
@@ -402,6 +404,25 @@ body.searching #cancel {
   background: var(--chalk);
 }
 
+/* Hover only where there is a pointer to hover with: on touch it would stick
+   after a tap. */
+@media (hover: hover) {
+  .pill:hover,
+  #lang:hover,
+  .icon:hover,
+  .row:hover {
+    background: var(--chalk);
+  }
+
+  .icon[data-act='close']:hover {
+    background: var(--tendon);
+  }
+
+  .row:active {
+    background: var(--tendon);
+  }
+}
+
 /* Rows run edge to edge of the sheet; their focus ring goes inside them. */
 .row:focus-visible {
   outline-offset: -3px;
@@ -448,7 +469,13 @@ body[data-detent='low'] .card-body {
   white-space: nowrap;
 }
 
-/* While a finger holds the sheet it follows at once, not a beat behind. */
+/* While a finger holds the sheet it follows at once, not a beat behind, and
+   the text under it is not selected. */
+body.dragging {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body.dragging #sheet,
 body.dragging #stage,
 body.instant #sheet,

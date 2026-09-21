@@ -279,9 +279,10 @@ p.sub[translate='no'] { font-style: italic; }
 #page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 #page[data-screen='game'] #map { display: none; }
 
-/* The map takes every gesture: a finger drags it or pinches it. Ui.mjs scrolls
-   the page by hand when the map is not zoomed, so it still feels like the page. */
-#map { touch-action: none; }
+/* Not zoomed, the map lets a finger's vertical drag scroll the page, as anywhere,
+   and takes the rest (a pinch, a double tap). Zoomed, a finger drags the map. */
+#map { touch-action: pan-y; }
+#map.zoomed { touch-action: none; }
 
 /* Both sides in one layer, so one transform can move and zoom them together.
    Steps (buttons, double tap, framing) glide; a finger moves the map at once. */

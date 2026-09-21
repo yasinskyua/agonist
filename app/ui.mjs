@@ -240,6 +240,7 @@ export async function start() {
     layer.classList.toggle('glide', glide);
     layer.style.transform = `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
     fit.hidden = !isZoomed(zoom);
+    map.classList.toggle('zoomed', !fit.hidden);
     // The button that was just pressed is gone; the keyboard's place goes to its neighbour.
     if (fit.hidden && document.activeElement === fit) zoomIn.focus();
     // The tap zones are measured in screen pixels, which zooming has just changed.
@@ -275,16 +276,15 @@ export async function start() {
     show(frameOn({ ...box, x: box.x - mine.left, y: box.y - mine.top }, mapSize()), true);
   }
 
-  // Fingers on the map: one drags a zoomed map — or, when it is not zoomed,
-  // scrolls the page under it — and two pinch. A drag is not a tap.
+  // Fingers on the map: one drags a zoomed map, two pinch. A drag is not a tap.
+  // A map that is not zoomed leaves one finger's vertical drag to the browser
+  // (`touch-action: pan-y`), so the page scrolls under it as it does anywhere.
   //
-  // ponytail: the page is scrolled by hand, so it has no fling after the finger
-  // lifts. Native scrolling needs `touch-action: pan-y` while not zoomed, and a
-  // pinch that starts with a slip upward then goes to the browser.
+  // ponytail: a pinch that starts with a slip upward is taken by the browser as a
+  // scroll, and that gesture is lost; the Trainer lifts and pinches again.
   const fingers = new Map(); // pointer id → where it is on the page
   let downAt = null;
   let dragged = false;
-  let pinched = false; // two fingers were down: the one left is not the page's hand
 
   /** A drag is not a tap: not this gesture's own, and not one still waiting for its double. */
   function drag() {
@@ -299,7 +299,6 @@ export async function start() {
     if (fingers.size === 1) {
       downAt = { x: event.clientX, y: event.clientY };
       dragged = false;
-      pinched = false;
     }
   });
 
@@ -312,14 +311,11 @@ export async function start() {
 
     if (fingers.size > 1) {
       drag();
-      pinched = true;
       if (pair) show(pinch(zoom, pair, [...fingers.values()].map(local), mapSize()));
       return;
     }
     if (Math.hypot(now.x - downAt.x, now.y - downAt.y) > DRAG_SLOP) drag();
     if (isZoomed(zoom)) show(panBy(zoom, now.x - was.x, now.y - was.y, mapSize()));
-    // A mouse has a wheel for the page; only a finger or a pen is the page's hand.
-    else if (event.pointerType !== 'mouse' && !pinched) scrollBy(0, was.y - now.y);
   });
 
   const lift = (event) => fingers.delete(event.pointerId);

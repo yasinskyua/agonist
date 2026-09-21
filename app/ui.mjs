@@ -71,6 +71,7 @@ export async function start() {
   const el = (id) => document.getElementById(id);
   const sides = el('sides');
   const sheet = el('sheet');
+  const card = el('card');
   const paint = el('paint');
   const results = el('results');
   const query = el('q');
@@ -84,7 +85,8 @@ export async function start() {
   // Only the language is state. The screen lives in the address, so a link to
   // a Muscle survives being sent to another Trainer, and GitHub Pages needs no
   // server configuration to serve it.
-  const state = { lang: LANGS[0], folded: false, browsing: false };
+  const state = { lang: LANGS[0], detent: 'low' };
+  const DETENTS = ['low', 'mid', 'high'];
 
   // ── Routes ──────────────────────────────────────────────────────────────
 
@@ -106,7 +108,7 @@ export async function start() {
   function go(hash) {
     // Leave a bookmark in the step we are leaving: how far the sheet was read
     // and what was typed in search. Back brings both back.
-    history.replaceState({ ...history.state, scroll: sheet.scrollTop, query: query.value }, '');
+    history.replaceState({ ...history.state, scroll: sheet.scrollTop, query: query.value, detent: state.detent }, '');
     history.pushState({ depth: (history.state?.depth ?? 0) + 1 }, '', hash);
     render();
   }
@@ -229,6 +231,9 @@ export async function start() {
     const svg = holder.querySelector('svg');
     svg.dataset.view = view;
     svg.dataset.whole = svg.getAttribute('viewBox');
+    // Hundreds of unnamed paths say nothing to a screen reader; the figure is
+    // one picture with a name. Every Muscle is reachable by name in search.
+    svg.setAttribute('role', 'img');
     // A path whose Muscles all lack Exercises invites no tap: not by colour,
     // not by reacting. Decided per path, because on the neck one path is two
     // Muscles and only one of them may be live.
@@ -364,14 +369,13 @@ export async function start() {
   const muscleRow = (m) =>
     `<li><button class="row" type="button" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la">${m.la}</small>` : ''}</button></li>`;
 
-  function sheetTop(t) {
+  /** The card's first line — back, the name, close — which the low sheet shows. */
+  function head(t, name) {
     const back = (history.state?.depth ?? 0) > 0
-      ? `<button class="back" type="button" data-act="back">‹ ${t('back')}</button>`
+      ? `<button class="icon" type="button" data-act="back" aria-label="${t('back')}">‹</button>`
       : '';
-    const fold = state.folded ? t('sheet.expand') : t('sheet.collapse');
-    return `
-      <button class="grip" type="button" data-act="fold" aria-expanded="${!state.folded}" aria-label="${fold}" title="${fold}"></button>
-      <div class="sheet-top">${back}<button class="pill" type="button" data-act="whole">${t('whole')}</button></div>`;
+    return `<div class="head">${back}<h2 class="name" tabindex="-1">${name}</h2>
+      <button class="icon" type="button" data-act="close" aria-label="${t('close')}">✕</button></div>`;
   }
 
   function muscleSheet(t, id) {
@@ -381,8 +385,8 @@ export async function start() {
     const any = withExercises.has(id);
 
     return `
-      ${sheetTop(t)}
-      <h2 class="name">${m.uk}</h2>
+      ${head(t, m.uk)}
+      <div class="card-body">
       ${m.la ? `<p class="latin">${m.la}</p>` : ''}
       <p class="action">${m.action}</p>
       ${any ? `
@@ -399,7 +403,8 @@ export async function start() {
               <p>${t(`role.${r}.does`)}</p>
               <ul>${byRole.get(r).map((e) => exerciseRow(e)).join('')}</ul>
             </section>`).join('')}
-        </div>` : `<p class="note">${t('muscle.none')}</p>`}`;
+        </div>` : `<p class="note">${t('muscle.none')}</p>`}
+      </div>`;
   }
 
   function exerciseSheet(t, id) {
@@ -411,8 +416,8 @@ export async function start() {
     const related = atlas.relatedExercises(id);
 
     return `
-      ${sheetTop(t)}
-      <h2 class="name">${e[state.lang]}</h2>
+      ${head(t, e[state.lang])}
+      <div class="card-body">
       <p class="latin">${e[otherLang(state.lang)]}</p>
       <ul class="legend" aria-label="${t('exercise.legend')}">
         ${present.map((r) => `<li data-role="${r}">${t(`role.${r}`)}</li>`).join('')}
@@ -430,7 +435,8 @@ export async function start() {
           <h3>${t('related.heading')}</h3>
           <p>${t('related.says')}</p>
           <ul>${related.map((x) => exerciseRow(x)).join('')}</ul>
-        </section>` : ''}`;
+        </section>` : ''}
+      </div>`;
   }
 
   /** What an empty search offers: every Muscle by group, then every Exercise. */
@@ -441,17 +447,14 @@ export async function start() {
       .filter((g) => g.muscles.length);
     return `
       <h2>${t('search.groups')}</h2>${named.map((g) => `
-        <div class="group"><div class="group-name">${g[state.lang]}</div>
+        <div class="group"><h3 class="group-name">${g[state.lang]}</h3>
           <ul>${g.muscles.map(muscleRow).join('')}</ul></div>`).join('')}
       <h2>${t('search.exercises')}</h2><ul>${atlas.exercises()
         .map((e) => exerciseRow(e, `${t('search.agonist')}: ${agonistOf(e)}`)).join('')}</ul>`;
   }
 
-  /** The list above the search field: the index while empty, results once typed. */
-  function list(t) {
-    if (!state.browsing) return '';
-    return query.value.trim() ? found(t, query.value) : index(t);
-  }
+  /** Under the search field: the index while it is empty, results once typed. */
+  const list = (t) => (query.value.trim() ? found(t, query.value) : index(t));
 
   function found(t, text) {
     const r = atlas.search(text);
@@ -460,7 +463,7 @@ export async function start() {
     const agonistOf = (e) => atlas.exerciseMuscles(e.id)[0].muscle.uk;
     return `
       ${r.groups.length ? `<h2>${t('search.groups')}</h2>${r.groups.map((g) => `
-        <div class="group"><div class="group-name">${g[state.lang]}</div>
+        <div class="group"><h3 class="group-name">${g[state.lang]}</h3>
           <ul>${g.muscles.map(muscleRow).join('')}</ul></div>`).join('')}` : ''}
       ${r.muscles.length ? `<h2>${t('search.muscles')}</h2><ul>${r.muscles.map(muscleRow).join('')}</ul>` : ''}
       ${r.exercises.length ? `<h2>${t('search.exercises')}</h2><ul>${r.exercises
@@ -487,15 +490,25 @@ export async function start() {
     document.documentElement.lang = state.lang;
     el('title').textContent = t('app.title');
     el('lang').textContent = t('lang.other');
-    el('lang').setAttribute('aria-label', t('lang.switch'));
+    // The spoken name starts with what is printed on it, so «tap EN» works.
+    el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     el('stage').setAttribute('aria-label', t('map.label'));
     el('hint-tap').textContent = t('map.hint');
     el('hint-legend').textContent = t('map.legend');
     query.placeholder = t('search.placeholder');
     query.setAttribute('aria-label', t('search.label'));
     if (!open) el('flip').textContent = t(`view.${VIEWS.find((v) => v !== here.view)}`);
+    // Each step keeps the height its sheet was left at; a fresh one opens a
+    // chosen Muscle halfway, keeps the height between two chosen ones, and
+    // lowers the sheet back to the search on the map.
+    const key = open ? `${here.screen}/${here.id}` : '';
+    if (key !== shown) {
+      const wasOpen = shown !== '';
+      setDetent(history.state?.detent ?? (open ? (wasOpen ? state.detent : 'mid') : 'low'));
+    }
     document.body.classList.toggle('open', open);
-    document.body.classList.toggle('folded', open && state.folded);
+    gripLabel();
+    el('cancel').textContent = t('search.cancel');
     if (location.hash !== zoomedAt) {
       zoomed = false;
       zoomedAt = location.hash;
@@ -509,6 +522,7 @@ export async function start() {
       ...views.map((view) => {
         const host = document.createElement('div');
         host.className = 'side';
+        figures[view].setAttribute('aria-label', `${t('map.label')}, ${t(`view.${view}`).toLowerCase()}`);
         host.append(figures[view]);
         if (views.length > 1) {
           const name = document.createElement('span');
@@ -524,18 +538,23 @@ export async function start() {
     // A new Muscle or Exercise starts its sheet where this step was left — the
     // top for a fresh one, the bookmark on the way back; a language switch
     // on the same one keeps the reader where they were.
-    const key = open ? `${here.screen}/${here.id}` : '';
-    if (here.screen === 'muscle') sheet.innerHTML = muscleSheet(t, here.id);
-    if (here.screen === 'exercise') sheet.innerHTML = exerciseSheet(t, here.id);
-    if (key !== shown) sheet.scrollTop = history.state?.scroll ?? 0;
-    shown = key;
+    if (here.screen === 'muscle') card.innerHTML = muscleSheet(t, here.id);
+    if (here.screen === 'exercise') card.innerHTML = exerciseSheet(t, here.id);
+    if (!open) card.textContent = '';
 
     // The map shows the search this step was left with: empty for a fresh one.
-    if (!open && document.activeElement !== query) {
-      query.value = history.state?.query ?? '';
-      state.browsing = Boolean(query.value); // back to the results this step was left with
-    }
+    if (!open && document.activeElement !== query) query.value = history.state?.query ?? '';
     results.innerHTML = open ? '' : list(t);
+    if (key !== shown) {
+      sheet.scrollTop = history.state?.scroll ?? 0;
+      // The row that was pressed is gone with the old card; without this the
+      // keyboard's place falls back to the top of the page. The new card's
+      // name takes it, or the grip once the card is put away.
+      if (document.activeElement === document.body || !document.activeElement) {
+        (open ? card.querySelector('.name') : el('grip'))?.focus({ preventScroll: true });
+      }
+    }
+    shown = key;
     requestAnimationFrame(settle);
   }
 
@@ -553,38 +572,68 @@ export async function start() {
     render();
   });
 
-  // Only the list redraws while typing: redrawing the page would drop the
-  // caret out of the field on every letter.
-  const showList = () => {
-    state.browsing = true;
-    results.innerHTML = list(translator(state.lang));
-  };
-  query.addEventListener('input', showList);
-  // A tap on the empty field is already a starting point: the whole index.
-  query.addEventListener('focus', showList);
-  addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && state.browsing) {
-      state.browsing = false;
-      results.innerHTML = '';
-      query.blur();
-    }
-  });
-
-  function fold(folded) {
-    state.folded = folded;
-    drawn = ''; // same screen, new shape: draw it again
-    render();
+  /** Put the choice away: back to the map, on the side it was seen from. */
+  function close() {
+    const side = sides.firstElementChild?.querySelector('svg')?.dataset.view ?? VIEWS[0];
+    go(`#/${side}`);
   }
 
-  // A sheet is moved by the finger, the way every phone sheet is: down from
-  // its top folds it, up unfolds it. Lower in a scrolled list a downward
-  // swipe is reading, so it scrolls instead.
+  function gripLabel() {
+    const t = translator(state.lang);
+    el('grip').setAttribute('aria-label', `${t('sheet.grip')}. ${t('sheet.now')}: ${t(`detent.${state.detent}`)}`);
+  }
+
+  function setDetent(detent) {
+    state.detent = detent;
+    document.body.dataset.detent = detent;
+    gripLabel();
+    // Low shows only the first line, so it shows it from the top.
+    if (detent === 'low') sheet.scrollTop = 0;
+  }
+
+  // Only the list redraws while typing: redrawing the page would drop the
+  // caret out of the field on every letter.
+  const searching = () => document.body.classList.toggle('searching', document.activeElement === query || Boolean(query.value));
+  query.addEventListener('input', () => {
+    const t = translator(state.lang);
+    results.innerHTML = list(t);
+    el('status').textContent = query.value.trim() ? `${t('search.count')}: ${results.querySelectorAll('.row').length}` : '';
+    searching();
+  });
+  // Typing needs room above the keyboard: the sheet goes all the way up.
+  query.addEventListener('focus', () => {
+    setDetent('high');
+    searching();
+  });
+  query.addEventListener('blur', searching);
+
+  /** Leave the search the way iOS does: empty, keyboard gone, sheet down. */
+  function cancelSearch() {
+    query.value = '';
+    query.blur();
+    results.innerHTML = list(translator(state.lang));
+    searching();
+    setDetent('low');
+  }
+  addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (document.body.classList.contains('searching')) cancelSearch();
+    else if (document.body.classList.contains('open')) close();
+  });
+
+  /**
+   * The sheet is moved by the finger, the way phone sheets are: up raises it
+   * a height, down lowers it one. Content scrolls only at the top height, as
+   * in Apple Maps — below that an upward swipe raises the sheet instead. A
+   * downward swipe inside a scrolled list is reading, so it scrolls.
+   */
   let pull = null;
   sheet.addEventListener(
     'touchstart',
     (e) => {
-      const fromTop = e.target.closest('.grip, .sheet-top') || sheet.scrollTop <= 0 || state.folded;
-      pull = e.touches.length === 1 && fromTop ? { y: e.touches[0].clientY, dy: 0, active: false } : null;
+      if (e.touches.length !== 1) return (pull = null);
+      pull = { y: e.touches[0].clientY, h: sheet.getBoundingClientRect().height, dy: 0, active: false,
+               fromHead: Boolean(e.target.closest('.grip, .head, .find-row')) };
     },
     { passive: true },
   );
@@ -595,55 +644,58 @@ export async function start() {
       const dy = e.touches[0].clientY - pull.y;
       if (!pull.active) {
         if (Math.abs(dy) < 8) return; // a tap wobbles; not yet a swipe
-        const folding = dy > 0 && !state.folded;
-        const unfolding = dy < 0 && state.folded;
-        if (!folding && !unfolding) return (pull = null); // the list scrolling
+        const up = dy < 0 && state.detent !== 'high';
+        // Low with something chosen, a swipe down dismisses it, as a sheet
+        // is dismissed on iOS; low on the map there is nowhere lower to go.
+        const dismiss = dy > 0 && state.detent === 'low' && document.body.classList.contains('open');
+        const down = dy > 0 && (state.detent !== 'low' || dismiss) && (pull.fromHead || sheet.scrollTop <= 0);
+        if (!up && !down) return (pull = null); // the list scrolling
         pull.active = true;
-        sheet.classList.add('dragging');
+        document.body.classList.add('dragging');
       }
       e.preventDefault();
       pull.dy = dy;
-      // Unfolded, the sheet follows the finger down; folded, it is too short to follow.
-      if (!state.folded) sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+      // The sheet follows the finger, and the stage above it follows too.
+      const h = Math.min(Math.max(pull.h - dy, 80), innerHeight * 0.92);
+      document.body.style.setProperty('--sheet-h', `${h}px`);
     },
     { passive: false },
   );
   const release = () => {
-    const done = pull?.active ? pull.dy : 0;
+    const moved = pull?.active ? pull.dy : 0;
     pull = null;
-    sheet.classList.remove('dragging');
-    sheet.style.transform = '';
-    if (!state.folded && done > 60) fold(true);
-    else if (state.folded && done < -30) fold(false);
+    document.body.classList.remove('dragging');
+    document.body.style.removeProperty('--sheet-h');
+    if (Math.abs(moved) < 40) return;
+    if (moved > 0 && state.detent === 'low') return close();
+    // A long fling skips a height: low straight to the top, or back.
+    const steps = Math.abs(moved) > innerHeight * 0.4 ? 2 : 1;
+    const at = DETENTS.indexOf(state.detent) + (moved < 0 ? steps : -steps);
+    setDetent(DETENTS[Math.min(Math.max(at, 0), DETENTS.length - 1)]);
   };
   sheet.addEventListener('touchend', release);
   sheet.addEventListener('touchcancel', release);
 
-  // A folded sheet is a handle as a whole: a tap anywhere on it but its
-  // buttons opens it again.
+  // Low, the whole sheet is a handle: a tap on it (not on its buttons or the
+  // search field) raises it halfway.
   sheet.addEventListener('click', (e) => {
-    if (state.folded && !e.target.closest('button')) fold(false);
+    if (state.detent === 'low' && !e.target.closest('button, input')) setDetent('mid');
   });
 
   // One listener for every row and button in the sheet and the results.
   document.addEventListener('click', (event) => {
-    // A tap anywhere outside the search puts its list away.
-    if (state.browsing && !event.target.closest?.('#find')) {
-      state.browsing = false;
-      results.innerHTML = '';
-    }
     const target = event.target.closest?.('[data-muscle-id], [data-exercise], [data-act]');
     if (!target) return;
     if (target.dataset.act === 'back') return history.back();
-    if (target.dataset.act === 'fold') return fold(!state.folded);
+    // The grip steps through the heights for a thumb that taps rather than
+    // drags, and for a keyboard, which cannot drag at all.
+    if (target.dataset.act === 'grip') return setDetent(DETENTS[(DETENTS.indexOf(state.detent) + 1) % DETENTS.length]);
+    if (target.dataset.act === 'close') return close();
+    if (target.dataset.act === 'cancel') return cancelSearch();
     if (target.dataset.act === 'fit') {
       zoomed = false;
       document.body.classList.remove('zoomed');
       return settle();
-    }
-    if (target.dataset.act === 'whole') {
-      const side = sides.firstElementChild?.querySelector('svg')?.dataset.view ?? VIEWS[0];
-      return go(`#/${side}`);
     }
     // Leaving the search for a result: let the keyboard go. The query stays in
     // the step we leave, so Back returns to the same results.
@@ -661,5 +713,6 @@ export async function start() {
   // Plugging in a mouse, or picking the tablet up off its keyboard, changes
   // what the tap targets should be.
   coarsePointer.addEventListener('change', settle);
+  setDetent(state.detent);
   render();
 }

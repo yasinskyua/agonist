@@ -20,16 +20,35 @@
   --stabilizer: #e9b300;
   --tap: 44px;
   --bar: 3.25rem;
-  --sheet: 56dvh;
+  --low: calc(6rem + env(safe-area-inset-bottom));
+  --mid: 56dvh;
+  --high: calc(100dvh - var(--bar) - env(safe-area-inset-top) - 0.5rem);
+  --sheet-h: var(--low);
+}
+
+/* The sheet's three heights. The stage above never shrinks past the middle
+   one: at the top height the sheet simply covers the figure. */
+body[data-detent='low'] {
+  --sheet-h: var(--low);
+}
+
+body[data-detent='mid'] {
+  --sheet-h: var(--mid);
+}
+
+body[data-detent='high'] {
+  --sheet-h: var(--high);
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Pinch and double-tap zoom the figure, never the page. */
+/* A pinch on the figure zooms the figure (its own touch-action is none); a
+   pinch anywhere else still zooms the page, for anyone who needs larger
+   text. Only double-tap zoom goes: it fired on quick taps of buttons. */
 html {
-  touch-action: pan-x pan-y;
+  touch-action: manipulation;
 }
 
 html,
@@ -100,12 +119,8 @@ button {
   top: calc(var(--bar) + env(safe-area-inset-top));
   left: 0;
   right: 0;
-  bottom: calc(5rem + env(safe-area-inset-bottom));
+  bottom: min(var(--sheet-h), var(--mid));
   transition: bottom 0.3s ease;
-}
-
-body.open #stage {
-  bottom: var(--sheet);
 }
 
 #sides {
@@ -183,7 +198,8 @@ body:not(.open) #sides {
 body.open #hint,
 body.open #flip,
 body.zoomed #hint,
-body.open #find {
+body.open #find,
+body:not(.open) #card {
   display: none;
 }
 
@@ -241,50 +257,50 @@ body[data-screen='exercise'] .side path.live[fill] {
   }
 }
 
-/* ── Search, under the thumb ─────────────────────────────────────────── */
+/* ── Search, at the top of the sheet ────────────────────────────────── */
 
-#find {
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
-  z-index: 3;
+.find-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Cancel shows while the search is in use, as it does on iOS. */
+#cancel {
+  display: none;
+  flex: none;
+  min-height: var(--tap);
+  padding: 0 0.2rem;
+  border: 0;
+  background: none;
+  color: var(--synergist);
+  font-weight: 500;
+}
+
+body.searching #cancel {
+  display: block;
 }
 
 #q {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 48px;
   padding: 0 1rem 0 2.6rem;
   border: 1px solid var(--rule);
   border-radius: 99px;
-  background: var(--paper)
+  background: var(--chalk)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6674' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='m15.5 15.5 5 5'/%3E%3C/svg%3E")
     no-repeat 0.95rem 50% / 1.15rem;
   font: inherit;
   color: var(--ink);
-  box-shadow: 0 4px 18px rgb(26 35 48 / 0.08);
 }
 
 #results {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 0.5rem);
-  max-height: 60dvh;
-  overflow-y: auto;
-  padding: 0.3rem 0;
-  border: 1px solid var(--rule);
-  border-radius: 1rem;
-  background: var(--paper);
-  box-shadow: 0 10px 30px rgb(26 35 48 / 0.12);
-}
-
-#results:empty {
-  display: none;
+  margin: 0.4rem -1.25rem 0;
 }
 
 #results h2 {
-  margin: 0.7rem 1rem 0.15rem;
+  margin: 0.9rem 1.25rem 0.15rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--dim);
@@ -297,8 +313,12 @@ body[data-screen='exercise'] .side path.live[fill] {
 }
 
 #results p {
-  margin: 0.8rem 1rem;
+  margin: 0.9rem 1.25rem;
   color: var(--dim);
+}
+
+#results .row {
+  padding-left: 1.25rem;
 }
 
 /* A group is a heading you can read at a glance, its Muscles indented under it. */
@@ -307,12 +327,14 @@ body[data-screen='exercise'] .side path.live[fill] {
 }
 
 .group-name {
-  padding: 0.35rem 1rem 0;
+  margin: 0;
+  padding: 0.35rem 1.25rem 0;
+  font-size: 1rem;
   font-weight: 700;
 }
 
-.group .row {
-  padding-left: 1.9rem;
+#results .group .row {
+  padding-left: 2.1rem;
 }
 
 /* ── Rows: every Muscle and Exercise in a list opens ─────────────────── */
@@ -353,7 +375,7 @@ body[data-screen='exercise'] .side path.live[fill] {
   background: var(--chalk);
 }
 
-/* ── The sheet: a Muscle or an Exercise ──────────────────────────────── */
+/* ── The sheet: always there, at one of three heights ────────────────── */
 
 #sheet {
   position: absolute;
@@ -361,45 +383,57 @@ body[data-screen='exercise'] .side path.live[fill] {
   right: 0;
   bottom: 0;
   z-index: 2;
-  height: var(--sheet);
-  padding: 0.6rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  height: var(--sheet-h);
+  padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--paper);
   border-radius: 1.25rem 1.25rem 0 0;
   box-shadow: 0 -1px 0 var(--rule), 0 -12px 32px rgb(26 35 48 / 0.08);
-  transform: translateY(100%);
-  transition:
-    transform 0.3s ease,
-    height 0.3s ease;
+  transition: height 0.3s ease;
 }
 
-/* While a finger holds the sheet it follows at once, not a beat behind. */
-#sheet.dragging {
-  transition: none;
-}
-
-body.open #sheet {
-  transform: none;
-}
-
-/* Folded: the sheet keeps only its name, the figure takes the rest. */
-body.folded {
-  --sheet: 9.5rem;
-}
-
-body.folded #sheet {
+/* Low, the sheet is a handle and one line: nothing under it scrolls. */
+body[data-detent='low'] #sheet {
   overflow: hidden;
   cursor: pointer;
 }
 
+/* …and what lies under the first line waits until the sheet is raised:
+   not peeking out cut in half, and not reachable by Tab while out of sight. */
+body[data-detent='low'] #results,
+body[data-detent='low'] .card-body {
+  visibility: hidden;
+}
+
+/* Heard, not seen: the search result count for a screen reader. */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* While a finger holds the sheet it follows at once, not a beat behind. */
+body.dragging #sheet,
+body.dragging #stage {
+  transition: none;
+}
+
 .grip {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: block;
-  width: 100%;
-  height: 1.6rem;
-  margin: -0.4rem 0 0;
+  width: calc(100% + 2.5rem);
+  height: 1.5rem;
+  margin: 0 -1.25rem 0.2rem;
   padding: 0;
   border: 0;
-  background: none;
+  background: var(--paper);
+  border-radius: 1.25rem 1.25rem 0 0;
 }
 
 .grip::before {
@@ -412,24 +446,51 @@ body.folded #sheet {
   background: var(--outline);
 }
 
-.sheet-top {
+/* The card's first line: back, the name, close. It is what the low sheet shows. */
+.head {
   display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.6rem;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
-.sheet-top .pill:only-child {
-  margin-left: auto;
+.head .name {
+  flex: 1;
+  padding-top: 0.35rem;
 }
 
-.back {
-  min-height: var(--tap);
-  padding: 0 0.6rem 0 0;
+body[data-detent='low'] .head .name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 1.2rem;
+}
+
+.icon {
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
   border: 0;
+  border-radius: 50%;
   background: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--dim);
+}
+
+.icon[data-act='back'] {
+  margin-left: -0.7rem;
   color: var(--synergist);
-  font-weight: 600;
+  font-size: 1.8rem;
+}
+
+.icon[data-act='close'] {
+  margin-right: -0.6rem;
+  background: var(--chalk);
+  width: 2.3rem;
+  height: 2.3rem;
+  margin-top: 0.2rem;
+  font-size: 1rem;
 }
 
 .name {

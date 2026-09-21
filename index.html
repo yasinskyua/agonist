@@ -2,9 +2,7 @@
 <html lang="uk">
   <head>
     <meta charset="utf-8" />
-    <!-- The figure zooms on its own (ui.mjs); a page zoom on top of it only
-         pulled the bar and the search off screen. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <!-- The product name, not a translated string: it is the same in both
          languages, and it is what a bookmark and a home-screen icon carry.
@@ -28,12 +26,20 @@
       <button id="fit" type="button" class="pill" data-act="fit"></button>
     </main>
 
-    <div id="find">
-      <div id="results" aria-live="polite"></div>
-      <input id="q" type="search" autocomplete="off" enterkeyhint="search" />
-    </div>
-
-    <section id="sheet" aria-live="polite"></section>
+    <!-- One sheet, always there, at one of three heights. On the map it holds
+         the search and the index; with something chosen, its card. -->
+    <section id="sheet">
+      <button id="grip" class="grip" type="button" data-act="grip"></button>
+      <div id="find">
+        <div class="find-row">
+          <input id="q" type="search" autocomplete="off" enterkeyhint="search" />
+          <button id="cancel" type="button" data-act="cancel"></button>
+        </div>
+        <p id="status" class="sr" role="status"></p>
+        <div id="results"></div>
+      </div>
+      <div id="card"></div>
+    </section>
 
     <script type="module">
       import { start } from './app/ui.mjs';
@@ -41,10 +47,11 @@
       // A typo in a Muscle id must break loudly. Without this the promise
       // rejects into the console and the Trainer just gets a blank figure.
       const fail = (error) => {
-        const sheet = document.getElementById('sheet');
+        const card = document.getElementById('card');
         document.body.classList.add('open');
-        sheet.className = 'failure';
-        sheet.textContent = error?.message ?? String(error);
+        document.body.dataset.detent = 'high';
+        card.className = 'failure';
+        card.textContent = error?.message ?? String(error);
       };
       start().catch(fail);
       // A failure after start — in a later screen — must not leave it half-drawn in silence.

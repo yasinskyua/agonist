@@ -11,7 +11,7 @@ import { createAtlas } from './atlas.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, HOME, GAME } from './route.mjs';
-import { pageTopHtml, pageListHtml, paintRules, litRules } from './screens.mjs';
+import { pageTopHtml, pageListHtml, paintRules, litRules, pageLights, openingSide } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
 
@@ -86,6 +86,8 @@ export async function start() {
 
   const el = (id) => document.getElementById(id);
   const map = el('map');
+  const dock = el('dock'); // the map's place on the page, which the map leaves when it fills the screen
+  const mapbar = el('mapbar');
   const top = el('top');
   const list = el('list');
   const all = map.querySelector('.all');
@@ -221,9 +223,15 @@ export async function start() {
   const fit = map.querySelector('[data-act="fit"]');
   const zoomIn = map.querySelector('[data-act="zoom-in"]');
   const zoomOut = map.querySelector('[data-act="zoom-out"]');
+  const hideMap = map.querySelector('[data-act="hide-map"]');
+  const fullMap = map.querySelector('[data-act="full-map"]');
+  const closeMap = map.querySelector('[data-act="close-map"]');
+  const sides = [...map.querySelectorAll('[data-act="side"]')];
+  const pickBar = map.querySelector('.pick');
+  const openPick = pickBar.querySelector('button');
   let zoom = IDENTITY;
 
-  for (const [button, name] of [[fit, 'fit'], [zoomIn, 'plus'], [zoomOut, 'minus']]) {
+  for (const [button, name] of [[fit, 'fit'], [zoomIn, 'plus'], [zoomOut, 'minus'], [hideMap, 'up'], [fullMap, 'full'], [closeMap, 'close']]) {
     button.innerHTML = icon(name);
   }
 
@@ -276,6 +284,12 @@ export async function start() {
     show(frameOn({ ...box, x: box.x - mine.left, y: box.y - mine.top }, mapSize()), true);
   }
 
+  /** The map as a screen opens it: the whole body, or on a Muscle's page glided onto the Muscle. */
+  function restoreView(here = parseRoute(location.hash, atlas)) {
+    show(IDENTITY);
+    if (here.screen === 'muscle') frameMuscle(here.id);
+  }
+
   // Fingers on the map: one drags a zoomed map, two pinch. A drag is not a tap.
   // A map that is not zoomed leaves one finger's vertical drag to the browser
   // (`touch-action: pan-y`), so the page scrolls under it as it does anywhere.
@@ -294,7 +308,7 @@ export async function start() {
   }
 
   map.addEventListener('pointerdown', (event) => {
-    if (event.target.closest('button')) return;
+    if (event.target.closest('button, .pick')) return;
     fingers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (fingers.size === 1) {
       downAt = { x: event.clientX, y: event.clientY };
@@ -360,6 +374,8 @@ export async function start() {
     const id = muscleAt(event.clientX, event.clientY);
     pendingTap = setTimeout(() => {
       pendingTap = null;
+      // Expanded, a tap only picks — a miss costs one more tap, not a trip to the wrong page.
+      if (full) return pick(id);
       if (id) go(muscleHref(id));
     }, DOUBLE_TAP_MS);
   });
@@ -370,11 +386,21 @@ export async function start() {
   // Back and the edge swipe work as the app's own Back does.
   const depth = () => history.state?.depth ?? 0;
 
-  /** Move to another screen, leaving a bookmark in the step we leave: how far it was read, and the search. */
+  /**
+   * Move to another screen, leaving a bookmark in the step we leave: how far it
+   * was read, and the search. From the expanded map the new screen takes over the
+   * map's own step (the screen it opened on already holds the bookmark), so Back
+   * returns to that screen and not to a map that is gone.
+   */
   function go(hash) {
-    if (hash === location.hash) return;
+    if (hash === location.hash) {
+      // The page we are on: there is nothing to open, only the map to close.
+      if (full) history.back();
+      return;
+    }
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
-    history.pushState({ depth: depth() + 1 }, '', hash);
+    if (full) history.replaceState({ depth: depth() }, '', hash);
+    else history.pushState({ depth: depth() + 1 }, '', hash);
     render();
   }
 
@@ -409,9 +435,14 @@ export async function start() {
   let drawn = ''; // …and what exactly was drawn, so one step is drawn once
 
   function render() {
+    // Drawing a screen ends the expanded map, however we came to it.
+    if (full && !history.state?.full) setFull(false);
+
     // Going back fires both popstate and hashchange; one screen, one drawing,
     // or a screen reader reads the page out twice.
-    const signature = `${location.hash}|${state.lang}|${depth()}`;
+    // The expanded map is a step, but not a screen: it does not make one deeper.
+    const steps = depth() - (history.state?.full ? 1 : 0);
+    const signature = `${location.hash}|${state.lang}|${steps}`;
     if (signature === drawn) return;
     drawn = signature;
 
@@ -437,9 +468,13 @@ export async function start() {
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
-    for (const [button, key] of [[fit, 'zoom.fit'], [zoomIn, 'zoom.in'], [zoomOut, 'zoom.out']]) {
+    for (const [button, key] of [[fit, 'zoom.fit'], [zoomIn, 'zoom.in'], [zoomOut, 'zoom.out'], [hideMap, 'map.hide'], [fullMap, 'map.full'], [closeMap, 'map.close']]) {
       button.setAttribute('aria-label', t(key));
     }
+    mapbar.innerHTML = `${icon('down')}${t('map.show')}`;
+    map.querySelector('.seg').setAttribute('aria-label', t('view.label'));
+    for (const button of sides) button.textContent = t(`view.${button.dataset.side}`);
+    openPick.textContent = t('pick.open');
     for (const svg of map.querySelectorAll('.fig svg')) {
       svg.setAttribute('aria-label', `${t('map.label')}, ${t(`view.${svg.parentElement.dataset.view}`).toLowerCase()}`);
     }
@@ -460,7 +495,7 @@ export async function start() {
       here.screen === 'home'
         ? ''
         : `<button class="ic" type="button" data-act="back" aria-label="${t('back')}">${icon('back')}</button>${
-            depth() >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
+            steps >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
           }`;
 
     // Before the scroll below: the page has to be tall enough to reach the place
@@ -472,14 +507,13 @@ export async function start() {
       // Muscle. A tap still waiting for its double is for the screen we leave.
       clearTimeout(pendingTap);
       pendingTap = null;
-      show(IDENTITY);
-      if (here.screen === 'muscle') frameMuscle(here.id);
+      restoreView(here);
       scrollTo(0, history.state?.scroll ?? 0);
       settled = scrollY;
       // The row that was pressed is gone with the old page; without this the
       // keyboard's place falls back to the top of the page and a screen reader
       // says nothing. The new page's heading takes it.
-      if (document.activeElement === document.body || !document.activeElement) {
+      if (document.activeElement === document.body || !document.activeElement || map.contains(document.activeElement)) {
         top.querySelector('h1')?.focus({ preventScroll: true });
       }
     }
@@ -494,12 +528,12 @@ export async function start() {
   let frame = null;
 
   /** Where the map's bottom edge is when it is pinned, whatever the scroll. */
-  const pinnedBottom = () => (parseFloat(getComputedStyle(map).top) || 0) + map.offsetHeight;
+  const pinnedBottom = () => (parseFloat(getComputedStyle(dock).top) || 0) + dock.offsetHeight;
 
   /** The list ends with room, so the last row can be scrolled up to the line as well. */
   function makeRoom() {
     const last = [...list.querySelectorAll('.row')].at(-1);
-    if (!last || !map.offsetHeight) {
+    if (!last || !dock.offsetHeight) {
       list.style.paddingBottom = '';
       return;
     }
@@ -521,8 +555,14 @@ export async function start() {
     lit?.classList.remove('lit');
     lit = row;
     row?.classList.add('lit');
-    el('lit').textContent = row ? litRules(atlas, lightsOf(row)) : '';
+    paintLit();
     all.hidden = !row;
+  }
+
+  /** The row being read lights its Muscles; a Muscle picked on the expanded map lights over it. */
+  function paintLit() {
+    const lights = picked ? { muscle: picked } : lit && lightsOf(lit);
+    el('lit').textContent = lights ? litRules(atlas, lights) : '';
   }
 
   /** The whole picture again, until the next scroll. */
@@ -534,10 +574,10 @@ export async function start() {
   function read() {
     frame = null;
     const rows = [...list.querySelectorAll('.row')];
-    if (!scrolled || !rows.length || !map.offsetHeight) return;
+    if (full || !scrolled || !rows.length || !dock.offsetHeight) return;
     // Back at the top of the page: the screen shows all it has again.
     if (scrollY < 8) return unlight();
-    light(rows[pickRow(rows.map((r) => r.getBoundingClientRect()), map.getBoundingClientRect().bottom)] ?? null);
+    light(rows[pickRow(rows.map((r) => r.getBoundingClientRect()), dock.getBoundingClientRect().bottom)] ?? null);
   }
 
   addEventListener(
@@ -551,6 +591,73 @@ export async function start() {
     },
     { passive: true },
   );
+
+  // ── Hidden, and on the whole screen ─────────────────────────────────────
+
+  let full = false; // the map fills the screen: a history step of its own
+  let picked = null; // the Muscle a tap chose there, waiting for «Open»
+
+  /** What the expanded map covers: nothing under it may be reached, by finger or by reader. */
+  const covered = [el('bar'), mapbar, top, list];
+
+  /** Hide the map down to its strip, or bring it back. The choice stays across screens. */
+  function setHidden(hidden) {
+    dock.hidden = hidden;
+    mapbar.hidden = !hidden;
+    // No map, nothing to light: the rows go back to being rows.
+    unlight();
+    makeRoom();
+    // The button that was pressed is gone; the keyboard goes to the one that took its place.
+    (hidden ? mapbar : hideMap).focus({ preventScroll: true });
+    if (hidden) show(IDENTITY);
+    else restoreView();
+  }
+
+  /** Choose a Muscle on the expanded map (or, with `null`, choose none). */
+  function pick(id) {
+    picked = id ?? null;
+    paintLit();
+    pickBar.hidden = !picked;
+    if (picked) pickBar.querySelector('b').textContent = atlas.muscle(picked).uk;
+    map.classList.toggle('picking', Boolean(picked));
+  }
+
+  function setSide(side) {
+    map.dataset.side = side;
+    for (const button of sides) button.setAttribute('aria-pressed', String(button.dataset.side === side));
+    // A pick on the side that just went away would be one nobody can see.
+    pick(null);
+    show(IDENTITY);
+  }
+
+  /** The map on the whole screen and back; the address does not change, so nothing is drawn anew. */
+  function setFull(on) {
+    if (on === full) return;
+    full = on;
+    // A tap still waiting for its double meant the other mode: it must not
+    // open a page from the map that has just closed, or pick on the page.
+    clearTimeout(pendingTap);
+    pendingTap = null;
+    document.documentElement.classList.toggle('full-map', on);
+    for (const part of covered) part.inert = on;
+    if (on) {
+      // It opens where the screen has something lit: the row being read, or the page's own Muscles.
+      const lights = lit ? lightsOf(lit) : pageLights(parseRoute(location.hash, atlas));
+      setSide(lights ? openingSide(atlas, lights) : map.dataset.side);
+      closeMap.focus({ preventScroll: true });
+    } else {
+      pick(null);
+      restoreView();
+      fullMap.focus({ preventScroll: true });
+    }
+  }
+
+  /** Expanding is a step of history, so Back closes the map before it leaves the screen. */
+  function openFull() {
+    history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
+    history.pushState({ depth: depth() + 1, full: true }, '');
+    setFull(true);
+  }
 
   // ── Search ──────────────────────────────────────────────────────────────
 
@@ -593,6 +700,12 @@ export async function start() {
     back: goBack,
     home: goHome,
     all: unlight,
+    'hide-map': () => setHidden(true),
+    'show-map': () => setHidden(false),
+    'full-map': openFull,
+    'close-map': () => history.back(),
+    side: (button) => setSide(button.dataset.side),
+    'open-pick': () => go(muscleHref(picked)),
     fit: () => show(IDENTITY, true),
     'zoom-in': () => zoomBy(STEP),
     'zoom-out': () => zoomBy(1 / STEP),
@@ -609,7 +722,7 @@ export async function start() {
   document.addEventListener('click', (event) => {
     const target = event.target.closest?.('a[href^="#/"], [data-act]');
     if (!target) return;
-    if (!target.matches('a')) return ACTIONS[target.dataset.act]();
+    if (!target.matches('a')) return ACTIONS[target.dataset.act](target);
     // Cmd/Ctrl/Shift-click on a row is the browser's own: a new tab or window.
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     // Leaving the search for a result lets the keyboard go. The query stays in
@@ -621,6 +734,7 @@ export async function start() {
 
   addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
+    if (full) return history.back();
     if (event.target.id === 'q' && event.target.value) return clearSearch();
     if (parseRoute(location.hash, atlas).screen !== 'home') goBack();
   });
@@ -630,6 +744,10 @@ export async function start() {
       unwinding = false;
       return showHome();
     }
+    // The expanded map is a step of its own on the same screen: entering or
+    // leaving it draws nothing anew.
+    const wantsFull = Boolean(history.state?.full);
+    if (wantsFull !== full && drawn.split('|')[0] === location.hash) return setFull(wantsFull);
     render();
   });
   addEventListener('hashchange', () => {
@@ -640,4 +758,6 @@ export async function start() {
   });
 
   render();
+  // A reload keeps the step it was on, the expanded map included.
+  if (history.state?.full) setFull(true);
 }

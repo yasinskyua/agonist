@@ -190,3 +190,18 @@ export function litRules(atlas, { muscle, role = 'agonist', exercise }) {
   const rest = '#map [data-muscle][fill] { fill: var(--c-rest); }';
   return `${rest}\n${exercise ? distribution(atlas, exercise) : rule(muscle, role)}`;
 }
+
+/** What the page itself is about, in the shape `litRules` and `openingSide` take. */
+export function pageLights(here) {
+  if (here.screen === 'muscle') return { muscle: here.id };
+  return here.screen === 'exercise' ? { exercise: here.id } : null;
+}
+
+/**
+ * The side of the body the full-screen map opens on: where what it lights is
+ * drawn — a Muscle's own side, an Exercise's Agonist's (the first Muscle).
+ */
+export function openingSide(atlas, { muscle, exercise }) {
+  const id = exercise ? atlas.exerciseMuscles(exercise)[0].muscle.id : muscle;
+  return atlas.muscle(id).views[0];
+}

@@ -67,22 +67,42 @@
         <!-- Until the data arrives the page says so, in the default language;
              the app replaces it on the first draw. -->
         <div id="top"><p class="loading">Завантаження…</p></div>
+        <!-- «Show the map» — all that is left of it while it is hidden. -->
+        <button id="mapbar" type="button" data-act="show-map" hidden></button>
         <!-- Both sides of the body, pinned under the top of the page while the
-             list below scrolls. -->
-        <figure id="map">
-          <div class="layer">
-            <div class="fig" data-view="front"></div>
-            <div class="fig" data-view="back"></div>
-          </div>
-          <!-- Shown while a row is lit: back to the whole picture. -->
-          <button class="all" type="button" data-act="all" hidden></button>
-          <!-- «Whole body» shows only once the map is zoomed. -->
-          <div class="zoom">
-            <button class="ic" type="button" data-act="fit" hidden></button>
-            <button class="ic" type="button" data-act="zoom-out"></button>
-            <button class="ic" type="button" data-act="zoom-in"></button>
-          </div>
-        </figure>
+             list below scrolls. The dock keeps the pinned place and size when
+             the map itself is taken out to fill the whole screen. -->
+        <div id="dock">
+          <figure id="map" data-side="front">
+            <div class="layer">
+              <div class="fig" data-view="front"></div>
+              <div class="fig" data-view="back"></div>
+            </div>
+            <!-- Shown while a row is lit: back to the whole picture. -->
+            <button class="all" type="button" data-act="all" hidden></button>
+            <!-- On the page (.pg): hide, expand. Expanded (.fl): the side, and the way out. -->
+            <div class="tools">
+              <button class="ic pg" type="button" data-act="hide-map"></button>
+              <button class="ic pg" type="button" data-act="full-map"></button>
+              <div class="seg fl" role="group">
+                <button type="button" data-act="side" data-side="front"></button>
+                <button type="button" data-act="side" data-side="back"></button>
+              </div>
+              <button class="ic fl" type="button" data-act="close-map"></button>
+            </div>
+            <!-- «Whole body» shows only once the map is zoomed. -->
+            <div class="zoom">
+              <button class="ic" type="button" data-act="fit" hidden></button>
+              <button class="ic" type="button" data-act="zoom-out"></button>
+              <button class="ic" type="button" data-act="zoom-in"></button>
+            </div>
+            <!-- Expanded, a tap only picks; this is the pick and the way into it. -->
+            <div class="pick" aria-live="polite" hidden>
+              <b></b>
+              <button type="button" data-act="open-pick"></button>
+            </div>
+          </figure>
+        </div>
         <div id="list"></div>
       </main>
 

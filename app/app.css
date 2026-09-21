@@ -264,7 +264,7 @@ p.sub[translate='no'] { font-style: italic; }
 
 #page { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 
-#map {
+#dock {
   position: sticky;
   z-index: 5;
   top: env(safe-area-inset-top);
@@ -272,12 +272,38 @@ p.sub[translate='no'] { font-style: italic; }
   margin: 0.6rem calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));
   border-bottom: 1px solid var(--ink);
   background: var(--bg);
+}
+
+#page[data-screen='home'] #dock { height: 44svh; }
+#page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+#page[data-screen='game'] #dock, #page[data-screen='game'] #mapbar { display: none; }
+
+#map {
+  position: relative;
+  height: 100%;
+  margin: 0;
   overflow: hidden;
 }
 
-#page[data-screen='home'] #map { height: 44svh; }
-#page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
-#page[data-screen='game'] #map { display: none; }
+/* What is left of a hidden map: a thin strip that stays under the top and
+   brings it back. */
+#mapbar {
+  position: sticky;
+  z-index: 5;
+  top: env(safe-area-inset-top);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: calc(100% + var(--gl) + var(--gr));
+  min-height: var(--tap);
+  margin: 0.6rem calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));
+  padding: 0 var(--gr) 0 var(--gl);
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: var(--bg);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 
 /* Not zoomed, the map lets a finger's vertical drag scroll the page, as anywhere,
    and takes the rest (a pinch, a double tap). Zoomed, a finger drags the map. */
@@ -356,6 +382,96 @@ p.sub[translate='no'] { font-style: italic; }
 }
 
 .zoom .ic { width: var(--tap); height: var(--tap); }
+
+/* On the page: hide and expand, bottom left, opposite the zoom. */
+.tools {
+  position: absolute;
+  z-index: 1;
+  left: max(0.5rem, env(safe-area-inset-left));
+  bottom: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tools .ic { width: var(--tap); height: var(--tap); }
+
+/* ── The map on the whole screen ───────────────────────────────────────── */
+
+/* One side, on the full height. Only the map is on top: the page stays where
+   it was, under it, and cannot be scrolled from here. */
+.full-map { overflow: hidden; }
+.full-map #bottom { display: none; }
+.full-map #map {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  height: auto;
+  background: var(--bg);
+  touch-action: none;
+}
+.full-map .layer { grid-template-columns: 1fr; }
+.full-map #map[data-side='front'] [data-view='back'],
+.full-map #map[data-side='back'] [data-view='front'] { display: none; }
+.full-map .all { display: none; }
+.full-map .pg, html:not(.full-map) .fl { display: none; }
+
+.full-map .tools {
+  top: calc(0.5rem + env(safe-area-inset-top));
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: auto;
+  justify-content: space-between;
+}
+
+.full-map .zoom { bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+.full-map #map.picking .zoom { bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+
+.seg {
+  display: flex;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.seg button {
+  min-height: calc(var(--tap) - 2px);
+  padding: 0 1rem;
+  border: 0;
+  background: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.seg button[aria-pressed='true'] { background: var(--ink); color: var(--bg); }
+
+/* The picked Muscle's name, and the way into its page. */
+.pick {
+  position: absolute;
+  z-index: 2;
+  left: max(0.5rem, env(safe-area-inset-left));
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.6rem 0.6rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.pick b { flex: 1; min-width: 0; font-size: 1rem; font-weight: 600; line-height: 1.25; }
+
+.pick button {
+  flex: none;
+  min-height: var(--tap);
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 700;
+}
 
 /* ── Back, where the thumb is ──────────────────────────────────────────── */
 

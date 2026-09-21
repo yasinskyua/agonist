@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { translator } from './i18n.mjs';
-import { indexHtml, searchHtml, pageTopHtml, pageListHtml, paintRules, litRules } from './screens.mjs';
+import { indexHtml, searchHtml, pageTopHtml, pageListHtml, paintRules, litRules, pageLights, openingSide } from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -216,4 +216,31 @@ test("an Exercise row lights its whole Role Distribution, as its own page would"
 
   assert.match(rules[0], /var\(--c-rest\)/);
   assert.deepEqual(rules.slice(1), paintRules(atlas, ROLL).split('\n'));
+});
+
+// ── The full-screen map opens on the side that has something lit ────────
+
+test('a Muscle opens the map on the side it is drawn on', () => {
+  assert.equal(openingSide(atlas, { muscle: 'rhomboids' }), 'back');
+  assert.equal(openingSide(atlas, { muscle: 'pectoralis_major' }), 'front');
+});
+
+test('a Muscle drawn on both sides opens on the first of them', () => {
+  assert.deepEqual(atlas.muscle('soleus').views, ['front', 'back']);
+  assert.equal(openingSide(atlas, { muscle: 'soleus' }), 'front');
+});
+
+test("an Exercise opens the map on its Agonist's side", () => {
+  assert.equal(openingSide(atlas, { exercise: 'cable-glute-kickback' }), 'back');
+  for (const { id } of atlas.exercises()) {
+    const [agonist] = atlas.exerciseMuscles(id);
+    assert.equal(openingSide(atlas, { exercise: id }), agonist.muscle.views[0], id);
+  }
+});
+
+test('a page lights what it is about, and home and the Game light nothing', () => {
+  assert.deepEqual(pageLights({ screen: 'muscle', id: 'rhomboids' }), { muscle: 'rhomboids' });
+  assert.deepEqual(pageLights(ROLL), { exercise: ROLL.id });
+  assert.equal(pageLights({ screen: 'home' }), null);
+  assert.equal(pageLights({ screen: 'game' }), null);
 });

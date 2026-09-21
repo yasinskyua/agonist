@@ -214,6 +214,7 @@ body:not(.open) #sides {
 #hint strong {
   display: block;
   font-size: 1.05rem;
+  text-wrap: balance;
 }
 
 #hint span {
@@ -385,6 +386,7 @@ body.searching #cancel {
   padding: 0.35rem var(--gr) 0 var(--gl);
   font-size: 1rem;
   font-weight: 700;
+  text-wrap: balance;
 }
 
 #results .group .row {
@@ -546,7 +548,11 @@ body.instant #stage {
 
 .head .name {
   flex: 1;
+  min-width: 0; /* a flex item may shrink below its longest word, so the name stays between the buttons */
   padding-top: 0.35rem;
+  font-size: clamp(1.3rem, 6.5vw, 1.55rem);
+  hyphens: auto;
+  overflow-wrap: anywhere; /* where the browser has no hyphenation for the word */
 }
 
 /* The name takes focus so a screen reader starts from it; it is not a
@@ -601,6 +607,7 @@ body[data-detent='low'] .head .name {
 .name {
   margin: 0;
   font-size: 1.55rem;
+  text-wrap: balance; /* no lone word on the second line */
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.015em;

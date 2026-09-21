@@ -375,7 +375,7 @@ export async function start() {
   const exerciseRow = (e, small = '') =>
     `<li><a class="row" href="#/exercise/${e.id}" data-exercise="${e.id}">${e[state.lang]}${small ? `<small>${small}</small>` : ''}</a></li>`;
   const muscleRow = (m) =>
-    `<li><a class="row" href="#/muscle/${m.id}" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la">${m.la}</small>` : ''}</a></li>`;
+    `<li><a class="row" href="#/muscle/${m.id}" data-muscle-id="${m.id}">${m.uk}${m.la ? `<small class="la" translate="no">${m.la}</small>` : ''}</a></li>`;
 
   /** The card's first line — back, the name, close — which the low sheet shows. */
   function head(t, name) {
@@ -395,7 +395,7 @@ export async function start() {
     return `
       ${head(t, m.uk)}
       <div class="card-body">
-      ${m.la ? `<p class="latin">${m.la}</p>` : ''}
+      ${m.la ? `<p class="latin" translate="no">${m.la}</p>` : ''}
       <p class="action">${m.action}</p>
       ${any ? `
         <ul class="plates" aria-label="${t('muscle.plates')}">
@@ -426,7 +426,7 @@ export async function start() {
     return `
       ${head(t, e[state.lang])}
       <div class="card-body">
-      <p class="latin">${e[otherLang(state.lang)]}</p>
+      <p class="latin" translate="no">${e[otherLang(state.lang)]}</p>
       <ul class="legend" aria-label="${t('exercise.legend')}">
         ${present.map((r) => `<li data-role="${r}">${t(`role.${r}`)}</li>`).join('')}
       </ul>

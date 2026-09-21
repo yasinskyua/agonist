@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- An "A" for Agonist, drawn as three strokes in the Role colours. Square and
+       full-bleed: iOS rounds the corners itself, browsers show it as is. -->
+  <rect width="100" height="100" fill="#1a2330"/>
+  <g fill="none" stroke-width="17" stroke-linecap="round">
+    <line x1="50" y1="17" x2="20" y2="86" stroke="#d0232f"/>
+    <line x1="50" y1="17" x2="80" y2="86" stroke="#1c5bc8"/>
+    <line x1="31" y1="62" x2="69" y2="62" stroke="#e9b300"/>
+  </g>
+</svg>

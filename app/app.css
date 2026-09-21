@@ -393,6 +393,18 @@ body.searching #cancel {
   padding-left: calc(var(--gl) + 0.85rem);
 }
 
+/* A long index: rows off screen stay out of layout until scrolled to. Not the
+   groups: their height varies with the row count, and one guess would make
+   the scrollbar jump. */
+#results .row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3.7rem;
+}
+
+#results.whole .row {
+  content-visibility: visible;
+}
+
 /* ── Rows: every Muscle and Exercise in a list opens ─────────────────── */
 
 .row {

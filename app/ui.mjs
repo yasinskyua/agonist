@@ -250,23 +250,37 @@ export async function start() {
     figures[view] = svg;
   });
 
+  // A Muscle's box in viewBox units does not move with the frame, and the SVG
+  // is fixed for the session, so each is measured once per figure.
+  const boxes = new WeakMap();
+
   /** Where a set of Muscles sits on one figure, in viewBox units. */
   function boxOn(svg, ids) {
-    const paths = ids.flatMap((id) => [...svg.querySelectorAll(`path[data-muscle~="${id}"][fill]`)]);
-    return paths.length ? union(paths.map((p) => p.getBBox())) : null;
+    if (!boxes.has(svg)) boxes.set(svg, new Map());
+    const known = boxes.get(svg);
+    const found = [];
+    for (const id of ids) {
+      let box = known.get(id);
+      if (box === undefined) {
+        const paths = [...svg.querySelectorAll(`path[data-muscle~="${id}"][fill]`)];
+        box = paths.length ? union(paths.map((p) => p.getBBox())) : null;
+        // A figure that is not on screen measures 0 x 0: ask again later.
+        if (!box || box.width || box.height) known.set(id, box);
+      }
+      if (box && (box.width || box.height)) found.push(box);
+    }
+    return found.length ? union(found) : null;
   }
 
   /**
    * Frame the figure on what is chosen, with room around it and the host's
    * aspect — so a 7 px Muscle becomes big enough to read and to tap beside.
    */
-  function frame(svg, ids, host, room, least) {
-    const box = ids.length && boxOn(svg, ids);
+  function frame(svg, box, aspect, room, least) {
     if (!box) {
       svg.setAttribute('viewBox', svg.dataset.whole);
       return;
     }
-    const aspect = host.clientWidth / host.clientHeight || 1;
     let w = Math.max(box.width * room, least);
     let h = Math.max(box.height * room, least);
     if (w / h < aspect) w = h * aspect;
@@ -318,10 +332,15 @@ export async function start() {
     const here = route();
     const ids = focusOf(here);
     const two = sides.children.length > 1;
-    for (const host of sides.children) {
-      const svg = host.querySelector('svg');
-      if (here.screen === 'exercise') frame(svg, ids, host, 1.25, 420);
-      else frame(svg, ids, host, two ? 2.6 : 3.2, two ? 380 : 320);
+    // Read every size first, then write every frame: no layout between hosts.
+    const hosts = [...sides.children].map((host) => ({
+      svg: host.querySelector('svg'),
+      aspect: host.clientWidth / host.clientHeight || 1,
+      box: ids.length ? boxOn(host.querySelector('svg'), ids) : null,
+    }));
+    for (const { svg, aspect, box } of hosts) {
+      if (here.screen === 'exercise') frame(svg, box, aspect, 1.25, 420);
+      else frame(svg, box, aspect, two ? 2.6 : 3.2, two ? 380 : 320);
     }
   }
 
@@ -554,7 +573,12 @@ export async function start() {
     if (!open && document.activeElement !== query) query.value = history.state?.query ?? '';
     results.innerHTML = open ? '' : list(t);
     if (key !== shown) {
+      // Skipped rows are only guessed at, so a bookmark deep in the index would
+      // land short: lay every row out for a frame, then let the off-screen ones
+      // go again, keeping the sizes they had.
+      results.classList.add('whole');
       sheet.scrollTop = history.state?.scroll ?? 0;
+      requestAnimationFrame(() => results.classList.remove('whole'));
       // The row that was pressed is gone with the old card; without this the
       // keyboard's place falls back to the top of the page. The new card's
       // name takes it, or the grip once the card is put away.

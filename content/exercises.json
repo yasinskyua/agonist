@@ -15,8 +15,8 @@
         "hip_flexors": "synergist",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
-        "deltoid_anterior": "stabilizer",
-        "wrist_flexors": "stabilizer"
+        "serratus_anterior": "stabilizer",
+        "deltoid_anterior": "stabilizer"
       },
       "notes": {
         "rectus_abdominis": "Прес тут не рухає хребет, а не дає йому прогнутися, тому він Стабілізатор, хоч навантаження на нього велике. Рух у плечах веде найширший — ExRx зараховує ролик до вправ на нього."
@@ -211,6 +211,9 @@
         "quadriceps": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer"
+      },
+      "notes": {
+        "hamstrings": "Задня поверхня стегна тут працює помітно менше, ніж у румунській тязі, а сідничний — так само."
       }
     },
     "cable-woodchop": {
@@ -218,20 +221,17 @@
       "en": "Cable Woodchop",
       "muscles": {
         "obliques": "agonist",
+        "latissimus_dorsi_teres_major": "synergist",
+        "pectoralis_major": "synergist",
+        "rectus_abdominis": "synergist",
         "abductors": "synergist",
         "hip_adductors": "synergist",
-        "hip_flexors": "synergist",
-        "quadratus_lumborum": "synergist",
-        "erector_spinae": "synergist",
-        "rectus_abdominis": "stabilizer",
-        "pectoralis_major": "stabilizer",
-        "pectoralis_minor": "stabilizer",
-        "trapezius_middle": "stabilizer",
-        "trapezius_lower": "stabilizer",
-        "rhomboids": "stabilizer",
-        "deltoid_medial_lateral": "stabilizer",
-        "deltoid_posterior": "stabilizer",
-        "triceps_brachii": "stabilizer"
+        "erector_spinae": "stabilizer",
+        "quadratus_lumborum": "stabilizer",
+        "triceps_brachii": "stabilizer",
+        "gluteus_maximus": "stabilizer",
+        "quadriceps": "stabilizer",
+        "deep_external_rotators": "stabilizer"
       },
       "notes": {
         "obliques": "Коментар ExRx: поворот іде більше через кульшові суглоби, ніж через хребет, тож м'язи стегна тут — Синергісти."
@@ -460,10 +460,12 @@
         "wrist_extensors": "stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
+        "latissimus_dorsi_teres_major": "stabilizer",
         "erector_spinae": "stabilizer",
         "quadratus_lumborum": "stabilizer",
         "obliques": "stabilizer",
         "abductors": "stabilizer",
+        "gluteus_maximus": "stabilizer",
         "rectus_abdominis": "stabilizer"
       },
       "notes": {
@@ -517,8 +519,12 @@
         "quadriceps": "synergist",
         "hamstrings": "stabilizer",
         "erector_spinae": "stabilizer",
+        "abductors": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer"
+      },
+      "notes": {
+        "hamstrings": "Що ближче стопи до таза, то менше працює задня поверхня стегна."
       }
     },
     "goblet-squat": {
@@ -674,11 +680,13 @@
         "rhomboids": "stabilizer",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
+        "abductors": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer",
         "wrist_flexors": "stabilizer"
       },
       "notes": {
+        "hamstrings": "За ЕМГ працює майже нарівні з сідничним.",
         "latissimus_dorsi_teres_major": "Тягне гирю між ніг на початку замаху, але Вправу веде розгинання таза: вгору гиря летить за інерцією, а не силою плечей."
       }
     },
@@ -802,12 +810,13 @@
       "en": "Pallof Press",
       "muscles": {
         "obliques": "agonist",
+        "deltoid_anterior": "synergist",
+        "pectoralis_major": "synergist",
+        "triceps_brachii": "synergist",
+        "serratus_anterior": "synergist",
         "rectus_abdominis": "stabilizer",
         "erector_spinae": "stabilizer",
         "quadratus_lumborum": "stabilizer",
-        "deltoid_anterior": "stabilizer",
-        "pectoralis_major": "stabilizer",
-        "triceps_brachii": "stabilizer",
         "gluteus_maximus": "stabilizer",
         "abductors": "stabilizer"
       },
@@ -846,16 +855,23 @@
         "hamstrings": "synergist",
         "hip_adductors": "synergist",
         "soleus": "synergist",
-        "gastrocnemius": "synergist",
         "trapezius_upper": "synergist",
+        "levator_scapulae": "synergist",
+        "serratus_anterior": "synergist",
         "deltoid_medial_lateral": "synergist",
+        "supraspinatus": "synergist",
         "deltoid_anterior": "synergist",
-        "brachialis": "synergist",
+        "infraspinatus_teres_minor": "synergist",
         "biceps_brachii": "synergist",
+        "brachialis": "synergist",
+        "brachioradialis": "synergist",
+        "gastrocnemius": "stabilizer",
         "erector_spinae": "stabilizer",
+        "trapezius_middle": "stabilizer",
+        "rhomboids": "stabilizer",
+        "wrist_flexors": "stabilizer",
         "rectus_abdominis": "stabilizer",
-        "obliques": "stabilizer",
-        "wrist_flexors": "stabilizer"
+        "obliques": "stabilizer"
       },
       "notes": {
         "trapezius_upper": "Завершує тягу, піднімаючи плечі. У довіднику ExRx висяче взяття стоїть серед вправ на верхню трапецію, але рух веде розгинання таза."
@@ -905,6 +921,7 @@
         "serratus_anterior": "synergist",
         "quadriceps": "synergist",
         "gluteus_maximus": "synergist",
+        "hip_adductors": "synergist",
         "soleus": "synergist",
         "trapezius_upper": "stabilizer",
         "levator_scapulae": "stabilizer",
@@ -916,7 +933,7 @@
         "obliques": "stabilizer"
       },
       "notes": {
-        "quadriceps": "Ноги дають штанзі початковий поштовх, а жим завершують плечі."
+        "quadriceps": "Ноги дають штанзі основний поштовх, а жим завершують плечі, тож квадрицепс тут — майже рівноправний кандидат в Агоністи."
       }
     },
     "push-up": {
@@ -1159,8 +1176,9 @@
         "quadriceps": "synergist",
         "hip_adductors": "synergist",
         "hamstrings": "synergist",
-        "soleus": "synergist",
         "gastrocnemius": "stabilizer",
+        "tibialis_anterior": "stabilizer",
+        "deep_external_rotators": "stabilizer",
         "erector_spinae": "stabilizer",
         "trapezius_middle": "stabilizer",
         "trapezius_upper": "stabilizer",
@@ -1168,6 +1186,9 @@
         "rhomboids": "stabilizer",
         "rectus_abdominis": "stabilizer",
         "obliques": "stabilizer"
+      },
+      "notes": {
+        "quadriceps": "У сумо квадрицепс працює більше, ніж у класичній становій, а литковий — менше."
       }
     },
     "t-bar-row": {

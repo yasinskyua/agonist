@@ -1,11 +1,11 @@
-// Перевіряє два SVG атласу й витягує з них перелік М'язів у
+// Checks the atlas's two SVGs and extracts the list of Muscles from them into
 // assets/atlas/muscle-ids.json.
 //
-// Запуск:  node tools/atlas-ids.mjs          — перезаписати перелік
-//          node tools/atlas-ids.mjs --check  — впасти, якщо перелік розійшовся з SVG
+// Run:  node tools/atlas-ids.mjs          — rewrite the list
+//       node tools/atlas-ids.mjs --check  — fail if the list has drifted from the SVGs
 //
-// Самі SVG збирає tools/build-atlas.mjs з експортів Figma. Цей скрипт працює
-// з тим, що лежить у репозиторії, і є перевіркою після будь-яких правок.
+// The SVGs themselves are built by tools/build-atlas.mjs from the Figma exports.
+// This script works with what lies in the repository and is the check after any edit.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -35,8 +35,8 @@ function readPaths(path) {
     if (hit) throw new Error(`${path}: ${what}, знайдено "${hit[0]}"`);
   }
 
-  // Один шлях може належати двом М'язам, що накладаються (шия), тому значення
-  // атрибута — список імен через пробіл, як у class.
+  // One path may belong to two overlapping Muscles (the neck), so an attribute
+  // value is a space-separated list of names, like `class`.
   const attr = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]+)"`))?.[1].split(' ') ?? [];
   const paths = (svg.match(/<path\b[^>]*>/g) ?? [])
     .map((tag) => ({ muscles: attr(tag, 'data-muscle'), groups: attr(tag, 'data-group') }))
@@ -57,8 +57,8 @@ export function collectMuscles(views = VIEWS) {
         if (!byMuscle.has(muscle)) byMuscle.set(muscle, { views: [], groups: [], paths: 0 });
         const entry = byMuscle.get(muscle);
         if (!entry.views.includes(view)) entry.views.push(view);
-        // М'язова група М'яза — та, що вкриває його шляхи; авторувати зв'язок
-        // руками не треба, він уже намальований в атласі.
+        // A Muscle's Muscle Group is the one covering its paths; there is no need
+        // to author the link by hand, it is already drawn in the atlas.
         for (const group of groups) if (!entry.groups.includes(group)) entry.groups.push(group);
         entry.paths += 1;
       }
@@ -101,7 +101,7 @@ if (import.meta.filename === process.argv[1]) {
       if (orphan.length) console.log(`  без групи: ${orphan.map(([id]) => id).join(', ')}`);
     }
   } catch (error) {
-    console.error(error.message); // стектрейс тут — шум: помилка адресована людині
+    console.error(error.message); // a stack trace is noise here: the error is addressed to a person
     process.exit(1);
   }
 }

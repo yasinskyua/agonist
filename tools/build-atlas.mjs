@@ -1,32 +1,34 @@
-// Будує assets/atlas/{front,back}.svg з двох сирих експортів Figma.
+// Builds assets/atlas/{front,back}.svg from the two raw Figma exports.
 //
 //   node tools/build-atlas.mjs "~/Downloads/Muscular Systems.svg" "~/Downloads/Muscle Callouts.svg"
 //
-// Навіщо: в атласі Ryan Graves шари М'язів не названі — усі шляхи звуться
-// `Vector`, `Group 574`. Імена живуть тільки у варіантах компонента виносок:
-// `Muscle Group=- Biceps Brachii, View=Anterior, Dissection=Outer Muscles`, де
-// потрібний М'яз залитий іншим кольором. Фігура у виносці й у самому атласі —
-// та сама, тож ім'я переноситься з виноски на шлях атласу за геометрією.
-// Це замінює ручне іменування півтори сотні шляхів.
+// Why: in Ryan Graves's atlas the Muscle layers are unnamed — every path is
+// called `Vector`, `Group 574`. The names live only in the variants of the
+// callout component:
+// `Muscle Group=- Biceps Brachii, View=Anterior, Dissection=Outer Muscles`,
+// where the wanted Muscle is filled with a different colour. The figure in a
+// callout and in the atlas itself is the same, so the name is carried from
+// the callout to the atlas path by geometry. This replaces naming a hundred
+// and fifty paths by hand.
 //
-// Вихідні файли в репозиторій не кладемо: разом вони важать 112 МБ, а в
-// продукті потрібні лише два зібрані SVG.
+// The source files are not kept in the repository: together they weigh 112 MB,
+// and the product needs only the two built SVGs.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const VIEWS = { front: 'Anterior', back: 'Posterior' };
 
-// Рівень дисекції — одне рішення на весь скрипт. Написаний він в експортах
-// по-різному: в атласі з одруківкою `Outter`, у виносках без неї. Тому дві
-// орфографії, але вибір рівня один.
+// The dissection level is one decision for the whole script. The exports spell
+// it differently: the atlas has the typo `Outter`, the callouts do not. So two
+// spellings, but one choice of level.
 const DISSECTION = {
-  systems: 'Outter/Inner Muscles', // саме так, з двома `t`
+  systems: 'Outter/Inner Muscles', // spelled just so, with two `t`
   callouts: 'Outer/Inner Muscles',
 };
 
-// Колір, яким виноска підсвічує цільовий М'яз. Калібрувальна константа: якщо
-// автор атласу колись змінить палітру, міняти тут — скрипт скаже, що не
-// знайшов жодного підсвіченого шляху.
+// The colour a callout uses to highlight its target Muscle. A calibration
+// constant: if the atlas author ever changes the palette, change it here — the
+// script will say it found no highlighted path.
 const HIGHLIGHT = '#CE4849';
 
 /** `Latissimus Dorsi & Teres Major` → `latissimus_dorsi_teres_major` */
@@ -37,10 +39,10 @@ const muscleId = (name) =>
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '');
 
-/** Тіло елемента з `id="<marker>"` до наступного `id="<prefix>` або кінця. */
+/** The body of the element with `id="<marker>"`, up to the next `id="<prefix>` or the end. */
 function sliceById(svg, marker, prefix, from = 0) {
   const start = svg.indexOf(`id="${marker}"`, from);
-  if (start < 0) throw new Error(`не знайдено варіант: ${marker}`);
+  if (start < 0) throw new Error(`variant not found: ${marker}`);
   const end = svg.indexOf(`id="${prefix}`, start + marker.length + 5);
   return svg.slice(start, end < 0 ? svg.length : end);
 }
@@ -48,9 +50,9 @@ function sliceById(svg, marker, prefix, from = 0) {
 const pathTags = (fragment) => fragment.match(/<path\b[^>]*\/?>/g) ?? [];
 
 /**
- * Рамка шляху `[minX, minY, maxX, maxY]` за контрольними точками кривих.
- * Реальний контур завжди лежить усередині опуклої оболонки контрольних точок,
- * тож рамка не обріже фігуру.
+ * A path's box `[minX, minY, maxX, maxY]` from the curves' control points.
+ * The real outline always lies inside the convex hull of its control points,
+ * so the box will not clip the figure.
  */
 function bboxOf(d) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -70,13 +72,14 @@ function bboxOf(d) {
 }
 
 /**
- * Рамки всіх шляхів, зсунуті так, щоб ліва верхня точка фігури була в нулі.
+ * The boxes of all paths, shifted so the figure's top-left point is at zero.
  *
- * Зіставляти шляхи атласу й виноски за індексом не можна: порядок у двох
- * експортах не збігається. На рівні `Outter/Inner Muscles` шлях литки стоїть
- * в атласі 73-м, а у виносці 79-м — і литка діставала ім'я квадрицепса
- * мовчки, бо кількість шляхів однакова. Геометрія ж та сама: обидва експорти
- * дають фігуру ~589.6×1135.3, просто в різних місцях полотна.
+ * Paths of the atlas and of a callout cannot be matched by index: the order
+ * differs between the two exports. At the `Outter/Inner Muscles` level the calf
+ * path is 73rd in the atlas and 79th in the callout — and the calf silently got
+ * the quadriceps's name, because the number of paths is the same. The geometry
+ * is the same, though: both exports give a ~589.6×1135.3 figure, just at
+ * different places on the canvas.
  */
 const boxesOf = (tags) =>
   tags.map((tag) => {
@@ -92,17 +95,18 @@ export function figureBoxes(tags) {
   return boxes.map((b) => b && [b[0] - x0, b[1] - y0, b[2] - x0, b[3] - y0]);
 }
 
-// Наскільки рамка шляху у виносці може розійтися з рамкою того самого шляху
-// в атласі, у вихідних одиницях (фігура ~590 завширшки). Виміряне
-// розходження — до 1.02 одиниці; сусідні М'язи лежать на десятки одиниць
-// далі, тож бере все одно найближчий, а межа лише ловить випадок, коли шляху
-// немає зовсім. Калібрувальна константа: якщо новий експорт піде з іншою
-// точністю, скрипт скаже, що не знайшов шляху, а не змовчить.
+// How far a callout path's box may differ from the same path's box in the
+// atlas, in source units (the figure is ~590 wide). The measured difference is
+// up to 1.02 units; neighbouring Muscles lie tens of units apart, so the
+// nearest one is taken anyway, and the limit only catches the case where the
+// path is missing altogether. A calibration constant: if a new export comes
+// with a different precision, the script says it found no path instead of
+// staying silent.
 const TOLERANCE = 2;
 
 /**
- * Індекси шляхів фігури, що відповідають рамці `box`: найближчий і всі, хто
- * лежить рівно там само.
+ * The indices of the figure's paths matching the box `box`: the nearest one and
+ * everything lying exactly the same place.
  */
 export function matchingPaths(figure, box) {
   const away = figure.map((b) =>
@@ -114,12 +118,14 @@ export function matchingPaths(figure, box) {
 }
 
 /**
- * Індекс шляху фігури → імена М'язів і М'язових груп, які його підсвічують.
+ * A figure path's index → the names of the Muscles and Muscle Groups that
+ * highlight it.
  *
- * Виноски М'язів автор назвав `Muscle Group=- Biceps Brachii`, а М'язових
- * груп — `Muscle Group=Chest`, без дефіса. Дефіс і є єдиною ознакою, що це
- * М'яз. Пробіл після дефіса необов'язковий: `-Rhomboids` написано злитно, і
- * суворий шаблон мовчки губив цей М'яз.
+ * The author named Muscle callouts `Muscle Group=- Biceps Brachii` and Muscle
+ * Group callouts `Muscle Group=Chest`, without the hyphen. The hyphen is the
+ * only sign that it is a Muscle. The space after the hyphen is optional:
+ * `-Rhomboids` is written together, and a strict pattern silently lost this
+ * Muscle.
  */
 function calloutMap(callouts, figmaView, figure) {
   const muscles = new Map();
@@ -148,12 +154,12 @@ function calloutMap(callouts, figmaView, figure) {
       const hits = boxes[i] ? matchingPaths(figure, boxes[i]) : [];
       if (hits.length === 0) {
         throw new Error(
-          `${figmaView}, ${id}: підсвіченого шляху немає у фігурі. ` +
-            'Фігури розійшлися — зіставлення за геометрією більше не діє.',
+          `${figmaView}, ${id}: the highlighted path is not in the figure. ` +
+            'The figures have diverged — matching by geometry no longer holds.',
         );
       }
-      // Однакова рамка означає шляхи, що лежать один на одному; ім'я дістають
-      // обидва, інакше підсвітиться тільки верхній.
+      // An equal box means paths lying on top of each other; both get the name,
+      // otherwise only the top one would light up.
       for (const hit of hits) {
         if (!owners.has(hit)) owners.set(hit, []);
         if (!owners.get(hit).includes(id)) owners.get(hit).push(id);
@@ -162,12 +168,12 @@ function calloutMap(callouts, figmaView, figure) {
   }
 
   if (muscles.size === 0) {
-    throw new Error(`${figmaView}: жодного підсвіченого шляху — змінився ${HIGHLIGHT}?`);
+    throw new Error(`${figmaView}: no highlighted path — did ${HIGHLIGHT} change?`);
   }
   return { muscles, groups };
 }
 
-/** viewBox навколо всіх шляхів, з полем. */
+/** A viewBox around all the paths, with a margin. */
 function viewBox(tags) {
   const boxes = boxesOf(tags).filter(Boolean);
 
@@ -192,7 +198,7 @@ function buildView({ systems, callouts, figmaView }) {
   const { muscles: owners, groups } = calloutMap(callouts, figmaView, figureBoxes(tags));
 
   const body = tags.map((tag, i) => {
-    let out = tag.replace(/\sid="[^"]*"/, ''); // `Vector 163` нічого не значить
+    let out = tag.replace(/\sid="[^"]*"/, ''); // `Vector 163` means nothing
     const attr = (name, value) =>
       value && (out = out.replace(/^<path/, `<path ${name}="${value.join(' ')}"`));
     attr('data-group', groups.get(i));
@@ -221,7 +227,7 @@ function buildView({ systems, callouts, figmaView }) {
 if (import.meta.filename === process.argv[1]) {
   const [systemsPath, calloutsPath] = process.argv.slice(2);
   if (!systemsPath || !calloutsPath) {
-    console.error('вжиток: node tools/build-atlas.mjs <Muscular Systems.svg> <Muscle Callouts.svg>');
+    console.error('usage: node tools/build-atlas.mjs <Muscular Systems.svg> <Muscle Callouts.svg>');
     process.exit(1);
   }
 
@@ -234,8 +240,8 @@ if (import.meta.filename === process.argv[1]) {
       const out = `assets/atlas/${view}.svg`;
       writeFileSync(out, svg);
       console.log(
-        `${out}: ${tags} шляхів, ${muscles.size} М'язів, ${groups.size} груп, ` +
-          `${(svg.length / 1024).toFixed(0)} КБ`,
+        `${out}: ${tags} paths, ${muscles.size} Muscles, ${groups.size} groups, ` +
+          `${(svg.length / 1024).toFixed(0)} KB`,
       );
     }
   } catch (error) {

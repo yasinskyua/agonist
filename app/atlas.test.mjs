@@ -1,6 +1,6 @@
-// Тести атласу працюють на справжньому контенті, не на фікстурах: контент тут
-// не вхідні дані, а сам продукт, і більшість помилок буде саме в ньому.
-// Фікстури з'являються лише там, де треба зламати контент навмисно.
+// The atlas tests run on the real content, not on fixtures: here the content
+// is not input data but the product itself, and most bugs will be in it.
+// Fixtures appear only where the content has to be broken on purpose.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,28 +19,28 @@ const content = {
 
 const atlas = createAtlas(content);
 
-/** Копія контенту з однією зламаною річчю. */
+/** A copy of the content with one thing broken. */
 const broken = (patch) => ({ ...content, ...patch });
 
-/** Помилка, яку кинув збір атласу. Тест мовчки не пройде, якщо її не буде. */
+/** The error building the atlas threw. The test fails if there is none. */
 function contentError(patch) {
   try {
     createAtlas(broken(patch));
   } catch (error) {
-    assert.ok(error instanceof ContentError, `очікували ContentError, дістали ${error}`);
+    assert.ok(error instanceof ContentError, `expected a ContentError, got ${error}`);
     return error;
   }
-  assert.fail('контент зламаний, а помилки немає');
+  assert.fail('the content is broken and there is no error');
 }
 
-// ── Цілісність контенту ──────────────────────────────────────────────────
+// ── Content integrity ────────────────────────────────────────────────────
 
-test('справжній контент проходить усі інваріанти', () => {
+test('the real content passes every invariant', () => {
   assert.ok(atlas.muscles().length > 0);
   assert.ok(atlas.exercises().length > 0);
 });
 
-test("одруківка в ідентифікаторі М'яза ламає перевірку, а не підсвічування", () => {
+test('a typo in a Muscle id breaks the check, not the highlighting', () => {
   const { pectoralis_major, ...rest } = content.muscles;
   const error = contentError({ muscles: { ...rest, pectoralis_majr: pectoralis_major } });
 
@@ -48,7 +48,7 @@ test("одруківка в ідентифікаторі М'яза ламає п
   assert.match(error.message, /не намальований в атласі/);
 });
 
-test('Вправа без Агоніста і Вправа з двома — обидві помилка', () => {
+test('an Exercise with no Agonist and one with two are both errors', () => {
   const none = { ...content.exercises['pull-up'], muscles: { biceps_brachii: 'synergist' } };
   const two = {
     ...content.exercises['pull-up'],
@@ -59,39 +59,39 @@ test('Вправа без Агоніста і Вправа з двома — о�
   assert.throws(() => createAtlas(broken({ exercises: { x: two } })), /Агоністів 2/);
 });
 
-test("Вправа без М'язів — помилка", () => {
+test('an Exercise with no Muscles is an error', () => {
   assert.throws(
     () => createAtlas(broken({ exercises: { x: { en: 'Nothing', muscles: {} } } })),
     /не має жодного М'яза/,
   );
 });
 
-test("Вправа, що згадує М'яз поза словником — помилка", () => {
+test('an Exercise naming a Muscle outside the vocabulary is an error', () => {
   const x = { en: 'Ghost', muscles: { unicorn_major: 'agonist' } };
   assert.throws(() => createAtlas(broken({ exercises: { x } })), /невідомий М'яз "unicorn_major"/);
 });
 
-test('невідома Роль — помилка', () => {
+test('an unknown Role is an error', () => {
   const x = { en: 'Odd', muscles: { quadriceps: 'agonist', hamstrings: 'помічник' } };
   assert.throws(() => createAtlas(broken({ exercises: { x } })), /невідома Роль/);
 });
 
-test("М'язова група поза атласом — помилка", () => {
+test('a Muscle Group outside the atlas is an error', () => {
   assert.throws(
     () => createAtlas(broken({ groups: { ...content.groups, elbows: { uk: 'Лікті', en: 'Elbows' } } })),
     /М'язова група "elbows" не намальована/,
   );
 });
 
-test('усі проблеми повідомляються за один прохід, не по одній', () => {
+test('all problems are reported in one pass, not one at a time', () => {
   const error = contentError({ exercises: { a: { en: 'A', muscles: {} }, b: { en: 'B', muscles: {} } } });
 
-  // Обидві зламані Вправи названі, а не тільки перша.
+  // Both broken Exercises are named, not just the first.
   assert.match(error.message, /"a"/);
   assert.match(error.message, /"b"/);
 });
 
-test("М'язова група без назви в контенті — помилка, а не порожній рядок на екрані", () => {
+test('a Muscle Group with no name in the content is an error, not an empty string on screen', () => {
   const { chest, ...rest } = content.groups;
   const error = contentError({ groups: rest });
 
@@ -99,32 +99,32 @@ test("М'язова група без назви в контенті — пом�
   assert.match(error.message, /"chest", якої немає в контенті/);
 });
 
-// ── Запити ───────────────────────────────────────────────────────────────
+// ── Queries ──────────────────────────────────────────────────────────────────
 
-test("М'язи Вправи йдуть Агоніст → Синергісти → Стабілізатори", () => {
+test("an Exercise's Muscles run Agonist → Synergists → Stabilizers", () => {
   const roles = atlas.exerciseMuscles('bench-press').map((x) => x.role);
 
   assert.equal(roles[0], 'agonist');
   assert.equal(roles.filter((r) => r === 'agonist').length, 1);
-  // Ролі йдуть блоками, а не впереміш.
+  // Roles come in blocks, not mixed.
   assert.deepEqual(roles, ['agonist', 'synergist', 'synergist', 'stabilizer', 'stabilizer']);
   assert.equal(atlas.exerciseMuscles('bench-press')[0].muscle.id, 'pectoralis_major');
 });
 
-test("Вправи М'яза — це обернене ребро, з Роллю в кожній", () => {
+test("a Muscle's Exercises are the reversed edge, with a Role in each", () => {
   const found = atlas.muscleExercises('erector_spinae');
 
   assert.equal(found.find((x) => x.exercise.id === 'deadlift').role, 'agonist');
   assert.equal(found.find((x) => x.exercise.id === 'back-squat').role, 'stabilizer');
-  // Те саме ребро з іншого боку.
+  // The same edge from the other side.
   for (const { exercise, role } of found) {
     assert.equal(content.exercises[exercise.id].muscles.erector_spinae, role);
   }
 });
 
-test('невідомий ідентифікатор у запиті — гучна помилка, а не порожня відповідь', () => {
-  // Порожній список мусить означати рівно одне: «такого нема». Перевіряти
-  // існування — muscle() / exercise(), саме туди йде ідентифікатор з URL.
+test('an unknown id in a query is a loud error, not an empty answer', () => {
+  // An empty list must mean exactly one thing: "there are none". Existence is
+  // checked with muscle() / exercise(); an id from the URL goes there.
   assert.throws(() => atlas.exerciseMuscles('bench-pres'), /Вправа "bench-pres" не існує/);
   assert.throws(() => atlas.muscleExercises('quadricep'), /М'яз "quadricep" не існує/);
   assert.throws(() => atlas.groupMuscles('chst'), /М'язова група "chst" не існує/);
@@ -135,31 +135,31 @@ test('невідомий ідентифікатор у запиті — гучн
   assert.equal(atlas.exercise('bench-pres'), undefined);
 });
 
-test("М'яз без жодної Вправи допустимий", () => {
+test('a Muscle with no Exercises is allowed', () => {
   assert.ok(atlas.muscle('splenius'));
   assert.deepEqual(atlas.muscleExercises('splenius'), []);
 });
 
-test("М'язова група розгортається в М'язи через атлас, не через контент", () => {
+test('a Muscle Group expands into Muscles through the atlas, not the content', () => {
   const ids = atlas.groupMuscles('back').map((m) => m.id);
 
   assert.ok(ids.includes('rhomboids'));
   assert.ok(ids.includes('latissimus_dorsi_teres_major'));
   assert.ok(!ids.includes('pectoralis_major'));
-  // Групи немає в жодному файлі контенту — тільки в атласі.
+  // The group is in no content file — only in the atlas.
   assert.equal(content.muscles.rhomboids.groups, undefined);
 });
 
-test("Вправи М'язової групи — об'єднання по М'язах, без повторів", () => {
+test("a Muscle Group's Exercises are the union over its Muscles, without repeats", () => {
   const ids = atlas.groupExercises('chest').map((e) => e.id);
 
   assert.deepEqual(ids, [...new Set(ids)]);
   assert.ok(ids.includes('bench-press'));
   assert.ok(ids.includes('push-up'));
-  assert.ok(ids.includes('overhead-press')); // через serratus_anterior, теж груди
+  assert.ok(ids.includes('overhead-press')); // via serratus_anterior, chest too
 });
 
-test("Пов'язані вправи — ті, що поділяють Агоніста, крім самої Вправи", () => {
+test('Related Exercises share the Agonist, and never include the Exercise itself', () => {
   const agonist = (id) =>
     Object.entries(content.exercises[id].muscles).find(([, role]) => role === 'agonist')[0];
 
@@ -175,7 +175,7 @@ test("Пов'язані вправи — ті, що поділяють Агон�
   assert.deepEqual(atlas.relatedExercises('hip-abduction-machine'), []);
 });
 
-test("М'яз віддає вид і групу з атласу, а назву з контенту", () => {
+test("a Muscle's view and group come from the atlas, its name from the content", () => {
   const quadriceps = atlas.muscle('quadriceps');
 
   assert.equal(quadriceps.uk, content.muscles.quadriceps.uk);
@@ -183,7 +183,7 @@ test("М'яз віддає вид і групу з атласу, а назву �
   assert.deepEqual(quadriceps.views, ['front', 'back']);
 });
 
-test("латинська назва порожня там, де М'яз — функціональна група", () => {
+test('the Latin name is empty where the Muscle is a functional group', () => {
   assert.equal(atlas.muscle('hamstrings').la, '');
   assert.equal(atlas.muscle('pectoralis_major').la, 'Pectoralis major');
 });
@@ -235,7 +235,7 @@ test('a review mark without a reason is an error: the Trainer must know what is 
 test('the review queue is a flat list with Role and reason, agonists first', () => {
   const queue = atlas.reviewQueue();
 
-  assert.ok(queue.length > 0, 'чернетка без жодної позначки непевності — підозріло');
+  assert.ok(queue.length > 0, 'a draft with no uncertainty flag at all is suspicious');
   assert.deepEqual(
     queue.map((x) => x.role),
     [...queue.map((x) => x.role)].sort((a, b) => ROLES.indexOf(a) - ROLES.indexOf(b)),

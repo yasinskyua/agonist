@@ -290,13 +290,8 @@ body[data-screen='exercise'] .side path.live[fill] {
 /* Cancel shows while the search is in use, as it does on iOS. */
 #cancel {
   display: none;
-  flex: none;
-  min-height: var(--tap);
-  padding: 0 0.2rem;
-  border: 0;
-  background: none;
-  color: var(--synergist);
-  font-weight: 500;
+  background: var(--chalk);
+  font-size: 1rem;
 }
 
 body.searching #cancel {

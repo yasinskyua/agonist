@@ -508,7 +508,7 @@ export async function start() {
     }
     document.body.classList.toggle('open', open);
     gripLabel();
-    el('cancel').textContent = t('search.cancel');
+    el('cancel').setAttribute('aria-label', t('search.cancel'));
     if (location.hash !== zoomedAt) {
       zoomed = false;
       zoomedAt = location.hash;
@@ -656,6 +656,11 @@ export async function start() {
     fit();
   }
   query.addEventListener('blur', searching);
+
+  // Pressing the button must not take focus from the field: the blur would end
+  // the search and hide this very button before its click landed, and the click
+  // would fall on the field, which raises the sheet again.
+  el('cancel').addEventListener('mousedown', (e) => e.preventDefault());
 
   /** Leave the search the way iOS does: empty, keyboard gone, sheet down. */
   function cancelSearch() {

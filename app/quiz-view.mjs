@@ -104,14 +104,14 @@ export function summaryHtml(t, lang, atlas, round) {
     <div class="g-bar"><h2 class="g-title" tabindex="-1">${t('game.finish')}</h2>${closeButton(t)}</div>
     <p class="g-score"><span class="sr">${t('game.score')}: </span><b>${score}</b>/${total}</p>
     ${note ? `<p class="g-lead g-note">${note}</p>` : ''}
-    ${mistakes.length ? `
-      <h3 class="g-sub">${t('game.mistakes')}</h3>
-      <ul class="g-list">${mistakes.map((m) => `
-        <li><a class="row" href="#/exercise/${m.exercise}" data-exercise="${m.exercise}">${atlas.exercise(m.exercise)[lang]}<small>${t('search.agonist')}: ${atlas.muscle(m.answer).uk}</small></a></li>`).join('')}
-      </ul>` : ''}
     <div class="g-actions">
       <button class="g-next" type="button" data-g="again">${t('game.again')}</button>
       <button class="g-ghost" type="button" data-g="modes">${t('game.modes')}</button>
       <button class="g-ghost" type="button" data-g="close">${t('close')}</button>
-    </div>`;
+    </div>
+    ${mistakes.length ? `
+      <h3 class="g-sub">${t('game.mistakes')}</h3>
+      <ul class="g-list">${mistakes.map((m) => `
+        <li><a class="row" href="#/exercise/${m.exercise}" data-exercise="${m.exercise}">${atlas.exercise(m.exercise)[lang]}<small>${t('search.agonist')}: ${atlas.muscle(m.answer).uk}</small></a></li>`).join('')}
+      </ul>` : ''}`;
 }

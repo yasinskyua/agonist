@@ -1186,13 +1186,17 @@ body.game .side path.live {
   padding-right: calc(2rem + var(--gr));
 }
 
+/* Right under the score, where the eye already is: with a long list of
+   mistakes the buttons must not be a scroll away, nor cover the list. */
 .g-actions {
-  position: sticky;
-  z-index: 1;
-  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.5rem;
   margin-top: 1rem;
-  padding: 0.4rem 0 calc(1rem + env(safe-area-inset-bottom));
-  background: var(--chalk);
+}
+
+.g-actions .g-next {
+  grid-column: 1 / -1;
 }
 
 @media (hover: hover) {

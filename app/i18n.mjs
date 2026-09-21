@@ -10,6 +10,7 @@ const STRINGS = {
   'app.title': { uk: "М'язи і вправи", en: 'Muscles and Exercises' },
   'map.label': { uk: 'Мапа тіла', en: 'Body map' },
   'map.hint': { uk: "Торкніться м'яза", en: 'Tap a muscle' },
+  'spy.all': { uk: "Усі м'язи", en: 'All muscles' },
   'map.legend': { uk: 'Тілесні — ті, для яких є вправи', en: 'Tinted muscles have exercises' },
   'view.front': { uk: 'Спереду', en: 'Front' },
   'view.back': { uk: 'Ззаду', en: 'Back' },

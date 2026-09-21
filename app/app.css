@@ -310,6 +310,30 @@ p.sub[translate='no'] { font-style: italic; }
 .fig path.live { cursor: pointer; }
 .fig rect.tap { fill: none; pointer-events: all; cursor: pointer; }
 
+/* ── The row being read ────────────────────────────────────────────────── */
+
+/* The row nearest the map lights its Muscles there and wears a red bar in the
+   gutter; the text stays where it was. */
+.row.lit { margin-left: -10px; padding-left: 10px; box-shadow: inset 3px 0 0 var(--red); }
+
+/* Back to the whole picture; shown only while a row is lit. */
+.all {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  min-height: var(--tap);
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* ── Back, where the thumb is ──────────────────────────────────────────── */
 
 #bottom {

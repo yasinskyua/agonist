@@ -14,12 +14,13 @@ const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>`
 
 /**
  * One row of any list: a link to a page. The Role, where the row has one, is
- * on the link itself (`data-role`), so its colour comes from CSS. The Note that
- * explains the Role sits beside the link, not in it: read as the link's name it
- * would be a paragraph.
+ * on the link itself (`data-role`), so its colour comes from CSS. So is what the
+ * row lights on the map while it is read (`lights`: `data-muscle` or
+ * `data-exercise`; see `litRules`). The Note that explains the Role sits beside
+ * the link, not in it: read as the link's name it would be a paragraph.
  */
-function row({ href, name, sub = '', aside = '', role = '', note = '' }) {
-  return `<li><a class="row" href="${href}"${role ? ` data-role="${role}"` : ''}>
+function row({ href, lights, name, sub = '', aside = '', role = '', note = '' }) {
+  return `<li><a class="row" href="${href}" ${lights}${role ? ` data-role="${role}"` : ''}>
     <span class="row-name"><b>${name}</b>${sub}</span>${aside ? `<small class="aside">${role ? '<i></i>' : ''}${aside}</small>` : ''}</a>${note ? `<p class="why">${note}</p>` : ''}</li>`;
 }
 
@@ -27,6 +28,7 @@ const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) =
   const n = atlas.muscleExercises(m.id).length;
   return row({
     href: muscleHref(m.id),
+    lights: `data-muscle="${m.id}"`,
     name: m.uk,
     sub,
     aside: role ? t(`role.${role}`) : n ? exerciseCount(lang, n) : '',
@@ -36,7 +38,7 @@ const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) =
 };
 
 const exerciseRow = (t, lang, e, { sub = '', aside = '', role = '' } = {}) =>
-  row({ href: exerciseHref(e.id), name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role });
+  row({ href: exerciseHref(e.id), lights: `data-exercise="${e.id}"`, name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role });
 
 const section = (title, body) => `<section><h2 class="h">${title}</h2>${body}</section>`;
 const list = (rows) => `<ul class="list">${rows.join('')}</ul>`;
@@ -154,19 +156,37 @@ export function pageListHtml(t, lang, atlas, here, query = '') {
 // ── The map's colours ────────────────────────────────────────────────────
 
 /**
- * Colour rules, one selector per Muscle: `~=` because a neck path belongs to
+ * Colour rule, one selector per Muscle: `~=` because a neck path belongs to
  * two Muscles, `[fill]` to skip the outline twins (filling a detail stroke would
- * smear it) and the tap zones. An Exercise's Roles go lightest first, the
- * Agonist last, so where two Roles share a path the heavier one shows.
+ * smear it) and the tap zones.
  */
-export function paintRules(atlas, here) {
-  const rule = (id, role) => `#map [data-muscle~="${id}"][fill] { fill: var(--r-${role}); }`;
-  if (here.screen === 'muscle') return rule(here.id, 'agonist');
-  if (here.screen !== 'exercise') return '';
+const rule = (id, role) => `#map [data-muscle~="${id}"][fill] { fill: var(--r-${role}); }`;
 
-  const byRole = atlas.exerciseMuscles(here.id);
+/**
+ * An Exercise's Roles go lightest first, the Agonist last, so where two Roles
+ * share a path the heavier one shows.
+ */
+const distribution = (atlas, id) => {
+  const byRole = atlas.exerciseMuscles(id);
   return [...ROLES]
     .reverse()
     .flatMap((role) => byRole.filter((x) => x.role === role).map((x) => rule(x.muscle.id, role)))
     .join('\n');
+};
+
+/** What the map shows for the page itself. */
+export function paintRules(atlas, here) {
+  if (here.screen === 'muscle') return rule(here.id, 'agonist');
+  return here.screen === 'exercise' ? distribution(atlas, here.id) : '';
+}
+
+/**
+ * What the map shows while a row is being read: everything grey, then what the
+ * row is about — a Muscle (in its Role, if the row has one, else as the
+ * Agonist) or an Exercise's whole Role Distribution. Written after the page's
+ * own rules with the same weight, so it wins over them.
+ */
+export function litRules(atlas, { muscle, role = 'agonist', exercise }) {
+  const rest = '#map [data-muscle][fill] { fill: var(--c-rest); }';
+  return `${rest}\n${exercise ? distribution(atlas, exercise) : rule(muscle, role)}`;
 }

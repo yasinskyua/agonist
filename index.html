@@ -26,6 +26,7 @@
     <link rel="modulepreload" href="app/icons.mjs" />
     <link rel="modulepreload" href="app/route.mjs" />
     <link rel="modulepreload" href="app/screens.mjs" />
+    <link rel="modulepreload" href="app/spy.mjs" />
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
     <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
@@ -47,6 +48,9 @@
     <!-- ui.mjs writes the colour rules here: a Muscle's or an Exercise's Muscles
          by Role. One selector per Muscle instead of a walk over paths. -->
     <style id="paint"></style>
+    <!-- …and here, after it, what the row being read lights: same weight, so
+         it wins over the page's own colours. -->
+    <style id="lit"></style>
   </head>
   <body>
     <div id="app">
@@ -69,6 +73,8 @@
             <div class="fig" data-view="front"></div>
             <div class="fig" data-view="back"></div>
           </div>
+          <!-- Shown while a row is lit: back to the whole picture. -->
+          <button class="all" type="button" data-act="all" hidden></button>
         </figure>
         <div id="list"></div>
       </main>

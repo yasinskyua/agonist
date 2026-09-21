@@ -11,7 +11,8 @@ import { createAtlas } from './atlas.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, HOME, GAME } from './route.mjs';
-import { pageTopHtml, pageListHtml, paintRules } from './screens.mjs';
+import { pageTopHtml, pageListHtml, paintRules, litRules } from './screens.mjs';
+import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 
 const VIEWS = ['front', 'back'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -76,6 +77,7 @@ export async function start() {
   const map = el('map');
   const top = el('top');
   const list = el('list');
+  const all = map.querySelector('.all');
 
   /** The finger minimum. One source: the CSS that sizes the buttons too. */
   const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
@@ -236,6 +238,9 @@ export async function start() {
     if (signature === drawn) return;
     drawn = signature;
 
+    // The list is about to be replaced, and the row that was lit with it.
+    unlight();
+
     const here = parseRoute(location.hash, atlas);
     const key = `${here.screen}/${here.id ?? ''}`;
     const fresh = key !== shown;
@@ -251,6 +256,7 @@ export async function start() {
     el('brand').setAttribute('aria-label', `Agonist: ${t('home')}`);
     el('play').textContent = t('flash.enter');
     el('lang').textContent = t('lang.other');
+    all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
@@ -277,8 +283,13 @@ export async function start() {
             depth() >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
           }`;
 
+    // Before the scroll below: the page has to be tall enough to reach the place
+    // the step was left at.
+    makeRoom();
+
     if (fresh) {
       scrollTo(0, history.state?.scroll ?? 0);
+      settled = scrollY;
       // The row that was pressed is gone with the old page; without this the
       // keyboard's place falls back to the top of the page and a screen reader
       // says nothing. The new page's heading takes it.
@@ -287,6 +298,73 @@ export async function start() {
       }
     }
   }
+
+  // ── The row being read ──────────────────────────────────────────────────
+
+  // Nothing is lit until the Trainer scrolls: a screen opens showing all it has.
+  let lit = null; // the row on the line now
+  let scrolled = false;
+  let settled = null; // where our own scrollTo put the page: that scroll event is not the Trainer's
+  let frame = null;
+
+  /** Where the map's bottom edge is when it is pinned, whatever the scroll. */
+  const pinnedBottom = () => (parseFloat(getComputedStyle(map).top) || 0) + map.offsetHeight;
+
+  /** The list ends with room, so the last row can be scrolled up to the line as well. */
+  function makeRoom() {
+    const last = [...list.querySelectorAll('.row')].at(-1);
+    if (!last || !map.offsetHeight) {
+      list.style.paddingBottom = '';
+      return;
+    }
+    // The room already there is taken out of the measure rather than removed and
+    // put back: with it gone the page is shorter for a moment, and a Trainer at
+    // the bottom of it would be thrown up the page by the browser.
+    const had = parseFloat(list.style.paddingBottom) || 0;
+    const box = last.getBoundingClientRect();
+    const tail = el('page').getBoundingClientRect().bottom - (box.top + box.height / 2) - had;
+    list.style.paddingBottom = `${roomAtEnd({ viewport: innerHeight, line: pinnedBottom() + LINE_GAP, tail })}px`;
+  }
+  addEventListener('resize', makeRoom);
+
+  /** What a row is about: its Muscle (in its Role, if it has one) or its Exercise. */
+  const lightsOf = ({ dataset: d }) => (d.exercise ? { exercise: d.exercise } : { muscle: d.muscle, role: d.role });
+
+  function light(row) {
+    if (row === lit) return;
+    lit?.classList.remove('lit');
+    lit = row;
+    row?.classList.add('lit');
+    el('lit').textContent = row ? litRules(atlas, lightsOf(row)) : '';
+    all.hidden = !row;
+  }
+
+  /** The whole picture again, until the next scroll. */
+  function unlight() {
+    light(null);
+    scrolled = false;
+  }
+
+  function read() {
+    frame = null;
+    const rows = [...list.querySelectorAll('.row')];
+    if (!scrolled || !rows.length || !map.offsetHeight) return;
+    // Back at the top of the page: the screen shows all it has again.
+    if (scrollY < 8) return unlight();
+    light(rows[pickRow(rows.map((r) => r.getBoundingClientRect()), map.getBoundingClientRect().bottom)] ?? null);
+  }
+
+  addEventListener(
+    'scroll',
+    () => {
+      const ours = scrollY === settled;
+      settled = null;
+      if (ours) return;
+      scrolled = true;
+      frame ??= requestAnimationFrame(read);
+    },
+    { passive: true },
+  );
 
   // ── Search ──────────────────────────────────────────────────────────────
 
@@ -300,7 +378,9 @@ export async function start() {
   function search(query) {
     state.query = query;
     const t = translator(state.lang);
+    unlight();
     list.innerHTML = pageListHtml(t, state.lang, atlas, { screen: 'home' }, query);
+    makeRoom();
     el('status').textContent = query.trim() ? `${t('search.count')}: ${list.querySelectorAll('.row').length}` : '';
     syncSearch();
   }
@@ -326,6 +406,7 @@ export async function start() {
   const ACTIONS = {
     back: goBack,
     home: goHome,
+    all: unlight,
     play: () => go(GAME),
     clear: clearSearch,
     lang() {

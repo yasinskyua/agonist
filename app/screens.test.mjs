@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { translator } from './i18n.mjs';
-import { indexHtml, searchHtml, pageTopHtml, pageListHtml, paintRules } from './screens.mjs';
+import { indexHtml, searchHtml, pageTopHtml, pageListHtml, paintRules, litRules } from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -175,4 +175,45 @@ test("an Exercise page paints its whole Role Distribution, the Agonist last so i
   assert.equal(rules.length, atlas.exerciseMuscles(ROLL.id).length);
   assert.match(rules.at(-1), /var\(--r-agonist\)/);
   assert.match(rules[0], /var\(--r-stabilizer\)/, 'the lightest first');
+});
+
+// ── What a row lights while it is being read ─────────────────────────────
+
+test('every row says what it lights: a Muscle row its Muscle, an Exercise row its Exercise', () => {
+  const index = pageListHtml(t, 'uk', atlas, { screen: 'home' });
+  const onMuscle = pageListHtml(t, 'uk', atlas, { screen: 'muscle', id: 'pectoralis_major' });
+
+  assert.match(index, /<a class="row" href="#\/muscle\/rhomboids" data-muscle="rhomboids"/);
+  for (const { exercise } of atlas.muscleExercises('pectoralis_major')) {
+    assert.match(onMuscle, new RegExp(`href="#/exercise/${exercise.id}"[^>]* data-exercise="${exercise.id}"`));
+  }
+});
+
+test('a row of an Exercise page lights its Muscle in the Role it plays there', () => {
+  const list = pageListHtml(t, 'uk', atlas, ROLL);
+
+  for (const { muscle, role } of atlas.exerciseMuscles(ROLL.id)) {
+    assert.match(list, new RegExp(`data-muscle="${muscle.id}" data-role="${role}"`));
+  }
+});
+
+test('the rest of the map goes grey, and a Muscle row lights its Muscle over it', () => {
+  const rules = litRules(atlas, { muscle: 'rhomboids' }).split('\n');
+
+  assert.match(rules[0], /data-muscle\]\[fill\]/);
+  assert.match(rules[0], /var\(--c-rest\)/);
+  assert.equal(rules.length, 2, 'the grey, then the one Muscle');
+  assert.match(rules[1], /data-muscle~="rhomboids"/);
+  assert.match(rules[1], /var\(--r-agonist\)/, 'no Role given: the Muscle is what the page is about');
+});
+
+test('a Muscle row with a Role lights in the colour of that Role', () => {
+  assert.match(litRules(atlas, { muscle: 'rhomboids', role: 'synergist' }), /var\(--r-synergist\)/);
+});
+
+test("an Exercise row lights its whole Role Distribution, as its own page would", () => {
+  const rules = litRules(atlas, { exercise: ROLL.id }).split('\n');
+
+  assert.match(rules[0], /var\(--c-rest\)/);
+  assert.deepEqual(rules.slice(1), paintRules(atlas, ROLL).split('\n'));
 });

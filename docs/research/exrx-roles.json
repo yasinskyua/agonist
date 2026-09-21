@@ -1,0 +1,1472 @@
+{
+  "_": "Знімок ExRx.net для Розподілу Ролей, 21.09.2026. Застосунок цей файл не читає: це вхід для тікета 14 (п'ять Ролей) і слід звірки. Для кожної Вправи — її сторінка ExRx (`exrx`) і п'ять категорій ExRx, зведені до М'язів атласу. Зведення: головки й частини — до М'яза атласу (дві частини великого грудного — один М'яз, adductor magnus, pectineus і gracilis — привідні, gluteus medius, minimus і tensor fasciae latae — відвідні, rectus femoris — квадрицепс); coracobrachialis і popliteus відкинуто, бо їх немає в атласі; М'яз, що потрапив у кілька категорій, лишається у вищій. `status`: premium — сторінка платна й м'язів не показує; articulations — ExRx дає лише рухи в суглобах; missing — такої Вправи в ExRx немає. `analog` — сторінка найближчої Вправи ExRx, з якої взято категорії, коли в самої Вправи їх немає. `back_general`: Target у ExRx — «спина загалом», окремого Агоніста він не називає.",
+  "exercises": {
+    "ab-wheel-rollout": {
+      "exrx": "https://exrx.net/WeightExercises/HipFlexors/BWKneelingWheelRollout",
+      "analog": "https://exrx.net/WeightExercises/LatissimusDorsi/BBPullover",
+      "status": "premium",
+      "note": "У довіднику ExRx стоїть серед вправ на найширший м'яз; сама сторінка лежить у розділі згиначів стегна.",
+      "target": [
+        "latissimus_dorsi_teres_major"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "triceps_brachii",
+        "deltoid_posterior",
+        "rhomboids",
+        "levator_scapulae",
+        "pectoralis_minor"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "wrist_flexors"
+      ]
+    },
+    "back-extension": {
+      "exrx": "https://exrx.net/WeightExercises/ErectorSpinae/BW45HyperextensionArmsCrossed",
+      "note": "ExRx має й варіант із прямою спиною, де Target — задня поверхня стегна: https://exrx.net/WeightExercises/Hamstrings/BW45HyperextensionArmsCrossed",
+      "target": [
+        "erector_spinae"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hamstrings",
+        "hip_adductors"
+      ]
+    },
+    "back-squat": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/BBSquat",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "barbell-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Biceps/BBCurl",
+      "target": [
+        "biceps_brachii"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "wrist_flexors"
+      ]
+    },
+    "barbell-row": {
+      "exrx": "https://exrx.net/WeightExercises/BackGeneral/BBBentOverRow",
+      "back_general": true,
+      "synergists": [
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "brachialis",
+        "brachioradialis",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "hamstrings",
+        "gluteus_maximus",
+        "hip_adductors",
+        "quadriceps"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "barbell-shrug": {
+      "exrx": "https://exrx.net/WeightExercises/TrapeziusUpper/BBShrug",
+      "target": [
+        "trapezius_upper"
+      ],
+      "synergists": [
+        "trapezius_middle",
+        "levator_scapulae"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ]
+    },
+    "bench-press": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/BBBenchPress",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "bulgarian-split-squat": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/BBSingleLegSplitSquat",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "abductors"
+      ]
+    },
+    "cable-crossover": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/CBStandingFly",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "pectoralis_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "latissimus_dorsi_teres_major"
+      ],
+      "stabilizers": [
+        "biceps_brachii",
+        "brachialis",
+        "triceps_brachii",
+        "wrist_flexors",
+        "rectus_abdominis",
+        "obliques"
+      ],
+      "antagonist_stabilizers": [
+        "erector_spinae"
+      ]
+    },
+    "cable-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Biceps/CBCurl",
+      "target": [
+        "biceps_brachii"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "wrist_flexors"
+      ]
+    },
+    "cable-external-rotation": {
+      "exrx": "https://exrx.net/WeightExercises/Infraspinatus/CBStandingExternalRotation",
+      "target": [
+        "infraspinatus_teres_minor"
+      ],
+      "synergists": [
+        "deltoid_posterior"
+      ],
+      "stabilizers": [
+        "rhomboids",
+        "trapezius_lower",
+        "deltoid_medial_lateral",
+        "wrist_extensors"
+      ]
+    },
+    "cable-glute-kickback": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/CBStandingHipExtension",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "hamstrings"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "obliques",
+        "quadratus_lumborum",
+        "abductors"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis"
+      ]
+    },
+    "cable-internal-rotation": {
+      "exrx": "https://exrx.net/WeightExercises/Subscapularis/CBStandingInternalRotation",
+      "target": [
+        "subscapularis"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "latissimus_dorsi_teres_major",
+        "deltoid_anterior"
+      ],
+      "stabilizers": [
+        "pectoralis_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "wrist_flexors"
+      ]
+    },
+    "cable-pull-through": {
+      "exrx": null,
+      "analog": "https://exrx.net/WeightExercises/GluteusMaximus/BBStrBackStiffLegDeadlift",
+      "status": "missing",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "hamstrings",
+        "hip_adductors"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "quadriceps",
+        "trapezius_middle",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "trapezius_upper",
+        "levator_scapulae",
+        "trapezius_lower"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "cable-woodchop": {
+      "exrx": null,
+      "analog": "https://exrx.net/WeightExercises/Obliques/CBTwist",
+      "status": "missing",
+      "note": "Власної сторінки немає; категорії — з Cable Twist. Коментар ExRx: обертання тут іде більше через кульшовий суглоб, ніж через хребет.",
+      "target": [
+        "obliques"
+      ],
+      "synergists": [
+        "abductors",
+        "hip_adductors",
+        "hip_flexors",
+        "quadratus_lumborum",
+        "erector_spinae"
+      ],
+      "stabilizers": [
+        "rectus_abdominis",
+        "pectoralis_major",
+        "pectoralis_minor",
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "deltoid_medial_lateral",
+        "deltoid_posterior",
+        "triceps_brachii"
+      ]
+    },
+    "chest-dip": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/BWChestDip",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii",
+        "pectoralis_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "latissimus_dorsi_teres_major"
+      ],
+      "stabilizers": [
+        "trapezius_lower"
+      ]
+    },
+    "chest-press-machine": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/LVChestPress",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "chin-up": {
+      "exrx": "https://exrx.net/WeightExercises/LatissimusDorsi/BWUnderhandChinup",
+      "target": [
+        "latissimus_dorsi_teres_major"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis",
+        "deltoid_posterior",
+        "rhomboids",
+        "levator_scapulae",
+        "trapezius_lower",
+        "trapezius_middle",
+        "pectoralis_major",
+        "pectoralis_minor"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ]
+    },
+    "close-grip-bench-press": {
+      "exrx": "https://exrx.net/WeightExercises/Triceps/BBCloseGripBenchPress",
+      "target": [
+        "triceps_brachii"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "crunch": {
+      "exrx": "https://exrx.net/WeightExercises/RectusAbdominis/BWCrunch",
+      "target": [
+        "rectus_abdominis"
+      ],
+      "synergists": [
+        "obliques"
+      ]
+    },
+    "deadlift": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/BBDeadlift",
+      "note": "ExRx показує ту саму Вправу й серед вправ на розгиначі спини — з приміткою, що там вони працюють ізометрично.",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "quadriceps",
+        "hip_adductors",
+        "hamstrings",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_middle",
+        "trapezius_upper",
+        "levator_scapulae",
+        "rhomboids"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "decline-bench-press": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/BBDeclineBenchPress",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "dumbbell-bench-press": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/DBBenchPress",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "dumbbell-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Biceps/DBCurl",
+      "target": [
+        "biceps_brachii"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "wrist_flexors"
+      ]
+    },
+    "dumbbell-fly": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/DBFly",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "brachialis",
+        "triceps_brachii",
+        "wrist_flexors"
+      ]
+    },
+    "dumbbell-pullover": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/DBPullover",
+      "note": "Пуловер зі штангою ExRx відносить до вправ на найширший: https://exrx.net/WeightExercises/LatissimusDorsi/BBPullover",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "latissimus_dorsi_teres_major",
+        "triceps_brachii",
+        "deltoid_posterior",
+        "pectoralis_minor",
+        "rhomboids",
+        "levator_scapulae"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "wrist_flexors"
+      ]
+    },
+    "dumbbell-row": {
+      "exrx": "https://exrx.net/WeightExercises/BackGeneral/DBBentOverRow",
+      "back_general": true,
+      "synergists": [
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "brachialis",
+        "brachioradialis",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "obliques",
+        "hip_flexors",
+        "quadratus_lumborum",
+        "erector_spinae"
+      ]
+    },
+    "dumbbell-shoulder-press": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidAnterior/DBShoulderPress",
+      "target": [
+        "deltoid_anterior"
+      ],
+      "synergists": [
+        "deltoid_medial_lateral",
+        "supraspinatus",
+        "triceps_brachii",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae"
+      ]
+    },
+    "face-pull": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidPosterior/CBStandingRearDeltRowRope",
+      "target": [
+        "deltoid_posterior"
+      ],
+      "synergists": [
+        "infraspinatus_teres_minor",
+        "deltoid_medial_lateral",
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "brachialis",
+        "brachioradialis"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "farmers-walk": {
+      "exrx": null,
+      "status": "missing"
+    },
+    "front-raise": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidAnterior/DBFrontRaise",
+      "target": [
+        "deltoid_anterior"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "deltoid_medial_lateral",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae",
+        "wrist_extensors"
+      ]
+    },
+    "front-squat": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/BBFrontSquat",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "deltoid_anterior",
+        "deltoid_medial_lateral",
+        "supraspinatus",
+        "pectoralis_major",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "trapezius_lower",
+        "serratus_anterior"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "glute-bridge": {
+      "exrx": null,
+      "analog": "https://exrx.net/WeightExercises/GluteusMaximus/BBHipThrust",
+      "status": "missing",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "quadriceps"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "goblet-squat": {
+      "exrx": "https://exrx.net/WeightExercises/Kettlebell/KBGobletSquat",
+      "analog": "https://exrx.net/WeightExercises/Quadriceps/DBFrontSquat",
+      "status": "articulations",
+      "note": "Сторінка відсилає до Weighted Front Squat; категорії взято з Dumbbell Front Squat.",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "good-morning": {
+      "exrx": "https://exrx.net/WeightExercises/Hamstrings/BBGoodMorning",
+      "target": [
+        "hamstrings"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "hack-squat": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/SLHackSquat",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ]
+    },
+    "hammer-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Brachioradialis/DBHammerCurl",
+      "target": [
+        "brachioradialis"
+      ],
+      "synergists": [
+        "brachialis",
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "wrist_flexors",
+        "wrist_extensors"
+      ]
+    },
+    "hanging-leg-raise": {
+      "exrx": "https://exrx.net/WeightExercises/HipFlexors/BWHangingLegRaise",
+      "note": "Коментар ExRx: прямий і косі м'язи живота рухають тіло, лише коли згинається поперек; інакше вони стабілізують таз.",
+      "target": [
+        "hip_flexors"
+      ],
+      "synergists": [
+        "abductors",
+        "hip_adductors",
+        "sartorius"
+      ],
+      "dynamic_stabilizers": [
+        "quadriceps"
+      ],
+      "stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "hip-abduction-machine": {
+      "exrx": "https://exrx.net/WeightExercises/HipAbductor/LVSeatedHipAbduction",
+      "target": [
+        "abductors"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "deep_external_rotators"
+      ]
+    },
+    "hip-adduction-machine": {
+      "exrx": "https://exrx.net/WeightExercises/HipAdductors/LVSeatedHipAdduction",
+      "target": [
+        "hip_adductors"
+      ]
+    },
+    "hip-thrust": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/BBHipThrust",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "quadriceps"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings"
+      ],
+      "stabilizers": [
+        "erector_spinae"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "incline-bench-press": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralClavicular/BBInclineBenchPress",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ]
+    },
+    "inverted-row": {
+      "exrx": "https://exrx.net/WeightExercises/BackGeneral/BWSupineRow",
+      "back_general": true,
+      "synergists": [
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "brachialis",
+        "brachioradialis",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "hamstrings",
+        "gluteus_maximus"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "kettlebell-swing": {
+      "exrx": "https://exrx.net/WeightExercises/Kettlebell/KBTwoArmSwing",
+      "status": "articulations"
+    },
+    "lat-pulldown": {
+      "exrx": "https://exrx.net/WeightExercises/LatissimusDorsi/CBFrontPulldown",
+      "target": [
+        "latissimus_dorsi_teres_major"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis",
+        "biceps_brachii",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "trapezius_lower",
+        "trapezius_middle",
+        "pectoralis_minor"
+      ],
+      "dynamic_stabilizers": [
+        "triceps_brachii"
+      ]
+    },
+    "lateral-lunge": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/DBSideLunge",
+      "analog": "https://exrx.net/WeightExercises/Quadriceps/DBLunge",
+      "status": "premium",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_lower",
+        "levator_scapulae",
+        "tibialis_anterior",
+        "abductors",
+        "quadratus_lumborum",
+        "obliques"
+      ]
+    },
+    "lateral-raise": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidLateral/DBLateralRaise",
+      "target": [
+        "deltoid_medial_lateral"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "supraspinatus",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae",
+        "wrist_extensors"
+      ]
+    },
+    "leg-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Hamstrings/LVLyingLegCurl",
+      "target": [
+        "hamstrings"
+      ],
+      "synergists": [
+        "gastrocnemius",
+        "sartorius",
+        "hip_adductors"
+      ],
+      "antagonist_stabilizers": [
+        "tibialis_anterior",
+        "quadriceps"
+      ]
+    },
+    "leg-extension": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/LVLegExtension",
+      "target": [
+        "quadriceps"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "brachioradialis",
+        "brachialis",
+        "biceps_brachii"
+      ]
+    },
+    "leg-press": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/SL45LegPress",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ]
+    },
+    "overhead-press": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidAnterior/BBMilitaryPress",
+      "target": [
+        "deltoid_anterior"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "triceps_brachii",
+        "deltoid_medial_lateral",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae"
+      ]
+    },
+    "overhead-triceps-extension": {
+      "exrx": "https://exrx.net/WeightExercises/Triceps/DBTriExt",
+      "target": [
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "pectoralis_major",
+        "wrist_flexors"
+      ]
+    },
+    "pallof-press": {
+      "exrx": null,
+      "analog": "https://exrx.net/WeightExercises/Obliques/BWSidePlank",
+      "status": "missing",
+      "target": [
+        "obliques"
+      ],
+      "stabilizers": [
+        "abductors",
+        "quadratus_lumborum",
+        "hip_flexors",
+        "erector_spinae",
+        "hip_adductors",
+        "gluteus_maximus",
+        "latissimus_dorsi_teres_major",
+        "pectoralis_major",
+        "pectoralis_minor",
+        "levator_scapulae"
+      ]
+    },
+    "plank": {
+      "exrx": "https://exrx.net/WeightExercises/RectusAbdominis/BWFrontPlank",
+      "target": [
+        "rectus_abdominis"
+      ],
+      "stabilizers": [
+        "obliques",
+        "hip_flexors",
+        "abductors",
+        "quadriceps",
+        "sartorius",
+        "pectoralis_major",
+        "serratus_anterior",
+        "pectoralis_minor"
+      ],
+      "antagonist_stabilizers": [
+        "erector_spinae",
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids"
+      ]
+    },
+    "power-clean": {
+      "exrx": "https://exrx.net/WeightExercises/OlympicLifts/PowerClean",
+      "status": "articulations",
+      "note": "Hang Clean ExRx показує в довіднику серед вправ на верхню трапецію."
+    },
+    "preacher-curl": {
+      "exrx": "https://exrx.net/WeightExercises/Brachialis/BBPreacherCurl",
+      "target": [
+        "brachialis"
+      ],
+      "synergists": [
+        "biceps_brachii",
+        "brachioradialis"
+      ],
+      "stabilizers": [
+        "wrist_flexors"
+      ]
+    },
+    "pull-up": {
+      "exrx": "https://exrx.net/WeightExercises/LatissimusDorsi/BWPullup",
+      "target": [
+        "latissimus_dorsi_teres_major"
+      ],
+      "synergists": [
+        "brachialis",
+        "brachioradialis",
+        "biceps_brachii",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "trapezius_lower",
+        "trapezius_middle",
+        "pectoralis_minor"
+      ],
+      "dynamic_stabilizers": [
+        "triceps_brachii"
+      ]
+    },
+    "push-press": {
+      "exrx": "https://exrx.net/WeightExercises/OlympicLifts/PushPress",
+      "analog": "https://exrx.net/WeightExercises/DeltoidAnterior/BBMilitaryPress",
+      "status": "articulations",
+      "target": [
+        "deltoid_anterior"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "triceps_brachii",
+        "deltoid_medial_lateral",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae"
+      ]
+    },
+    "push-up": {
+      "exrx": "https://exrx.net/WeightExercises/PectoralSternal/BWPushup",
+      "target": [
+        "pectoralis_major"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "triceps_brachii"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "serratus_anterior",
+        "pectoralis_minor",
+        "rectus_abdominis",
+        "obliques",
+        "quadriceps"
+      ],
+      "antagonist_stabilizers": [
+        "erector_spinae"
+      ]
+    },
+    "rear-delt-fly": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidPosterior/DBRearLateralRaise",
+      "target": [
+        "deltoid_posterior"
+      ],
+      "synergists": [
+        "infraspinatus_teres_minor",
+        "deltoid_medial_lateral",
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids"
+      ],
+      "stabilizers": [
+        "triceps_brachii",
+        "wrist_extensors",
+        "erector_spinae",
+        "hamstrings",
+        "gluteus_maximus",
+        "hip_adductors",
+        "quadriceps"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "reverse-lunge": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/DBRearLunge",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_lower",
+        "levator_scapulae",
+        "abductors",
+        "quadratus_lumborum",
+        "obliques"
+      ]
+    },
+    "reverse-wrist-curl": {
+      "exrx": "https://exrx.net/WeightExercises/WristExtensors/BBReverseWristCurl",
+      "target": [
+        "wrist_extensors"
+      ]
+    },
+    "romanian-deadlift": {
+      "exrx": "https://exrx.net/WeightExercises/OlympicLifts/RomanianDeadlift",
+      "analog": "https://exrx.net/WeightExercises/GluteusMaximus/BBStrBackStiffLegDeadlift",
+      "status": "articulations",
+      "note": "У довіднику ExRx стоїть серед вправ на задню поверхню стегна. Сторінка відсилає до «дуже схожої» Straight-back Stiff-leg Deadlift — категорії взято з неї.",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "hamstrings",
+        "hip_adductors"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "quadriceps",
+        "trapezius_middle",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "trapezius_upper",
+        "levator_scapulae",
+        "trapezius_lower"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "russian-twist": {
+      "exrx": "https://exrx.net/Plyometrics/MBRussianTwist",
+      "status": "articulations"
+    },
+    "seated-cable-row": {
+      "exrx": "https://exrx.net/WeightExercises/BackGeneral/CBSeatedRow",
+      "back_general": true,
+      "synergists": [
+        "erector_spinae",
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "brachialis",
+        "brachioradialis",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "hamstrings",
+        "gluteus_maximus",
+        "hip_adductors"
+      ]
+    },
+    "seated-calf-raise": {
+      "exrx": "https://exrx.net/WeightExercises/Soleus/LVSeatedCalfRaise",
+      "target": [
+        "soleus"
+      ],
+      "synergists": [
+        "gastrocnemius"
+      ]
+    },
+    "side-plank": {
+      "exrx": "https://exrx.net/WeightExercises/Obliques/BWSidePlank",
+      "target": [
+        "obliques"
+      ],
+      "stabilizers": [
+        "abductors",
+        "quadratus_lumborum",
+        "hip_flexors",
+        "erector_spinae",
+        "hip_adductors",
+        "gluteus_maximus",
+        "latissimus_dorsi_teres_major",
+        "pectoralis_major",
+        "pectoralis_minor",
+        "levator_scapulae"
+      ]
+    },
+    "single-leg-romanian-deadlift": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/BWSingleLegStiffLegDeadlift",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "hamstrings",
+        "hip_adductors"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "quadriceps",
+        "abductors",
+        "quadratus_lumborum",
+        "obliques"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis"
+      ]
+    },
+    "skull-crusher": {
+      "exrx": "https://exrx.net/WeightExercises/Triceps/BBLyingTriExtSC",
+      "target": [
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "deltoid_anterior",
+        "pectoralis_major",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "wrist_flexors"
+      ]
+    },
+    "standing-calf-raise": {
+      "exrx": "https://exrx.net/WeightExercises/Gastrocnemius/LVStandingCalfRaise",
+      "target": [
+        "gastrocnemius"
+      ],
+      "synergists": [
+        "soleus"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae"
+      ]
+    },
+    "step-up": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/DBStepUp",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus",
+        "gastrocnemius"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "abductors",
+        "quadratus_lumborum",
+        "obliques"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis"
+      ]
+    },
+    "straight-arm-pulldown": {
+      "exrx": "https://exrx.net/WeightExercises/LatissimusDorsi/CBBentoverPullover",
+      "target": [
+        "latissimus_dorsi_teres_major"
+      ],
+      "synergists": [
+        "pectoralis_major",
+        "triceps_brachii",
+        "deltoid_posterior",
+        "rhomboids",
+        "levator_scapulae",
+        "pectoralis_minor"
+      ],
+      "stabilizers": [
+        "rectus_abdominis",
+        "obliques",
+        "wrist_flexors"
+      ]
+    },
+    "sumo-deadlift": {
+      "exrx": "https://exrx.net/WeightExercises/GluteusMaximus/BBSumoDeadlift",
+      "analog": "https://exrx.net/WeightExercises/GluteusMaximus/BBDeadlift",
+      "status": "premium",
+      "target": [
+        "gluteus_maximus"
+      ],
+      "synergists": [
+        "quadriceps",
+        "hip_adductors",
+        "hamstrings",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_middle",
+        "trapezius_upper",
+        "levator_scapulae",
+        "rhomboids"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "t-bar-row": {
+      "exrx": "https://exrx.net/WeightExercises/BackGeneral/LVTBarRow",
+      "back_general": true,
+      "synergists": [
+        "trapezius_middle",
+        "trapezius_lower",
+        "rhomboids",
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "infraspinatus_teres_minor",
+        "brachialis",
+        "brachioradialis",
+        "pectoralis_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii",
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "hamstrings",
+        "gluteus_maximus",
+        "hip_adductors",
+        "quadriceps"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "trap-bar-deadlift": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/TBSquat",
+      "note": "У ExRx — Trap Bar Squat, у розділі присідань.",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_middle",
+        "levator_scapulae",
+        "rhomboids"
+      ],
+      "antagonist_stabilizers": [
+        "rectus_abdominis",
+        "obliques"
+      ]
+    },
+    "triceps-dip": {
+      "exrx": "https://exrx.net/WeightExercises/Triceps/BWBenchDip",
+      "target": [
+        "triceps_brachii"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "pectoralis_major",
+        "pectoralis_minor",
+        "rhomboids",
+        "levator_scapulae",
+        "latissimus_dorsi_teres_major"
+      ],
+      "dynamic_stabilizers": [
+        "biceps_brachii"
+      ],
+      "stabilizers": [
+        "trapezius_lower"
+      ]
+    },
+    "triceps-pushdown": {
+      "exrx": "https://exrx.net/WeightExercises/Triceps/CBPushdown",
+      "target": [
+        "triceps_brachii"
+      ],
+      "stabilizers": [
+        "latissimus_dorsi_teres_major",
+        "deltoid_posterior",
+        "pectoralis_major",
+        "pectoralis_minor",
+        "trapezius_lower",
+        "rectus_abdominis",
+        "obliques",
+        "wrist_flexors"
+      ],
+      "antagonist_stabilizers": [
+        "erector_spinae"
+      ]
+    },
+    "upright-row": {
+      "exrx": "https://exrx.net/WeightExercises/DeltoidLateral/BBUprightRow",
+      "target": [
+        "deltoid_medial_lateral"
+      ],
+      "synergists": [
+        "deltoid_anterior",
+        "supraspinatus",
+        "brachialis",
+        "brachioradialis",
+        "biceps_brachii",
+        "trapezius_middle",
+        "trapezius_lower",
+        "serratus_anterior",
+        "infraspinatus_teres_minor"
+      ],
+      "stabilizers": [
+        "trapezius_upper",
+        "levator_scapulae"
+      ]
+    },
+    "walking-lunge": {
+      "exrx": "https://exrx.net/WeightExercises/Quadriceps/DBLunge",
+      "target": [
+        "quadriceps"
+      ],
+      "synergists": [
+        "gluteus_maximus",
+        "hip_adductors",
+        "soleus"
+      ],
+      "dynamic_stabilizers": [
+        "hamstrings",
+        "gastrocnemius"
+      ],
+      "stabilizers": [
+        "erector_spinae",
+        "trapezius_upper",
+        "trapezius_lower",
+        "levator_scapulae",
+        "tibialis_anterior",
+        "abductors",
+        "quadratus_lumborum",
+        "obliques"
+      ]
+    },
+    "wrist-curl": {
+      "exrx": "https://exrx.net/WeightExercises/WristFlexors/BBWristCurl",
+      "target": [
+        "wrist_flexors"
+      ]
+    }
+  }
+}

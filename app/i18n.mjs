@@ -42,11 +42,23 @@ const STRINGS = {
   'role.agonist': { uk: 'Агоніст', en: 'Agonist' },
   'role.synergist': { uk: 'Синергіст', en: 'Synergist' },
   'role.stabilizer': { uk: 'Стабілізатор', en: 'Stabilizer' },
+  'role.dynamic_stabilizer': { uk: 'Динамічний стабілізатор', en: 'Dynamic stabilizer' },
+  'role.antagonist_stabilizer': { uk: 'Стабілізатор-антагоніст', en: 'Antagonist stabilizer' },
   'roles.synergist': { uk: 'Синергісти', en: 'Synergists' },
   'roles.stabilizer': { uk: 'Стабілізатори', en: 'Stabilizers' },
+  'roles.dynamic_stabilizer': { uk: 'Динамічні стабілізатори', en: 'Dynamic stabilizers' },
+  'roles.antagonist_stabilizer': { uk: 'Стабілізатори-антагоністи', en: 'Antagonist stabilizers' },
   'role.agonist.does': { uk: 'Веде рух', en: 'Drives the movement' },
   'role.synergist.does': { uk: 'Допомагає агоністу', en: 'Assists the agonist' },
+  'role.dynamic_stabilizer.does': {
+    uk: 'Рухається разом із суглобами, майже не змінюючи довжини',
+    en: 'Moves with the joints, barely changing length',
+  },
   'role.stabilizer.does': { uk: 'Утримує положення, руху не створює', en: 'Holds position, creates no movement' },
+  'role.antagonist_stabilizer.does': {
+    uk: 'Тримає суглоб з протилежного боку',
+    en: 'Holds the joint from the opposite side',
+  },
 
   'game.enter': { uk: 'Гра', en: 'Game' },
   'game.pick.says': {

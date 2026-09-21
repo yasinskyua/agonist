@@ -1,6 +1,8 @@
 /* Palette from the gym: Role colours are Olympic plate colours — red 25 kg is
    the Agonist, blue 20 kg the Synergist, yellow 15 kg the Stabilizer. Heavier
    means more central to the movement, which is exactly what a Role says.
+   The Dynamic and the Antagonist stabilizer are shades of that yellow, darker
+   and paler: kinds of Stabilizer, one family (ADR-0006).
 
    One-handed: search sits at the bottom under the thumb; the sheet rises from
    there too. */
@@ -20,6 +22,8 @@
   --agonist: #d0232f;
   --synergist: #1c5bc8;
   --stabilizer: #e9b300;
+  --dynamic_stabilizer: #a36c00;
+  --antagonist_stabilizer: #f7e08c;
   --tap: 44px;
   --bar: 3.25rem;
   /* The sheet's side gutters: 1.25rem, plus the notch or rounded corner when
@@ -661,7 +665,8 @@ body[data-detent='low'] .head .name {
 
 .plates {
   display: flex;
-  gap: 0.9rem;
+  flex-wrap: wrap; /* five plates are wider than a phone */
+  gap: 0.8rem 0.9rem;
   margin: 1.25rem 0 0;
   padding: 0;
   list-style: none;
@@ -703,11 +708,26 @@ body[data-detent='low'] .head .name {
   background: var(--synergist);
 }
 
+.plate[data-role='dynamic_stabilizer'] .disc {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.1rem;
+  background: var(--dynamic_stabilizer);
+}
+
 .plate[data-role='stabilizer'] .disc {
   width: 2.8rem;
   height: 2.8rem;
   font-size: 1.05rem;
   background: var(--stabilizer);
+  color: var(--ink);
+}
+
+.plate[data-role='antagonist_stabilizer'] .disc {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.95rem;
+  background: var(--antagonist_stabilizer);
   color: var(--ink);
 }
 
@@ -717,7 +737,7 @@ body[data-detent='low'] .head .name {
   box-shadow: none;
 }
 
-/* The Exercise legend: the three plate colours, named. */
+/* The Exercise legend: the Role colours, named. */
 
 .legend {
   display: flex;
@@ -764,6 +784,14 @@ body[data-detent='low'] .head .name {
   --role: var(--stabilizer);
 }
 
+[data-role='dynamic_stabilizer'] {
+  --role: var(--dynamic_stabilizer);
+}
+
+[data-role='antagonist_stabilizer'] {
+  --role: var(--antagonist_stabilizer);
+}
+
 .role h3,
 .related h3 {
   margin: 0 0 0.1rem;
@@ -792,6 +820,14 @@ body[data-detent='low'] .head .name {
 .role .row,
 .related .row {
   padding-left: 0;
+}
+
+/* Why this Muscle has this Role here: under its row, not part of the link. */
+.why {
+  margin: -0.35rem 2rem 0.6rem 0;
+  color: var(--dim);
+  font-size: 0.9rem;
+  max-width: 44ch;
 }
 
 .related {

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
-import { createQuiz, ROUND_SIZE } from './quiz.mjs';
+import { createQuiz, createRound, ROUND_SIZE } from './quiz.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -131,4 +131,20 @@ test('the summary gives the score and every «Не знав» Card once, each na
 test('a perfect Round has no mistakes', () => {
   const summary = play('KKKKKKKKKK').summary();
   assert.deepEqual([summary.score, summary.mistakes], [10, []]);
+});
+
+// ── A Round over an arbitrary deck ───────────────────────────────────────
+
+test('a Round is built from a deck the caller passes in, not from the atlas', () => {
+  const deck = ['a', 'b', 'c'];
+  const round = createRound(deck);
+  assert.deepEqual(round.cards, deck);
+  assert.equal(round.total, 3);
+});
+
+test('the Round length is up to the caller, ten by default', () => {
+  const deck = Array.from({ length: 20 }, (_, i) => i);
+  assert.equal(createRound(deck).total, ROUND_SIZE);
+  assert.equal(createRound(deck, 5).total, 5);
+  assert.equal(createRound(deck, 20).total, 20);
 });

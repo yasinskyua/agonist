@@ -98,8 +98,7 @@ function searchField(t) {
       <input id="q" name="q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
         placeholder="${t('search.placeholder')}" aria-label="${t('search.label')}" />
       <button class="clear" type="button" data-act="clear" aria-label="${t('search.clear')}" hidden>${icon('close')}</button>
-    </div>
-    <p id="status" class="sr" role="status"></p>`;
+    </div>`;
 }
 
 /** The Roles an Exercise's Muscles play, most central first, each once. */
@@ -121,7 +120,6 @@ export function pageTopHtml(t, lang, atlas, here) {
         .map((r) => `<li data-role="${r}"><i></i>${t(`role.${r}`)}</li>`)
         .join('')}</ul>`;
   }
-  if (here.screen === 'game') return `<h1 tabindex="-1">${t('flash.enter')}</h1><p class="lead">${t('flash.soon')}</p>`;
   return searchField(t);
 }
 
@@ -149,8 +147,73 @@ export function pageListHtml(t, lang, atlas, here, query = '') {
         : '')
     );
   }
-  if (here.screen === 'game') return '';
   return query.trim() ? searchHtml(t, lang, atlas, query) : indexHtml(t, lang, atlas);
+}
+
+// ── The Game: a Round of Cards (ADR-0007) ───────────────────────────────
+
+/**
+ * A Card: the Exercise's name, and then either the way to reveal its Agonist
+ * or, once revealed, the two grades. The Agonist's name is shown as words as
+ * well as colour — the map is not the only way to read it.
+ */
+export function cardTopHtml(t, lang, atlas, round) {
+  const { exercise, answer } = round.current;
+  const action = round.revealed
+    ? `<p class="lead"><b>${t('role.agonist')}:</b> ${atlas.muscle(answer).uk}</p>
+       <div class="card-go">
+         <button class="ghost" type="button" data-act="grade" data-knew="0">${t('card.no')}</button>
+         <button class="main" type="button" data-act="grade" data-knew="1">${t('card.yes')}</button>
+       </div>`
+    : `<p class="lead">${t('card.hint')}</p>
+       <button class="main" type="button" data-act="reveal">${t('card.reveal')}</button>`;
+  return `<h1 tabindex="-1">${atlas.exercise(exercise)[lang]}</h1>${action}`;
+}
+
+/** Once revealed: the Exercise's whole Role Distribution, as the Exercise page lists it — without Related Exercises, so nothing invites leaving the Round. */
+export function cardListHtml(t, lang, atlas, round) {
+  if (!round.revealed) return '';
+  const { exercise } = round.current;
+  const notes = atlas.exercise(exercise).notes ?? {};
+  return list(
+    atlas
+      .exerciseMuscles(exercise)
+      .map(({ muscle, role }) => muscleRow(t, lang, atlas, muscle, { role, note: notes[muscle.id] })),
+  );
+}
+
+/** What a screen reader is told once a Card is revealed: heard, not only seen in colour. */
+export function cardAnnounce(t, atlas, round) {
+  return `${t('role.agonist')}: ${atlas.muscle(round.current.answer).uk}.`;
+}
+
+/** The header's «N/10 · знав K», read off the Round in play. */
+export function roundTally(t, round) {
+  return `${round.index + 1}/${round.total} · ${t('round.known')} ${round.score}`;
+}
+
+/** The Round's end: the score, and the Exercises graded «Не знав», linked for a review. */
+export function summaryHtml(t, lang, atlas, round) {
+  const { score, total, mistakes } = round.summary();
+  return `
+    <h1 tabindex="-1">${t('round.done')}</h1>
+    <p class="score"><span class="sr">${t('round.score')}: </span><b>${score}</b>/${total}</p>
+    ${score === total ? `<p class="lead">${t('round.perfect')}</p>` : ''}
+    <div class="card-go">
+      <button class="ghost" type="button" data-act="home">${t('round.map')}</button>
+      <button class="main" type="button" data-act="again">${t('round.again')}</button>
+    </div>
+    ${
+      mistakes.length
+        ? `<h2 class="h">${t('round.review')}</h2>${list(
+            mistakes.map((m) =>
+              exerciseRow(t, lang, atlas.exercise(m.exercise), {
+                aside: `${t('search.agonist')}: ${atlas.muscle(m.answer).uk}`,
+              }),
+            ),
+          )}`
+        : ''
+    }`;
 }
 
 // ── The map's colours ────────────────────────────────────────────────────

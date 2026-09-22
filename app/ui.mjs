@@ -8,10 +8,23 @@
 // without emulating a DOM.
 
 import { createAtlas } from './atlas.mjs';
+import { createQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, HOME, GAME } from './route.mjs';
-import { pageTopHtml, pageListHtml, paintRules, litRules, pageLights, openingSide } from './screens.mjs';
+import {
+  pageTopHtml,
+  pageListHtml,
+  paintRules,
+  litRules,
+  pageLights,
+  openingSide,
+  cardTopHtml,
+  cardListHtml,
+  cardAnnounce,
+  roundTally,
+  summaryHtml,
+} from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
 
@@ -77,6 +90,8 @@ export async function start() {
     exercises: exercises.exercises,
     atlasMuscles: atlasIds.muscles,
   });
+  const quiz = createQuiz({ atlas });
+  let round = null; // the Round in play, once the Trainer has entered the Game
 
   // A Muscle with no Exercises has nothing to show, so it is not tappable on
   // the map. Search still opens it: its name and Function are worth it.
@@ -378,6 +393,8 @@ export async function start() {
     const id = muscleAt(event.clientX, event.clientY);
     pendingTap = setTimeout(() => {
       pendingTap = null;
+      // A Round: the map is for looking at (double tap still zooms it), not for leaving it by.
+      if (parseRoute(location.hash, atlas).screen === 'game') return;
       // Expanded, a tap only picks — a miss costs one more tap, not a trip to the wrong page.
       if (full) return pick(id);
       if (id) go(muscleHref(id));
@@ -467,6 +484,8 @@ export async function start() {
     document.documentElement.lang = state.lang;
     el('brand').setAttribute('aria-label', `Agonist: ${t('home')}`);
     el('play').textContent = t('flash.enter');
+    el('play').hidden = here.screen === 'game';
+    el('tally').hidden = here.screen !== 'game';
     el('lang').textContent = t('lang.other');
     all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
@@ -484,23 +503,36 @@ export async function start() {
     }
 
     el('page').dataset.screen = here.screen;
-    top.innerHTML = pageTopHtml(t, state.lang, atlas, here);
-    if (el('q')) el('q').value = state.query;
-    syncSearch();
-    list.innerHTML = pageListHtml(t, state.lang, atlas, here, state.query);
 
-    const paint = paintRules(atlas, here);
-    el('paint').textContent = paint;
-    map.classList.toggle('painted', Boolean(paint));
+    if (here.screen === 'game') {
+      // A fresh step into the Game is a fresh Round — reloading it starts over too.
+      if (fresh) round = quiz.round();
+      syncGame(t);
+    } else {
+      delete el('page').dataset.game;
+      top.innerHTML = pageTopHtml(t, state.lang, atlas, here);
+      if (el('q')) el('q').value = state.query;
+      syncSearch();
+      list.innerHTML = pageListHtml(t, state.lang, atlas, here, state.query);
 
-    // Back is always where the thumb is, except on home, which has none. Two or
-    // more steps in, a shortcut home stands beside it.
+      const paint = paintRules(atlas, here);
+      el('paint').textContent = paint;
+      map.classList.toggle('painted', Boolean(paint));
+      // A revealed Card's announcement does not outlive the Round.
+      el('status').textContent = '';
+    }
+
+    // Back is always where the thumb is, except on home, which has none. A
+    // Round has only the small way out. Two or more steps in on any other
+    // screen, a shortcut home stands beside Back.
     el('bottom').innerHTML =
-      here.screen === 'home'
-        ? ''
-        : `<button class="ic" type="button" data-act="back" aria-label="${t('back')}">${icon('back')}</button>${
-            steps >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
-          }`;
+      here.screen === 'game'
+        ? `<button class="ic" type="button" data-act="home" aria-label="${t('close')}">${icon('close')}</button>`
+        : here.screen === 'home'
+          ? ''
+          : `<button class="ic" type="button" data-act="back" aria-label="${t('back')}">${icon('back')}</button>${
+              steps >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
+            }`;
 
     // Before the scroll below: the page has to be tall enough to reach the place
     // the step was left at.
@@ -521,6 +553,46 @@ export async function start() {
         top.querySelector('h1')?.focus({ preventScroll: true });
       }
     }
+  }
+
+  // ── The Game: a Round of Cards ───────────────────────────────────────────
+
+  /**
+   * The Round in play, drawn: the Card or, once it is finished, the summary.
+   * Reveal, grade and «Ще партія» change nothing in the address — they redraw
+   * through here instead of through `render()`.
+   */
+  function syncGame(t) {
+    el('page').dataset.game = round.finished ? 'done' : 'card';
+    top.innerHTML = round.finished ? summaryHtml(t, state.lang, atlas, round) : cardTopHtml(t, state.lang, atlas, round);
+    list.innerHTML = round.finished ? '' : cardListHtml(t, state.lang, atlas, round);
+
+    const paint = !round.finished && round.revealed ? paintRules(atlas, { screen: 'exercise', id: round.current.exercise }) : '';
+    el('paint').textContent = paint;
+    map.classList.toggle('painted', Boolean(paint));
+
+    el('tally').textContent = roundTally(t, round);
+    // Heard, not only seen in colour: revealing paints the map, which says nothing on its own.
+    el('status').textContent = !round.finished && round.revealed ? cardAnnounce(t, atlas, round) : '';
+  }
+
+  /**
+   * Redraw the Game outside of `render()`: reveal, grade, «Ще партія». Either
+   * way the heading is rebuilt from scratch, taking whatever had the keyboard's
+   * place with it — the heading takes it back, as a fresh step's always does.
+   * `newCard` is true whenever the Card itself changes (not just revealed), so
+   * the map resets and the page opens on it again too.
+   */
+  function redrawGame(newCard) {
+    unlight();
+    syncGame(translator(state.lang));
+    makeRoom();
+    if (newCard) {
+      show(IDENTITY);
+      scrollTo(0, 0);
+      settled = scrollY;
+    }
+    top.querySelector('h1')?.focus({ preventScroll: true });
   }
 
   // ── The row being read ──────────────────────────────────────────────────
@@ -714,6 +786,18 @@ export async function start() {
     'zoom-in': () => zoomBy(STEP),
     'zoom-out': () => zoomBy(1 / STEP),
     play: () => go(GAME),
+    reveal: () => {
+      round.reveal();
+      redrawGame(false);
+    },
+    grade: (button) => {
+      round.grade(button.dataset.knew === '1');
+      redrawGame(true);
+    },
+    again: () => {
+      round = quiz.round();
+      redrawGame(true);
+    },
     clear: clearSearch,
     lang() {
       state.lang = otherLang(state.lang);
@@ -729,6 +813,11 @@ export async function start() {
     if (!target.matches('a')) return ACTIONS[target.dataset.act](target);
     // Cmd/Ctrl/Shift-click on a row is the browser's own: a new tab or window.
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    // A Round in play: a Muscle in the revealed Card's list is not a way out of
+    // it — only the Round's own end, ✕, offers that. The summary's own links
+    // (a review of the Round just finished) are not a Round in play, so they open.
+    // preventDefault or the link's own href still moves the address bar's hash.
+    if (round && !round.finished && parseRoute(location.hash, atlas).screen === 'game') return event.preventDefault();
     // Leaving the search for a result lets the keyboard go. The query stays in
     // the step we leave, so Back returns to the same results.
     event.preventDefault();

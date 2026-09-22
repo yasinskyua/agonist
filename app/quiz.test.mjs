@@ -1,13 +1,13 @@
 // The Quiz tests run on the real content, like the atlas tests: the content is
-// the product, and a bad question is most likely a content problem. Randomness
+// the product, and a bad Card is most likely a content problem. Randomness
 // comes in from outside, so every Round here is reproducible from its seed.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { createAtlas, ROLES } from './atlas.mjs';
-import { createQuiz, MODES, ROUND_SIZE } from './quiz.mjs';
+import { createAtlas } from './atlas.mjs';
+import { createQuiz, ROUND_SIZE } from './quiz.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -28,203 +28,107 @@ const seeded = (seed) => () => {
 
 const quizWith = (seed) => createQuiz({ atlas, random: seeded(seed) });
 const SEEDS = Array.from({ length: 150 }, (_, i) => i);
-const rounds = (mode) => SEEDS.map((seed) => quizWith(seed).round(mode));
+const rounds = () => SEEDS.map((seed) => quizWith(seed).round());
 
-const roleIn = (exercise, muscle) =>
-  atlas.exerciseMuscles(exercise).find((x) => x.muscle.id === muscle)?.role ?? null;
 const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
 
-// ── Modes ────────────────────────────────────────────────────────────────
+/** Play a Round grading each Card right or wrong as told: 'K' (знав) or 'U' (не знав). */
+function play(pattern, seed = 5) {
+  const round = quizWith(seed).round();
+  for (const c of pattern) {
+    round.reveal();
+    round.grade(c === 'K');
+  }
+  return round;
+}
 
-test('all five Modes are listed, and only Who is the Agonist? is ready yet', () => {
-  assert.deepEqual(MODES.map((m) => m.id), ['find', 'name', 'agonist', 'role', 'where']);
-  assert.deepEqual(MODES.filter((m) => m.ready).map((m) => m.id), ['agonist']);
-});
-
-test('a Mode that is not ready cannot be played, and an unknown one fails loudly', () => {
-  assert.throws(() => quizWith(1).round('find'), /find/);
-  assert.throws(() => quizWith(1).round('quiz'), /quiz/);
-});
-
-// ── A Round of Who is the Agonist? ───────────────────────────────────────
+// ── A Round of ten Cards ─────────────────────────────────────────────────
 
 test('a Round is exactly ten different Exercises', () => {
-  for (const round of rounds('agonist')) {
-    assert.equal(round.questions.length, ROUND_SIZE);
-    const exercises = round.questions.map((q) => q.exercise);
+  for (const round of rounds()) {
+    assert.equal(round.total, ROUND_SIZE);
+    const exercises = round.cards.map((c) => c.exercise);
     assert.equal(new Set(exercises).size, ROUND_SIZE, `repeat in ${exercises}`);
   }
 });
 
-test('every question has four different options and exactly one right answer', () => {
-  for (const { questions } of rounds('agonist')) {
-    for (const q of questions) {
-      assert.equal(q.options.length, 4);
-      assert.equal(new Set(q.options).size, 4, `duplicate option in ${q.exercise}`);
-      assert.equal(q.answer, agonistOf(q.exercise));
-      // The answer is the one Agonist; nobody else in the options has that Role.
-      const agonists = q.options.filter((m) => roleIn(q.exercise, m) === 'agonist');
-      assert.deepEqual(agonists, [q.answer]);
-    }
+test('every Card names its Exercise and its Agonist', () => {
+  for (const { cards } of rounds()) {
+    for (const card of cards) assert.equal(card.answer, agonistOf(card.exercise));
   }
-});
-
-test("the wrong options come first from the Exercise itself, then from the Agonist's Group", () => {
-  for (const { questions } of rounds('agonist')) {
-    for (const q of questions) {
-      const own = atlas
-        .exerciseMuscles(q.exercise)
-        .filter(({ role }) => role !== 'agonist')
-        .map(({ muscle }) => muscle.id);
-      const wrong = q.options.filter((m) => m !== q.answer);
-      const fromOwn = wrong.filter((m) => own.includes(m));
-
-      assert.equal(fromOwn.length, Math.min(3, own.length), `${q.exercise}: own Muscles come first`);
-
-      // What is left comes from the Agonist's Groups while there are any there.
-      const groups = atlas.muscle(q.answer).groups;
-      const kin = atlas
-        .muscles()
-        .filter(
-          (m) =>
-            m.id !== q.answer &&
-            !own.includes(m.id) &&
-            atlas.muscleExercises(m.id).length > 0 &&
-            m.groups.some((g) => groups.includes(g)),
-        )
-        .map((m) => m.id);
-      const fromKin = wrong.filter((m) => !own.includes(m) && kin.includes(m));
-      assert.equal(fromKin.length, Math.min(3 - fromOwn.length, kin.length), `${q.exercise}: kin next`);
-    }
-  }
-});
-
-test('the options are shuffled, so the answer is not always in the same place', () => {
-  const places = new Set(rounds('agonist').flatMap((r) => r.questions.map((q) => q.options.indexOf(q.answer))));
-  assert.deepEqual([...places].sort(), [0, 1, 2, 3]);
 });
 
 test('the same seed gives the same Round, another seed another one', () => {
-  const ids = (round) => round.questions.map((q) => q.exercise);
-  assert.deepEqual(ids(quizWith(7).round('agonist')), ids(quizWith(7).round('agonist')));
-  assert.notDeepEqual(ids(quizWith(7).round('agonist')), ids(quizWith(8).round('agonist')));
+  const ids = (round) => round.cards.map((c) => c.exercise);
+  assert.deepEqual(ids(quizWith(7).round()), ids(quizWith(7).round()));
+  assert.notDeepEqual(ids(quizWith(7).round()), ids(quizWith(8).round()));
 });
 
-// ── Answering ────────────────────────────────────────────────────────────
+// ── Revealing and grading ────────────────────────────────────────────────
 
-test('a right answer says so, and names the Role Distribution to paint', () => {
-  const round = quizWith(3).round('agonist');
-  const q = round.current;
-  const result = round.answer(q.answer);
-
-  assert.equal(result.right, true);
-  assert.equal(result.answer, q.answer);
-  assert.deepEqual(
-    result.roles,
-    atlas.exerciseMuscles(q.exercise).map(({ muscle, role }) => ({ muscle: muscle.id, role })),
-  );
-  assert.equal(round.results[0], 'right');
+test('a Round opens on the first Card, unrevealed', () => {
+  const round = quizWith(1).round();
+  assert.equal(round.index, 0);
+  assert.equal(round.revealed, false);
+  assert.equal(round.finished, false);
 });
 
-test('a wrong answer says which Role the picked Muscle has in this Exercise', () => {
-  const round = quizWith(3).round('agonist');
-  const q = round.current;
-  const wrong = q.options.find((m) => m !== q.answer && roleIn(q.exercise, m));
-  const result = round.answer(wrong);
-
-  assert.equal(result.right, false);
-  assert.equal(result.given, wrong);
-  assert.equal(result.givenRole, roleIn(q.exercise, wrong));
-  assert.ok(ROLES.includes(result.givenRole));
-  assert.equal(round.results[0], 'wrong');
+test('a Card cannot be graded before it is revealed', () => {
+  const round = quizWith(1).round();
+  assert.throws(() => round.grade(true), /reveal/);
 });
 
-test('a wrong answer from outside the Exercise reports that the Muscle does not work in it', () => {
-  // Find, over many Rounds, a wrong option that the Exercise does not use at all.
-  for (const round of rounds('agonist')) {
-    for (const q of round.questions) {
-      const stranger = q.options.find((m) => m !== q.answer && roleIn(q.exercise, m) === null);
-      if (!stranger) continue;
-      // Play this Round up to that question with right answers, then miss it.
-      const at = round.questions.indexOf(q);
-      for (let i = 0; i < at; i++) {
-        round.answer(round.current.answer);
-        round.next();
-      }
-      assert.equal(round.answer(stranger).givenRole, null);
-      return;
-    }
-  }
-  assert.fail('no question with an option outside its Exercise: the test cannot run');
+test('a Card cannot be revealed twice', () => {
+  const round = quizWith(1).round();
+  round.reveal();
+  assert.throws(() => round.reveal(), /already revealed/);
 });
 
-test('an answer that is not one of the options is a bug, and so is answering twice', () => {
-  const round = quizWith(3).round('agonist');
-  assert.throws(() => round.answer('not_a_muscle'), /not_a_muscle/);
-  round.answer(round.current.answer);
-  assert.throws(() => round.answer(round.current.answer), /already/);
+test('grading moves to the next Card, unrevealed again', () => {
+  const round = quizWith(1).round();
+  const first = round.current;
+  round.reveal();
+  round.grade(true);
+
+  assert.equal(round.index, 1);
+  assert.notDeepEqual(round.current, first);
+  assert.equal(round.revealed, false);
 });
 
-test('the next question waits for an answer, and the Round ends after the tenth', () => {
-  const round = quizWith(3).round('agonist');
-  assert.throws(() => round.next(), /answer/);
+test('the score counts «Знав», not «Не знав»', () => {
+  const round = play('KKU');
+  assert.equal(round.score, 2);
+});
 
+test('the Round finishes after the tenth grade, and nothing can be revealed or graded after', () => {
+  const round = quizWith(3).round();
   for (let i = 0; i < ROUND_SIZE; i++) {
     assert.equal(round.finished, false);
-    assert.equal(round.index, i);
-    round.answer(round.current.answer);
-    if (i < ROUND_SIZE - 1) round.next();
+    round.reveal();
+    round.grade(i % 2 === 0);
   }
   assert.equal(round.finished, true);
-  assert.throws(() => round.next(), /over/);
+  assert.throws(() => round.reveal(), /over/);
+  assert.throws(() => round.grade(true), /over/);
 });
 
-// ── Score, streak, summary ───────────────────────────────────────────────
+// ── Summary ───────────────────────────────────────────────────────────────
 
-/** Play a Round answering right or wrong as told: 'R' or 'W'. */
-function play(pattern, seed = 5) {
-  const round = quizWith(seed).round('agonist');
-  [...pattern].forEach((c, i) => {
-    const q = round.current;
-    round.answer(c === 'R' ? q.answer : q.options.find((m) => m !== q.answer));
-    if (i < ROUND_SIZE - 1) round.next();
-  });
-  return round;
-}
-
-test('the streak counts right answers in a row and is broken by a wrong one', () => {
-  const round = quizWith(5).round('agonist');
-  const streaks = [];
-  for (const c of 'RRWRRR') {
-    const q = round.current;
-    round.answer(c === 'R' ? q.answer : q.options.find((m) => m !== q.answer));
-    streaks.push(round.streak);
-    round.next();
-  }
-  assert.deepEqual(streaks, [1, 2, 0, 1, 2, 3]);
-  assert.equal(round.bestStreak, 3);
+test('a summary before the Round is finished is a bug', () => {
+  assert.throws(() => quizWith(4).round().summary(), /finish/);
 });
 
-test('the summary gives the score, the longest streak and each mistake once', () => {
-  const round = play('RRRWRRWRRR');
+test('the summary gives the score and every «Не знав» Card once, each naming its Agonist', () => {
+  const round = play('KKKUKKUKKK');
   const summary = round.summary();
 
   assert.equal(summary.score, 8);
   assert.equal(summary.total, ROUND_SIZE);
-  assert.equal(summary.bestStreak, 3);
   assert.equal(summary.mistakes.length, 2);
-  for (const m of summary.mistakes) {
-    assert.equal(round.questions.some((q) => q.exercise === m.exercise), true);
-    assert.equal(m.answer, agonistOf(m.exercise));
-  }
-  assert.equal(new Set(summary.mistakes.map((m) => m.exercise)).size, 2);
+  for (const m of summary.mistakes) assert.equal(m.answer, agonistOf(m.exercise));
 });
 
-test('a perfect Round has no mistakes and a streak of ten', () => {
-  const summary = play('RRRRRRRRRR').summary();
-  assert.deepEqual([summary.score, summary.bestStreak, summary.mistakes], [10, 10, []]);
-});
-
-test('a summary before the last answer is a bug', () => {
-  assert.throws(() => quizWith(5).round('agonist').summary(), /finish/);
+test('a perfect Round has no mistakes', () => {
+  const summary = play('KKKKKKKKKK').summary();
+  assert.deepEqual([summary.score, summary.mistakes], [10, []]);
 });

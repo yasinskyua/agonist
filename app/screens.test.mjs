@@ -8,7 +8,22 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { translator } from './i18n.mjs';
-import { indexHtml, searchHtml, pageTopHtml, pageListHtml, paintRules, litRules, pageLights, openingSide } from './screens.mjs';
+import { createQuiz } from './quiz.mjs';
+import {
+  indexHtml,
+  searchHtml,
+  pageTopHtml,
+  pageListHtml,
+  paintRules,
+  litRules,
+  pageLights,
+  openingSide,
+  cardTopHtml,
+  cardListHtml,
+  cardAnnounce,
+  roundTally,
+  summaryHtml,
+} from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -243,4 +258,80 @@ test('a page lights what it is about, and home and the Game light nothing', () =
   assert.deepEqual(pageLights(ROLL), { exercise: ROLL.id });
   assert.equal(pageLights({ screen: 'home' }), null);
   assert.equal(pageLights({ screen: 'game' }), null);
+});
+
+// ── The Game: a Round of Cards ──────────────────────────────────────────
+
+const quiz = () => createQuiz({ atlas });
+
+test('a Card before reveal shows the Exercise and the way to reveal it, and nothing more', () => {
+  const round = quiz().round();
+  const top = cardTopHtml(t, 'uk', atlas, round);
+  const e = atlas.exercise(round.current.exercise);
+
+  assert.ok(top.includes(e.uk));
+  assert.ok(top.includes(t('card.reveal')));
+  assert.ok(!top.includes(t('card.yes')) && !top.includes(t('card.no')));
+  assert.equal(cardListHtml(t, 'uk', atlas, round), '');
+});
+
+test('revealing a Card shows the Agonist, both grades, and the whole Role Distribution', () => {
+  const round = quiz().round();
+  round.reveal();
+
+  const top = cardTopHtml(t, 'uk', atlas, round);
+  assert.ok(top.includes(atlas.muscle(round.current.answer).uk));
+  assert.ok(top.includes(t('card.yes')) && top.includes(t('card.no')));
+
+  const list = cardListHtml(t, 'uk', atlas, round);
+  for (const { muscle, role } of atlas.exerciseMuscles(round.current.exercise)) {
+    assert.ok(list.includes(muscle.uk));
+    assert.ok(list.includes(`data-role="${role}"`));
+  }
+});
+
+test('a revealed Card is announced by its Agonist, for a screen reader', () => {
+  const round = quiz().round();
+  round.reveal();
+  assert.ok(cardAnnounce(t, atlas, round).includes(atlas.muscle(round.current.answer).uk));
+});
+
+test('the tally names the Card in play, out of ten, and the score so far', () => {
+  const round = quiz().round();
+  assert.ok(roundTally(t, round).startsWith('1/10'));
+
+  round.reveal();
+  round.grade(true);
+  const tally = roundTally(t, round);
+  assert.ok(tally.startsWith('2/10'));
+  assert.ok(tally.endsWith('1'));
+});
+
+test('the summary gives the score and links every «Не знав» Card to its Exercise', () => {
+  const round = quiz().round();
+  for (let i = 0; i < 10; i++) {
+    round.reveal();
+    round.grade(i % 3 !== 0);
+  }
+  const { score, total, mistakes } = round.summary();
+  const html = summaryHtml(t, 'uk', atlas, round);
+
+  assert.ok(html.includes(`>${score}</b>`));
+  assert.ok(html.includes(`/${total}`));
+  for (const m of mistakes) {
+    assert.ok(hrefs(html).includes(`#/exercise/${m.exercise}`));
+    assert.ok(html.includes(atlas.muscle(m.answer).uk));
+  }
+});
+
+test('a perfect Round is praised, and has nothing to review', () => {
+  const round = quiz().round();
+  for (let i = 0; i < 10; i++) {
+    round.reveal();
+    round.grade(true);
+  }
+  const html = summaryHtml(t, 'uk', atlas, round);
+
+  assert.ok(html.includes(t('round.perfect')));
+  assert.ok(!html.includes(t('round.review')));
 });

@@ -113,7 +113,10 @@ button { cursor: pointer; }
 #brand { padding-right: 1rem; font-weight: 800; }
 #play { padding: 0 0.6rem; font-weight: 700; }
 #lang { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
-.bar-end { display: flex; align-items: center; }
+.bar-end { display: flex; align-items: center; gap: 0.3rem; }
+
+/* The Round's «N/10 · знав K», where «Знав / Не знав» sits between Cards. */
+.tally { padding: 0 0.4rem; font: 600 0.85rem var(--mono); color: var(--dim); white-space: nowrap; }
 
 /* ── Words ─────────────────────────────────────────────────────────────── */
 
@@ -276,7 +279,8 @@ p.sub[translate='no'] { font-style: italic; }
 
 #page[data-screen='home'] #dock { height: 44svh; }
 #page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
-#page[data-screen='game'] #dock, #page[data-screen='game'] #mapbar { display: none; }
+/* The Round's summary has nothing to paint: the map goes with the Card. */
+#page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
 
 #map {
   position: relative;
@@ -495,3 +499,28 @@ p.sub[translate='no'] { font-style: italic; }
   background: var(--bg);
   color: var(--ink);
 }
+
+/* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
+
+.main, .ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0 1.2rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.main { border: 0; background: var(--ink); color: var(--bg); }
+.ghost { border: 1px solid var(--ink); background: var(--bg); color: var(--ink); }
+
+/* The reveal button, alone under the hint. */
+#top > .main { width: 100%; margin-top: 0.8rem; }
+
+/* The two grades, or the summary's «На мапу» / «Ще партія» — side by side. */
+.card-go { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+.card-go > * { flex: 1; }
+
+.score { margin: 0.6rem 0 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; }
+.score b { font-variant-numeric: tabular-nums; }

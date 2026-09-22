@@ -22,6 +22,7 @@
          module's own imports are listed too, so they do not queue behind it. -->
     <link rel="modulepreload" href="app/ui.mjs" />
     <link rel="modulepreload" href="app/atlas.mjs" />
+    <link rel="modulepreload" href="app/quiz.mjs" />
     <link rel="modulepreload" href="app/i18n.mjs" />
     <link rel="modulepreload" href="app/icons.mjs" />
     <link rel="modulepreload" href="app/route.mjs" />
@@ -58,10 +59,15 @@
       <header id="bar">
         <button id="brand" type="button" data-act="home">Agonist</button>
         <span class="bar-end">
+          <span id="tally" class="tally" hidden></span>
           <button id="play" type="button" data-act="play"></button>
           <button id="lang" type="button" data-act="lang"></button>
         </span>
       </header>
+
+      <!-- Heard, not seen: search counts and, in the Game, a revealed Card's
+           Agonist. Outside #top, which a redraw replaces whole. -->
+      <p id="status" class="sr" role="status"></p>
 
       <main id="page" data-screen="home">
         <!-- Until the data arrives the page says so, in the default language;

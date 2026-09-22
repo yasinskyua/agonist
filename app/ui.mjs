@@ -130,10 +130,14 @@ export async function start() {
    * wider than five fingers: let them outrank the picture and the small Muscles'
    * zones swallow the middle of the big ones (measured: 33 taps in 54, on a
    * point lying on the Muscle, went to a neighbour).
+   *
+   * Expanded, the map has room to aim, and the spec says a tap on empty ground
+   * drops the pick — so «empty» there means what it looks like: no zone stands
+   * in for a Muscle that is not drawn under the finger.
    */
   function muscleAt(x, y) {
     const under = document.elementsFromPoint(x, y).filter((e) => e.matches('#map [data-muscle]'));
-    const hit = under.find((e) => !e.matches('rect.tap')) ?? under[0];
+    const hit = full ? under.find((e) => !e.matches('rect.tap')) : (under.find((e) => !e.matches('rect.tap')) ?? under[0]);
     return hit && musclesOf(hit).find((m) => withExercises.has(m));
   }
 

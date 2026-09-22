@@ -401,6 +401,33 @@ export async function start() {
     }, DOUBLE_TAP_MS);
   });
 
+  // ── Motion: view transitions show which way a screen changes ─────────────
+
+  const calm = matchMedia('(prefers-reduced-motion: reduce)');
+
+  /**
+   * Run `update` as a View Transition: `dir` is 'forward' (the new screen
+   * slides in from the right), 'back' (from the left) or 'fade' (a screen
+   * that stays put — the full map, the hidden map, «Спереду/Ззаду», a
+   * revealed Card). The map and the header carry their own transition names
+   * in the CSS, so only the rest of the page moves.
+   *
+   * Without support, or under «Зменшити рух», `update` just runs. A
+   * transition can be skipped outright — another one starts first, the tab
+   * is hidden — which rejects `ready`/`finished`; `update` still ran by
+   * then, so the screen is drawn either way and nothing here throws.
+   */
+  function draw(dir, update) {
+    if (calm.matches || !document.startViewTransition) return update();
+    // 'fade' matches no rule below — the default cross-fade plays on its own —
+    // so only 'forward'/'back' need the flag that picks a slide direction.
+    if (dir !== 'fade') document.documentElement.dataset.dir = dir;
+    const t = document.startViewTransition(update);
+    t.ready.catch(() => {});
+    t.finished.catch(() => {});
+    return t;
+  }
+
   // ── Steps ───────────────────────────────────────────────────────────────
 
   // Every step is a history entry that remembers how deep it is, so the phone's
@@ -422,7 +449,7 @@ export async function start() {
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
     if (full) history.replaceState({ depth: depth() }, '', hash);
     else history.pushState({ depth: depth() + 1 }, '', hash);
-    render();
+    draw('forward', render);
   }
 
   /**
@@ -433,7 +460,7 @@ export async function start() {
   function showHome() {
     history.replaceState({ depth: 0 }, '', HOME);
     shown = drawn = '';
-    render();
+    draw('back', render);
   }
 
   let unwinding = false;
@@ -584,15 +611,17 @@ export async function start() {
    * the map resets and the page opens on it again too.
    */
   function redrawGame(newCard) {
-    unlight();
-    syncGame(translator(state.lang));
-    makeRoom();
-    if (newCard) {
-      show(IDENTITY);
-      scrollTo(0, 0);
-      settled = scrollY;
-    }
-    top.querySelector('h1')?.focus({ preventScroll: true });
+    draw(newCard ? 'forward' : 'fade', () => {
+      unlight();
+      syncGame(translator(state.lang));
+      makeRoom();
+      if (newCard) {
+        show(IDENTITY);
+        scrollTo(0, 0);
+        settled = scrollY;
+      }
+      top.querySelector('h1')?.focus({ preventScroll: true });
+    });
   }
 
   // ── The row being read ──────────────────────────────────────────────────
@@ -676,6 +705,12 @@ export async function start() {
   /** What the expanded map covers: nothing under it may be reached, by finger or by reader. */
   const covered = [el('bar'), mapbar, top, list];
 
+  // setHidden/setSide/setFull, below, never call `draw()` themselves — only
+  // the caller that wants a transition does. `setFull` calls `setSide`
+  // directly, and `render()` calls `setFull(false)` as a safety net that may
+  // already be running inside one of those callers' transitions; nesting a
+  // second `document.startViewTransition` inside an active one is not safe.
+
   /** Hide the map down to its strip, or bring it back. The choice stays across screens. */
   function setHidden(hidden) {
     dock.hidden = hidden;
@@ -728,11 +763,20 @@ export async function start() {
     }
   }
 
-  /** Expanding is a step of history, so Back closes the map before it leaves the screen. */
+  /**
+   * Expanding is a step of history, so Back closes the map before it leaves the screen.
+   *
+   * ponytail: `history.pushState` above lands before `setFull(true)` inside
+   * `draw` does — a View Transition's callback runs on a queued task, not on
+   * this one — so `history.state.full` is briefly true while `full` and the
+   * DOM still are not. Self-heals in every case tried by hand; a real fix
+   * would set `full` synchronously here and leave only the animated part
+   * (`.full-map`, `inert`, focus) inside `draw`.
+   */
   function openFull() {
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
     history.pushState({ depth: depth() + 1, full: true }, '');
-    setFull(true);
+    draw('fade', () => setFull(true));
   }
 
   // ── Search ──────────────────────────────────────────────────────────────
@@ -776,11 +820,11 @@ export async function start() {
     back: goBack,
     home: goHome,
     all: unlight,
-    'hide-map': () => setHidden(true),
-    'show-map': () => setHidden(false),
+    'hide-map': () => draw('fade', () => setHidden(true)),
+    'show-map': () => draw('fade', () => setHidden(false)),
     'full-map': openFull,
     'close-map': () => history.back(),
-    side: (button) => setSide(button.dataset.side),
+    side: (button) => draw('fade', () => setSide(button.dataset.side)),
     'open-pick': () => go(muscleHref(picked)),
     fit: () => show(IDENTITY, true),
     'zoom-in': () => zoomBy(STEP),
@@ -802,7 +846,7 @@ export async function start() {
     lang() {
       state.lang = otherLang(state.lang);
       saveLang(storage, state.lang);
-      render();
+      draw('fade', render);
     },
   };
 
@@ -840,8 +884,12 @@ export async function start() {
     // The expanded map is a step of its own on the same screen: entering or
     // leaving it draws nothing anew.
     const wantsFull = Boolean(history.state?.full);
-    if (wantsFull !== full && drawn.split('|')[0] === location.hash) return setFull(wantsFull);
-    render();
+    if (wantsFull !== full && drawn.split('|')[0] === location.hash) return draw('fade', () => setFull(wantsFull));
+    // popstate fires for the system Forward as much as Back — the depth this
+    // step left behind (in `drawn`) against the one just arrived at says which.
+    const wasSteps = Number(drawn.split('|')[2] ?? 0);
+    const steps = depth() - (wantsFull ? 1 : 0);
+    draw(steps > wasSteps ? 'forward' : 'back', render);
   });
   addEventListener('hashchange', () => {
     // An address typed by hand arrives without our state; count it as a step

@@ -37,6 +37,8 @@
   --game-zone: 44px;
   /* A wrong Muscle the Trainer tapped in the Game: no Role has this colour. */
   --c-miss: var(--ink);
+  /* The right Muscle in Знайди М'яз: green, which no Role is. */
+  --c-right: #1a8f4d;
   /* The bottom tab bar's own height, safe area excluded (added where it's used). */
   --tabsh: 3.9rem;
   /* The sticky top bar's own rendered height, safe area excluded — what the
@@ -77,6 +79,7 @@ html[data-theme='dark'] { color-scheme: dark; }
   --c-skin: #1c1c1c;
   --c-detail: #666;
   --c-outline: #8a8a8a;
+  --c-right: #3ecf7e;
 
   --r-agonist: #ff5a4f;
   --r-synergist: #6f96ff;

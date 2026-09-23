@@ -428,11 +428,19 @@ test('a page lights what it is about, and home and the Game light nothing', () =
 
 // ── The Game: a Round of Tasks ──────────────────────────────────────────
 
-const quiz = () => createQuiz({ atlas });
+/** A small seedable generator, so the Round a test plays is always the same one. */
+const lcg = (seed) => () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
+/** A Round in play whose first Task is of `kind` — «Хто Агоніст» unless told otherwise. */
+const roundOf = (kind = 'agonist') => {
+  for (let seed = 1; ; seed++) {
+    const round = createQuiz({ atlas, random: lcg(seed) }).round();
+    if (round.current.kind === kind) return round;
+  }
+};
 
 /** A Round whose first Task is answered with `given` (a Muscle id or DONT_KNOW). */
-const answered = (given) => {
-  const round = quiz().round();
+const answered = (given, kind) => {
+  const round = roundOf(kind);
   round.choose(typeof given === 'function' ? given(round.current) : given);
   return round;
 };
@@ -445,7 +453,7 @@ const idleOf = (task) => {
 };
 
 test('a Task waiting for its tap says what to do and names the Exercise, and offers only «Не знаю»', () => {
-  const round = quiz().round();
+  const round = roundOf();
   const top = taskTopHtml(t, 'uk', atlas, round);
 
   assert.ok(top.includes(t('task.agonist')));
@@ -466,14 +474,14 @@ test('the wording follows the interface language: the Exercise in it, the Agonis
 });
 
 test('a Task before its tap offers «Хто такий Агоніст?» as a native disclosure holding the Agonist\'s sentence', () => {
-  const top = taskTopHtml(t, 'uk', atlas, quiz().round());
+  const top = taskTopHtml(t, 'uk', atlas, roundOf());
 
   assert.ok(top.includes('<details class="who"><summary>' + t('card.agonist.question')));
   assert.ok(top.includes(t('role.agonist.sentence')));
 });
 
 test('a Card of the Game is gone: no «Показати відповідь», no «Знав / Не знав»', () => {
-  for (const round of [quiz().round(), answered(DONT_KNOW)]) {
+  for (const round of [roundOf(), answered(DONT_KNOW)]) {
     const top = taskTopHtml(t, 'uk', atlas, round);
     for (const key of ['card.reveal', 'card.yes', 'card.no']) assert.ok(!top.includes(t(key)), key);
   }
@@ -570,8 +578,86 @@ test('an answered Task paints its Exercise\'s Role Distribution, and a wrong Mus
   assert.ok(!taskPaintRules(atlas, right).includes('--c-miss'), 'a right answer marks no miss');
 });
 
+// «Знайди М'яз»
+
+/** A Muscle other than the Task's, that is on the map. */
+const wrongMuscle = (task) => atlas.muscles().find((m) => m.id !== task.muscle && withExercises(m.id)).id;
+
+test('a «Знайди М\'яз» Task names the Muscle, in Ukrainian, with only «Не знаю» to give up — no Agonist disclosure, no list', () => {
+  const round = roundOf('find');
+  const top = taskTopHtml(tEn, 'en', atlas, round);
+
+  assert.ok(top.includes(tEn('task.find')));
+  assert.ok(top.includes(atlas.muscle(round.current.muscle).uk));
+  assert.ok(top.includes(`data-act="dont-know">${tEn('task.dontknow')}`));
+  assert.ok(!top.includes('class="who"'));
+  assert.equal(taskListHtml(t, 'uk', atlas, round), '');
+});
+
+test('the new wordings exist in both languages', () => {
+  for (const tr of [t, tEn]) assert.ok(tr('task.find') && tr('task.find') !== 'task.find');
+  assert.notEqual(t('task.find'), tEn('task.find'));
+});
+
+test('a right «Знайди М\'яз» answer says so, and gives the Muscle\'s Function', () => {
+  const round = answered((task) => task.muscle, 'find');
+  const top = taskTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes('data-verdict="right"'));
+  assert.ok(top.includes(atlas.muscle(round.current.muscle).action));
+  assert.ok(!top.includes(t('task.tapped')));
+  assert.ok(top.includes(`data-act="next">${t('task.next')}`));
+});
+
+test('a «Знайди М\'яз» miss says which Muscle was tapped and still gives the right one\'s Function', () => {
+  const round = answered(wrongMuscle, 'find');
+  const top = taskTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes('data-verdict="wrong"'));
+  assert.ok(top.includes(`${t('task.tapped')}: <b>${atlas.muscle(round.choice).uk}</b>`));
+  assert.ok(top.includes(atlas.muscle(round.current.muscle).action));
+  assert.ok(!top.includes(t('task.idle')), 'Roles are not this Task\'s business');
+});
+
+test('«Не знаю» in «Знайди М\'яз» is a miss with the Function but nothing tapped', () => {
+  const top = taskTopHtml(t, 'uk', atlas, answered(DONT_KNOW, 'find'));
+
+  assert.ok(top.includes('data-verdict="wrong"'));
+  assert.ok(!top.includes(t('task.tapped')));
+});
+
+test('«Далі» sits in the same place in both kinds, right or wrong', () => {
+  const next = (given, kind) => taskTopHtml(t, 'uk', atlas, answered(given, kind)).match(/<div class="card-go task-go">.*<\/div>/s)[0];
+
+  assert.equal(next((task) => task.muscle, 'find'), next(DONT_KNOW, 'find'));
+  assert.equal(next(DONT_KNOW, 'find'), next(DONT_KNOW, 'agonist'));
+});
+
+test('a «Знайди М\'яз» answer is announced: verdict, the Muscle, its Function, and the Muscle tapped on a miss', () => {
+  const right = answered((task) => task.muscle, 'find');
+  const muscle = atlas.muscle(right.current.muscle);
+  assert.equal(taskAnnounce(t, atlas, right), `${t('task.right')}. ${muscle.uk}. ${muscle.action}`);
+
+  const miss = answered(wrongMuscle, 'find');
+  const said = taskAnnounce(t, atlas, miss);
+  assert.ok(said.startsWith(t('task.wrong')));
+  assert.ok(said.includes(atlas.muscle(miss.current.muscle).uk));
+  assert.ok(said.includes(`${t('task.tapped')}: ${atlas.muscle(miss.choice).uk}`));
+});
+
+test('«Знайди М\'яз» paints the right Muscle in a colour of its own, and a miss in another — neither a Role\'s', () => {
+  const right = answered((task) => task.muscle, 'find');
+  assert.equal(taskPaintRules(atlas, right), `#map [data-muscle~="${right.current.muscle}"][fill] { fill: var(--c-right); }`);
+
+  const miss = answered(wrongMuscle, 'find');
+  const rules = taskPaintRules(atlas, miss);
+  assert.ok(rules.includes(`[data-muscle~="${miss.current.muscle}"][fill] { fill: var(--c-right); }`));
+  assert.ok(rules.endsWith(`[data-muscle~="${miss.choice}"][fill] { fill: var(--c-miss); }`));
+  assert.ok(!rules.includes('--r-'), 'no Role colour');
+});
+
 test('the tally names the Task in play, out of ten, and how many are right — «правильно», not «знав» — in words', () => {
-  const round = quiz().round();
+  const round = roundOf();
   assert.ok(roundTally(t, round, 'round.right').startsWith('1 з 10'));
 
   round.choose(round.current.muscle);
@@ -583,11 +669,11 @@ test('the tally names the Task in play, out of ten, and how many are right — �
 });
 
 test('the Exam still tallies «знав» by default', () => {
-  assert.ok(roundTally(t, quiz().round()).includes(t('round.known')));
+  assert.ok(roundTally(t, roundOf()).includes(t('round.known')));
 });
 
-test('the summary gives the score and links every missed Task to its Exercise, with the right Agonist', () => {
-  const round = quiz().round();
+test('the summary gives the score and links every missed Task: an Exercise for «Хто Агоніст», the Muscle for «Знайди М\'яз»', () => {
+  const round = roundOf();
   for (let i = 0; i < 10; i++) {
     round.choose(i % 3 ? round.current.muscle : DONT_KNOW);
     round.grade(i % 3 !== 0);
@@ -598,13 +684,28 @@ test('the summary gives the score and links every missed Task to its Exercise, w
   assert.ok(html.includes(`>${score}</b>`));
   assert.ok(html.includes(`/${total}`));
   for (const m of mistakes) {
-    assert.ok(hrefs(html).includes(`#/exercise/${m.exercise}`));
+    if (m.kind === 'agonist') assert.ok(hrefs(html).includes(`#/exercise/${m.exercise}`));
     assert.ok(html.includes(atlas.muscle(m.muscle).uk));
   }
 });
 
+test('a Round missed whole links both kinds: an Agonist Task to its Exercise, a Find Task to its Muscle', () => {
+  const round = roundOf();
+  for (let i = 0; i < 10; i++) {
+    round.choose(DONT_KNOW);
+    round.grade(false);
+  }
+  const links = hrefs(summaryHtml(t, 'uk', atlas, round));
+  const { mistakes } = round.summary();
+
+  assert.ok(mistakes.some((m) => m.kind === 'find') && mistakes.some((m) => m.kind === 'agonist'));
+  for (const m of mistakes) {
+    assert.ok(links.includes(m.kind === 'find' ? `#/muscle/${m.muscle}` : `#/exercise/${m.exercise}`), m.kind);
+  }
+});
+
 test('a perfect Round is praised, and has nothing to review', () => {
-  const round = quiz().round();
+  const round = roundOf();
   for (let i = 0; i < 10; i++) {
     round.choose(round.current.muscle);
     round.grade(true);

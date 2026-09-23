@@ -237,35 +237,39 @@ export function pageListHtml(t, lang, atlas, here, query = '') {
 const verdictOf = (atlas, round) => judge(atlas, round.current, round.choice);
 
 /**
- * A Task: its wording — the action and the Exercise's name — and, at the foot
- * (in the thumb zone, `.task-go`), «Не знаю» while it waits for a tap, or once
- * answered the verdict and «Далі» in the same place. The verdict is a mark and
- * words, never colour alone, and the Agonist is named in words too — the map is
- * not the only way to read it.
+ * A Task: its wording — the action and its subject, the Exercise (Хто Агоніст) or
+ * the Muscle (Знайди М'яз) — and, at the foot (in the thumb zone, `.task-go`),
+ * «Не знаю» while it waits for a tap, or once answered the verdict and «Далі» in
+ * the same place. The verdict is a mark and words, never colour alone, and the
+ * right answer is named in words too — the map is not the only way to read it.
  */
 export function taskTopHtml(t, lang, atlas, round) {
   const task = round.current;
-  const heading = `<h1 tabindex="-1"><small class="task-do">${t('task.agonist')}</small>${atlas.exercise(task.exercise)[lang]}</h1>`;
+  const find = task.kind === 'find';
+  const subject = find ? atlas.muscle(task.muscle).uk : atlas.exercise(task.exercise)[lang];
+  const heading = `<h1 tabindex="-1"><small class="task-do">${t(find ? 'task.find' : 'task.agonist')}</small>${subject}</h1>`;
   if (!round.revealed) {
-    return `${heading}
-      <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>
+    const who = find ? '' : `\n      <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>`;
+    return `${heading}${who}
       <div class="card-go task-go"><button class="ghost" type="button" data-act="dont-know">${t('task.dontknow')}</button></div>`;
   }
   const v = verdictOf(atlas, round);
   const tapped = v.tapped && !v.correct
-    ? `<p class="lead">${t('task.tapped')}: <b>${atlas.muscle(v.tapped).uk}</b> — ${v.role ? t(`role.${v.role}`) : t('task.idle')}</p>`
+    ? `<p class="lead">${t('task.tapped')}: <b>${atlas.muscle(v.tapped).uk}</b>${find ? '' : ` — ${v.role ? t(`role.${v.role}`) : t('task.idle')}`}</p>`
     : '';
+  const answer = find
+    ? `<p class="lead">${atlas.muscle(task.muscle).action}</p>`
+    : `<p class="lead"><b>${t('role.agonist')}:</b> ${atlas.muscle(task.muscle).uk}</p>`;
   return `${heading}
     <p class="verdict" data-verdict="${v.correct ? 'right' : 'wrong'}"><span aria-hidden="true">${v.correct ? '✓' : '✕'}</span> ${t(v.correct ? 'task.right' : 'task.wrong')}</p>
-    <p class="lead"><b>${t('role.agonist')}:</b> ${atlas.muscle(task.muscle).uk}</p>
-    ${tapped}
-    ${legendHtml(t, rolesIn(atlas.exerciseMuscles(task.exercise)))}
+    ${find ? tapped + answer : answer + tapped}
+    ${find ? '' : legendHtml(t, rolesIn(atlas.exerciseMuscles(task.exercise)))}
     <div class="card-go task-go"><button class="main" type="button" data-act="next">${t('task.next')}</button></div>`;
 }
 
 /** Once answered: the Exercise's whole Role Distribution, as the Exercise page lists it — without Related Exercises, so nothing invites leaving the Round. */
 export function taskListHtml(t, lang, atlas, round) {
-  if (!round.revealed) return '';
+  if (!round.revealed || round.current.kind === 'find') return '';
   const { exercise } = round.current;
   const notes = atlas.exercise(exercise).notes ?? {};
   return list(
@@ -278,19 +282,25 @@ export function taskListHtml(t, lang, atlas, round) {
 /** What a screen reader is told once a Task is answered: verdict and the right answer, heard, not only seen in colour. */
 export function taskAnnounce(t, atlas, round) {
   const v = verdictOf(atlas, round);
-  const tapped = v.tapped && !v.correct ? ` ${t('task.tapped')}: ${atlas.muscle(v.tapped).uk} — ${v.role ? t(`role.${v.role}`) : t('task.idle')}.` : '';
-  return `${t(v.correct ? 'task.right' : 'task.wrong')}. ${t('role.agonist')}: ${atlas.muscle(round.current.muscle).uk}.${tapped}`;
+  const find = round.current.kind === 'find';
+  const said = v.tapped && !v.correct ? ` ${t('task.tapped')}: ${atlas.muscle(v.tapped).uk}${find ? '' : ` — ${v.role ? t(`role.${v.role}`) : t('task.idle')}`}.` : '';
+  const { uk, action } = atlas.muscle(round.current.muscle);
+  const answer = find ? ` ${uk}. ${action}` : ` ${t('role.agonist')}: ${uk}.`;
+  return `${t(v.correct ? 'task.right' : 'task.wrong')}.${answer}${said}`;
 }
 
 /**
- * What the map shows once a Task is answered: the Exercise's Role Distribution,
- * and over it a wrong Muscle the Trainer tapped in `--c-miss` — a colour no Role
- * has, so the miss is never mistaken for one.
+ * What the map shows once a Task is answered: the Exercise's Role Distribution
+ * (Хто Агоніст) or the right Muscle alone in `--c-right` (Знайди М'яз), and over
+ * it a wrong Muscle the Trainer tapped in `--c-miss` — colours no Role has, so
+ * neither is mistaken for one.
  */
 export function taskPaintRules(atlas, round) {
   const { tapped, correct } = verdictOf(atlas, round);
+  const { kind, exercise, muscle } = round.current;
+  const base = kind === 'find' ? `#map [data-muscle~="${muscle}"][fill] { fill: var(--c-right); }` : paintRules(atlas, { screen: 'exercise', id: exercise });
   const miss = tapped && !correct ? `\n#map [data-muscle~="${tapped}"][fill] { fill: var(--c-miss); }` : '';
-  return paintRules(atlas, { screen: 'exercise', id: round.current.exercise }) + miss;
+  return base + miss;
 }
 
 /** The header's «N з 10 · знав K», read off the Round in play; the Game says «правильно» instead (`word`), for it checks the answer itself. */
@@ -298,7 +308,7 @@ export function roundTally(t, round, word = 'round.known') {
   return `${round.index + 1} ${t('round.of')} ${round.total} · ${t(word)} ${round.score}`;
 }
 
-/** The Round's end: the score, and the Tasks missed, linked for a review. */
+/** The Round's end: the score, and the Tasks missed, linked for a review — to the Exercise, or for Знайди М'яз to the Muscle. */
 export function summaryHtml(t, lang, atlas, round) {
   const { score, total, mistakes } = round.summary();
   return `
@@ -313,9 +323,11 @@ export function summaryHtml(t, lang, atlas, round) {
       mistakes.length
         ? `<h2 class="h">${t('round.review')}</h2>${list(
             mistakes.map((m) =>
-              exerciseRow(t, lang, atlas.exercise(m.exercise), {
-                aside: `${t('search.agonist')}: ${atlas.muscle(m.muscle).uk}`,
-              }),
+              m.kind === 'find'
+                ? muscleRow(t, lang, atlas, atlas.muscle(m.muscle))
+                : exerciseRow(t, lang, atlas.exercise(m.exercise), {
+                    aside: `${t('search.agonist')}: ${atlas.muscle(m.muscle).uk}`,
+                  }),
             ),
           )}`
         : ''

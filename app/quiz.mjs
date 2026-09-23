@@ -15,7 +15,7 @@
 //
 //   const quiz = createQuiz({ atlas, random: Math.random });
 //   const round = quiz.round();
-//   round.current;              // a Task: { kind, exercise, muscle } — Exercise and Muscle ids
+//   round.current;              // a Task: { kind, muscle, exercise? } — Muscle and Exercise ids
 //   round.choose(tappedMuscle); // or DONT_KNOW
 //   judge(atlas, round.current, round.choice); // { correct, tapped, role }
 //   round.grade(correct);       // moves to the next Task
@@ -123,6 +123,12 @@ export const KINDS = [
       const role = tapped && atlas.exerciseMuscles(task.exercise).find((x) => x.muscle.id === tapped)?.role;
       return { correct: tapped === task.muscle, tapped, role: role ?? null };
     },
+  },
+  {
+    id: 'find',
+    // Only a Muscle that works in some Exercise is worth asking about (and is live on the map).
+    tasks: (atlas) => atlas.muscles().filter(({ id }) => atlas.muscleExercises(id).length > 0).map(({ id }) => ({ kind: 'find', muscle: id })),
+    judge: (atlas, task, given) => ({ correct: given === task.muscle, tapped: given === DONT_KNOW ? null : given }),
   },
 ];
 

@@ -34,6 +34,8 @@ const SEEDS = Array.from({ length: 150 }, (_, i) => i);
 const rounds = () => SEEDS.map((seed) => quizWith(seed).round());
 
 const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
+/** The first Task of `kind` in a seeded Round. */
+const taskOf = (kind, seed = 1) => quizWith(seed).round().cards.find((c) => c.kind === kind);
 
 /** Play a Round answering each Task right or wrong as told: 'K' (tap the Agonist) or 'U' («Не знаю»). */
 function play(pattern, seed = 5) {
@@ -50,20 +52,39 @@ function play(pattern, seed = 5) {
 test('a Round is exactly ten Tasks, no Exercise or Muscle twice', () => {
   for (const round of rounds()) {
     assert.equal(round.total, ROUND_SIZE);
-    const exercises = round.cards.map((c) => c.exercise);
+    const exercises = round.cards.filter((c) => c.exercise).map((c) => c.exercise);
     const muscles = round.cards.map((c) => c.muscle);
-    assert.equal(new Set(exercises).size, ROUND_SIZE, `repeat in ${exercises}`);
+    assert.equal(new Set(exercises).size, exercises.length, `repeat in ${exercises}`);
     assert.equal(new Set(muscles).size, ROUND_SIZE, `repeat in ${muscles}`);
   }
 });
 
-test("every Task names its Exercise, and its answer is that Exercise's Agonist in the atlas", () => {
+test('a Round mixes «Хто Агоніст» and «Знайди М\'яз» about equally, and not in blocks', () => {
+  const orders = new Set();
   for (const { cards } of rounds()) {
-    for (const task of cards) {
-      assert.equal(task.kind, 'agonist');
-      assert.equal(task.muscle, agonistOf(task.exercise));
+    const count = (kind) => cards.filter((c) => c.kind === kind).length;
+    assert.deepEqual([count('agonist'), count('find')], [5, 5]);
+    orders.add(cards.map((c) => c.kind[0]).join(''));
+  }
+  assert.ok(orders.size > 50, 'the order of kinds is shuffled');
+});
+
+test("a «Хто Агоніст» Task names its Exercise, and its answer is that Exercise's Agonist in the atlas", () => {
+  for (const { cards } of rounds()) {
+    for (const task of cards.filter((c) => c.kind === 'agonist')) assert.equal(task.muscle, agonistOf(task.exercise));
+  }
+});
+
+test('«Знайди М\'яз» asks only about Muscles that work in some Exercise', () => {
+  const asked = new Set();
+  for (const { cards } of rounds()) {
+    for (const task of cards.filter((c) => c.kind === 'find')) {
+      assert.equal(task.exercise, undefined, 'the subject is the Muscle, not an Exercise');
+      assert.ok(atlas.muscleExercises(task.muscle).length > 0, task.muscle);
+      asked.add(task.muscle);
     }
   }
+  assert.ok(asked.size > 20, 'a wide spread of Muscles, not a few');
 });
 
 test('the same seed gives the same Round, another seed another one', () => {
@@ -76,14 +97,14 @@ test('the same seed gives the same Round, another seed another one', () => {
 
 test('tapping the Agonist is right, and the Role it reports is the Agonist', () => {
   for (const { cards } of rounds()) {
-    for (const task of cards) {
+    for (const task of cards.filter((c) => c.kind === 'agonist')) {
       assert.deepEqual(judge(atlas, task, task.muscle), { correct: true, tapped: task.muscle, role: 'agonist' });
     }
   }
 });
 
 test('another Muscle of the Exercise is a miss that carries the Role it has there', () => {
-  const task = quizWith(1).round().current;
+  const task = taskOf('agonist');
   for (const { muscle, role } of atlas.exerciseMuscles(task.exercise)) {
     if (muscle.id === task.muscle) continue;
     assert.deepEqual(judge(atlas, task, muscle.id), { correct: false, tapped: muscle.id, role });
@@ -91,15 +112,22 @@ test('another Muscle of the Exercise is a miss that carries the Role it has ther
 });
 
 test('a Muscle the Exercise does not use is a miss with no Role: it does not work there', () => {
-  const task = quizWith(1).round().current;
+  const task = taskOf('agonist');
   const used = new Set(atlas.exerciseMuscles(task.exercise).map((x) => x.muscle.id));
   const idle = atlas.muscles().find((m) => !used.has(m.id));
   assert.deepEqual(judge(atlas, task, idle.id), { correct: false, tapped: idle.id, role: null });
 });
 
 test('«Не знаю» is a miss with nothing tapped', () => {
-  const task = quizWith(1).round().current;
-  assert.deepEqual(judge(atlas, task, DONT_KNOW), { correct: false, tapped: null, role: null });
+  assert.deepEqual(judge(atlas, taskOf('agonist'), DONT_KNOW), { correct: false, tapped: null, role: null });
+  assert.deepEqual(judge(atlas, taskOf('find'), DONT_KNOW), { correct: false, tapped: null });
+});
+
+test('«Знайди М\'яз»: tapping the Muscle is right, any other is a miss that says which was tapped', () => {
+  const task = taskOf('find');
+  const other = atlas.muscles().find((m) => m.id !== task.muscle).id;
+  assert.deepEqual(judge(atlas, task, task.muscle), { correct: true, tapped: task.muscle });
+  assert.deepEqual(judge(atlas, task, other), { correct: false, tapped: other });
 });
 
 // ── Answering and moving on ──────────────────────────────────────────────
@@ -163,7 +191,7 @@ test('the summary gives the score and every missed Task once, each still naming 
   assert.equal(summary.score, 8);
   assert.equal(summary.total, ROUND_SIZE);
   assert.equal(summary.mistakes.length, 2);
-  for (const m of summary.mistakes) assert.equal(m.muscle, agonistOf(m.exercise));
+  for (const m of summary.mistakes) assert.ok(m.kind === 'find' || m.muscle === agonistOf(m.exercise));
 });
 
 test('a perfect Round has no mistakes', () => {

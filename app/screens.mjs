@@ -82,7 +82,7 @@ export function welcomeHtml(t) {
 
 /** Every Muscle that has Exercises, by Muscle Group, with how many. */
 export function indexHtml(t, lang, atlas) {
-  const caption = `<p class="caption">${t('map.hint')}. ${t('map.legend')}</p>`;
+  const caption = `<p class="caption">${t('map.caption')}</p>`;
   return caption + atlas
     .groups()
     .map((g) => {

@@ -179,8 +179,8 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
     /** All Muscles in the content, by Ukrainian name. */
     muscles: () => Object.keys(muscles).map(muscleView).sort(byUk),
 
-    /** All Muscle Groups, by Ukrainian name. */
-    groups: () => Object.entries(groups).map(([id, group]) => ({ id, ...group })).sort(byUk),
+    /** All Muscle Groups, in the order the content lists them: the body, top down. */
+    groups: () => Object.entries(groups).map(([id, group]) => ({ id, ...group })),
 
     /** All exercises, by Ukrainian name: the Trainer's working language. */
     exercises: () => Object.keys(exercises).map(exerciseView).sort(byUk),

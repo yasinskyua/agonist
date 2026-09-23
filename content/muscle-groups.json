@@ -1,15 +1,15 @@
 {
-  "_": "М'язові групи. Ідентифікатори збігаються з data-group в SVG атласу.",
+  "_": "М'язові групи. Ідентифікатори збігаються з data-group в SVG атласу. Порядок груп тут — порядок індексу головної: тіло згори донизу.",
   "groups": {
-    "back": { "uk": "Спина", "en": "Back" },
-    "calves": { "uk": "Гомілки", "en": "Calves" },
-    "chest": { "uk": "Груди", "en": "Chest" },
-    "forearms": { "uk": "Передпліччя", "en": "Forearms" },
-    "hips": { "uk": "Таз", "en": "Hips" },
     "neck": { "uk": "Шия", "en": "Neck" },
     "shoulders": { "uk": "Плечі", "en": "Shoulders" },
-    "thighs": { "uk": "Стегна", "en": "Thighs" },
+    "chest": { "uk": "Груди", "en": "Chest" },
+    "back": { "uk": "Спина", "en": "Back" },
     "upper_arms": { "uk": "Плече", "en": "Upper Arms" },
-    "waist": { "uk": "Тулуб", "en": "Waist" }
+    "forearms": { "uk": "Передпліччя", "en": "Forearms" },
+    "waist": { "uk": "Тулуб", "en": "Waist" },
+    "hips": { "uk": "Таз", "en": "Hips" },
+    "thighs": { "uk": "Стегна", "en": "Thighs" },
+    "calves": { "uk": "Гомілки", "en": "Calves" }
   }
 }

@@ -9,9 +9,8 @@ export const LANGS = ['uk', 'en'];
 const STRINGS = {
   'app.title': { uk: "М'язи і вправи", en: 'Muscles and Exercises' },
   'map.label': { uk: 'Мапа тіла', en: 'Body map' },
-  'map.hint': { uk: "Торкніться м'яза", en: 'Tap a muscle' },
   'spy.all': { uk: "Усі м'язи", en: 'All muscles' },
-  'map.legend': { uk: 'Тілесні — ті, для яких є вправи', en: 'Tinted muscles have exercises' },
+  'map.caption': { uk: "Кольорові м'язи мають вправи — торкніться", en: 'Coloured muscles have exercises — tap' },
   'zoom.in': { uk: 'Наблизити', en: 'Zoom in' },
   'zoom.out': { uk: 'Віддалити', en: 'Zoom out' },
   'zoom.fit': { uk: 'Усе тіло', en: 'Whole body' },

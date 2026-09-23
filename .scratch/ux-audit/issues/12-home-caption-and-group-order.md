@@ -10,7 +10,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [ ] Підпис під мапою — новий, обома мовами
 - [ ] Індекс головної іде в порядку груп із контенту, згори донизу

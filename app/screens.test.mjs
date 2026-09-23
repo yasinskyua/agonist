@@ -97,8 +97,28 @@ test('the index groups the Muscles and counts their Exercises', () => {
   assert.ok(html.includes(`${n} вправ`) || html.includes(`${n} вправи`) || html.includes(`${n} вправа`));
 });
 
+test('the index goes by the order of the groups in the content, not the alphabet (ticket 12)', () => {
+  const html = indexHtml(t, 'uk', atlas);
+  const headings = [...html.matchAll(/>([^<>]+)<\/h2>/g)].map((m) => m[1]);
+  const inContent = Object.values(read('content/muscle-groups.json').groups).map((g) => g.uk).filter((uk) => headings.includes(uk));
+
+  assert.deepEqual(headings, inContent);
+  assert.notDeepEqual(headings, [...headings].sort((a, b) => a.localeCompare(b, 'uk')), 'not the alphabet');
+  assert.equal(headings.at(-1), 'Гомілки', 'the body, top down: the calves last');
+});
+
+test('the caption under the map says which muscles are coloured, in both languages (ticket 12)', () => {
+  assert.ok(indexHtml(t, 'uk', atlas).includes("Кольорові м'язи мають вправи — торкніться"));
+  assert.ok(indexHtml(tEn, 'en', atlas).includes('Coloured muscles have exercises — tap'));
+});
+
+test('search results keep the alphabet, whatever the content order (ticket 12)', () => {
+  const names = atlas.search('а').groups.map((g) => g.uk);
+  assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b, 'uk')));
+});
+
 test('the group name follows the interface language', () => {
-  const group = atlas.groups()[0];
+  const group = atlas.groups().find((g) => g.uk === 'Спина');
   assert.ok(indexHtml(tEn, 'en', atlas).includes(`>${group.en}</h2>`));
   assert.ok(!indexHtml(tEn, 'en', atlas).includes(`>${group.uk}</h2>`));
 });

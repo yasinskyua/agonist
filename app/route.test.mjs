@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
-import { parseRoute, muscleHref, exerciseHref, HOME, GAME, EXAM, EXAM_CARDS } from './route.mjs';
+import { parseRoute, muscleHref, exerciseHref, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -47,6 +47,11 @@ test('no address, the home address, the game address and the exam address', () =
 test('the Cards Format has its own screen, under the exam address', () => {
   assert.deepEqual(parseRoute(EXAM_CARDS, atlas), { screen: 'examCards' });
   assert.deepEqual(parseRoute('#/exam/cards', atlas), { screen: 'examCards' });
+});
+
+test('the Test Format has its own screen, under the exam address', () => {
+  assert.deepEqual(parseRoute(EXAM_TEST, atlas), { screen: 'examTest' });
+  assert.deepEqual(parseRoute('#/exam/test', atlas), { screen: 'examTest' });
 });
 
 test('a summary link opens the Digest at the Question it names', () => {

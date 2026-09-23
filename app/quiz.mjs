@@ -5,6 +5,10 @@
 // callers: they ask the atlas or the exam and know nothing about the screen,
 // so a Round can be played and checked in Node on the real content.
 //
+// The Test Format (ticket 07) auto-grades instead: `round.choose(i)` reveals
+// the Card and remembers which option, so the caller reads `round.choice`
+// back to mark the screen and to grade the Card correct or not.
+//
 // Randomness comes from the caller (`random` returns [0, 1) like
 // `Math.random`), so a test can replay any Round from a seed.
 //
@@ -35,6 +39,7 @@ export function createRound(deck, size = ROUND_SIZE) {
   const results = cards.map(() => null); // 'known' | 'unknown' | null, one per Card
   let index = 0;
   let revealed = false;
+  let choice = null; // Test only (ticket 07): the option index `choose()` was called with
 
   return {
     cards,
@@ -47,6 +52,9 @@ export function createRound(deck, size = ROUND_SIZE) {
     },
     get revealed() {
       return revealed;
+    },
+    get choice() {
+      return choice;
     },
     get finished() {
       return results.every(Boolean);
@@ -61,6 +69,12 @@ export function createRound(deck, size = ROUND_SIZE) {
       revealed = true;
     },
 
+    /** Test only: picking an option reveals the Card and remembers which one, for the screen to mark and `grade()` to score. */
+    choose(i) {
+      this.reveal();
+      choice = i;
+    },
+
     /** Grading moves on to the next Card, unrevealed again — or finishes the Round on the last one. */
     grade(knew) {
       if (this.finished) throw new Error('the Round is over');
@@ -69,6 +83,7 @@ export function createRound(deck, size = ROUND_SIZE) {
       if (index < cards.length - 1) {
         index++;
         revealed = false;
+        choice = null;
       }
     },
 
@@ -109,6 +124,28 @@ export function createExamQuiz({ exam, random = Math.random }) {
   return {
     round({ topic, length } = {}) {
       const deck = shuffle(exam.questions({ topic }));
+      return createRound(deck, length ?? deck.length);
+    },
+  };
+}
+
+/**
+ * The Exam Test's deck: only Questions with a Test block (ticket 07 — one
+ * without doesn't belong in the pool), each carrying its four options
+ * pre-shuffled from the same seed as the deck, so a seed replays both the
+ * Question order and the option order.
+ */
+export function createExamTestQuiz({ exam, random = Math.random }) {
+  const shuffle = shuffleWith(random);
+
+  return {
+    round({ topic, length } = {}) {
+      const pool = exam.testable().filter((q) => !topic || q.topic === topic);
+      const deck = shuffle(pool).map((q) => {
+        const question = q.test.question ?? q.question;
+        const answer = q.test.answer ?? q.answer;
+        return { ...q, question, answer, options: shuffle([answer, ...q.test.wrong]) };
+      });
       return createRound(deck, length ?? deck.length);
     },
   };

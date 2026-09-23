@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz, createExamQuiz, createRound, ROUND_SIZE } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz, createRound, ROUND_SIZE } from './quiz.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -195,4 +195,79 @@ test('an Exam Round plays the same way a Game Round does: reveal, grade, summary
   assert.equal(summary.total, 5);
   assert.equal(summary.mistakes.length, 2);
   for (const m of summary.mistakes) assert.ok(exam.question(m.id));
+});
+
+// ── The Exam Test: a Round over the testable Questions, each with 4 options ─
+
+const examTestQuizWith = (seed) => createExamTestQuiz({ exam, random: seeded(seed) });
+
+test('the Test deck holds only Questions with a Test block, and only those', () => {
+  const round = examTestQuizWith(1).round();
+  assert.equal(round.total, exam.testable().length);
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(exam.testable().map((q) => q.id)));
+});
+
+test('«десять Питань» gives exactly ten, out of the testable Questions', () => {
+  for (const seed of SEEDS) {
+    const round = examTestQuizWith(seed).round({ length: 10 });
+    assert.equal(round.total, 10);
+    assert.equal(new Set(round.cards.map((q) => q.id)).size, 10, 'no repeats');
+  }
+});
+
+test('one Topic gives every testable Question it has, and only its own', () => {
+  for (const topic of exam.topics()) {
+    const round = examTestQuizWith(1).round({ topic: topic.id });
+    const want = exam.testable().filter((q) => q.topic === topic.id);
+    assert.equal(round.total, want.length);
+    assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(want.map((q) => q.id)));
+  }
+});
+
+test('every Card carries exactly four options, one of them the answer', () => {
+  for (const q of examTestQuizWith(1).round().cards) {
+    assert.equal(q.options.length, 4);
+    assert.equal(q.options.filter((o) => o === q.answer).length, 1);
+  }
+});
+
+test('the same seed gives the same Test Round and the same option order, another seed another one', () => {
+  const shape = (round) => round.cards.map((q) => [q.id, ...q.options]);
+  assert.deepEqual(shape(examTestQuizWith(7).round()), shape(examTestQuizWith(7).round()));
+  assert.notDeepEqual(shape(examTestQuizWith(7).round()), shape(examTestQuizWith(8).round()));
+});
+
+test('a Test Round plays the same way a Cards Round does: choose (reveals), grade, summary', () => {
+  const round = examTestQuizWith(2).round({ length: 5 });
+  for (let i = 0; i < 5; i++) {
+    round.choose(0);
+    round.grade(round.current.options[round.choice] === round.current.answer);
+  }
+  const summary = round.summary();
+  assert.equal(summary.total, 5);
+  for (const m of summary.mistakes) assert.ok(exam.question(m.id));
+});
+
+// ── choose(): Test's auto-grade, layered on the same reveal/grade machinery ─
+
+test('choosing an option reveals the Card and remembers which one', () => {
+  const round = examTestQuizWith(1).round();
+  assert.equal(round.choice, null);
+  round.choose(2);
+  assert.equal(round.revealed, true);
+  assert.equal(round.choice, 2);
+});
+
+test('choosing twice is the same as revealing twice: not allowed', () => {
+  const round = examTestQuizWith(1).round();
+  round.choose(0);
+  assert.throws(() => round.choose(1), /already revealed/);
+});
+
+test('grading clears the choice along with the reveal, moving to the next Card', () => {
+  const round = examTestQuizWith(1).round();
+  round.choose(1);
+  round.grade(true);
+  assert.equal(round.choice, null);
+  assert.equal(round.revealed, false);
 });

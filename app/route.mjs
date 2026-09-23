@@ -6,6 +6,7 @@ export const HOME = '#/';
 export const GAME = '#/game';
 export const EXAM = '#/exam';
 export const EXAM_CARDS = '#/exam/cards';
+export const EXAM_TEST = '#/exam/test';
 export const muscleHref = (id) => `#/muscle/${id}`;
 export const exerciseHref = (id) => `#/exercise/${id}`;
 export const examQuestionHref = (id) => `#/exam/q/${id}`;
@@ -26,6 +27,7 @@ export function parseRoute(hash, atlas) {
     // Cards (ticket 06) and Test (ticket 07) are their own Formats — Partiya
     // screens, not the Digest.
     if (second === 'cards') return { screen: 'examCards' };
+    if (second === 'test') return { screen: 'examTest' };
     // A summary's mistake links land here, on the Digest, at the Question it
     // names — `id` is untrusted (a stale link, a typo), so the Digest just
     // does not scroll to it, rather than break.

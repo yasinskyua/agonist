@@ -302,10 +302,18 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .exam-exercise { margin: 0.5rem 0 0; font-size: 0.85rem; }
 .exam-exercise a { color: inherit; }
 
+/* ── The Exam: Test, four options (ADR-0008, ticket 07) ───────────────── */
+
+.row[data-state='correct'] { font-weight: 700; }
+.row[data-state='correct'] .aside { color: var(--ink); }
+.row[data-state='wrong'] { color: var(--red); }
+.row[data-state='wrong'] .aside { color: var(--red); }
+
 /* Pressed state on a finger; hover only where there is a pointer to hover with,
-   or it would stick after a tap. */
-.row:active { background: var(--rule); }
-@media (hover: hover) { .row:hover { background: var(--rule); } }
+   or it would stick after a tap. Not on a revealed Test option (`[data-state]`):
+   it looks like a row but is no longer tappable. */
+.row:not([data-state]):active { background: var(--rule); }
+@media (hover: hover) { .row:not([data-state]):hover { background: var(--rule); } }
 
 /* ── The page and its pinned map ───────────────────────────────────────── */
 
@@ -329,15 +337,16 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 /* The tab bar is gone in the Game and in Cards (both hide it for the whole
    Round, summary included — CONTEXT.md counts the score at the end as part
    of the Round), so neither needs the tab bar's height added back in. */
-#page[data-screen='game'], #page[data-screen='examCards'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+#page[data-screen='game'], #page[data-screen='examCards'], #page[data-screen='examTest'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 /* The Round's summary has nothing to paint: the map goes with the Card. */
 #page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
 /* The Digest has no use for the body map: it is text to read, not a picture to tap. */
 #page[data-screen='exam'] #dock, #page[data-screen='exam'] #mapbar { display: none; }
 #page[data-screen='exam'] #top { margin-bottom: 0.6rem; }
 /* The Cards Format (ADR-0008) has no body map either — the picker, a Card and
-   its summary are all just text. */
-#page[data-screen='examCards'] #dock, #page[data-screen='examCards'] #mapbar { display: none; }
+   its summary are all just text. Neither does the Test Format (ticket 07). */
+#page[data-screen='examCards'] #dock, #page[data-screen='examCards'] #mapbar,
+#page[data-screen='examTest'] #dock, #page[data-screen='examTest'] #mapbar { display: none; }
 
 #map {
   position: relative;
@@ -555,7 +564,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 }
 
 /* #bottom is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #bottom, #page[data-screen='examCards'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+#page[data-screen='game'] ~ #bottom, #page[data-screen='examCards'] ~ #bottom, #page[data-screen='examTest'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
 
 .ic {
   display: grid;
@@ -603,7 +612,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 /* Nothing to switch to mid-Round, and nothing left to switch to under the
    full-screen map — hidden rather than fought over for the thumb's reach.
    #tabs is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #tabs, #page[data-screen='examCards'] ~ #tabs, .full-map #tabs { display: none; }
+#page[data-screen='game'] ~ #tabs, #page[data-screen='examCards'] ~ #tabs, #page[data-screen='examTest'] ~ #tabs, .full-map #tabs { display: none; }
 
 /* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
 

@@ -330,6 +330,67 @@ export function examSummaryHtml(t, round) {
     }`;
 }
 
+// ── The Exam: Test, four options, auto-graded (ADR-0008, ticket 07) ─────
+
+/**
+ * Before a Round: the same three lengths as Cards, over only the testable
+ * Questions — a Topic with none of those does not offer an empty Round.
+ */
+export function examTestPickerHtml(t, exam) {
+  const all = exam.testable();
+  const topics = exam
+    .topics()
+    .filter((topic) => all.some((q) => q.topic === topic.id))
+    .map(
+      (topic) => `<li><button class="row" type="button" data-act="exam-test-round" data-topic="${topic.id}">
+        <span class="row-name"><b>${topic.uk}</b></span>
+        <small class="aside">${all.filter((q) => q.topic === topic.id).length}</small>
+      </button></li>`,
+    );
+  return `
+    <p class="lead">${t('exam.cards.hint')}</p>
+    <div class="card-go">
+      <button class="main" type="button" data-act="exam-test-round" data-length="10">${t('exam.cards.ten')}</button>
+      <button class="main" type="button" data-act="exam-test-round">${t('exam.cards.all').replace('{n}', all.length)}</button>
+    </div>
+    <h2 class="h">${t('exam.cards.topic')}</h2>
+    <ul class="list">${topics.join('')}</ul>`;
+}
+
+/**
+ * A Test screen: the Question and its four options. Before a choice, all four
+ * are plain buttons; once `round.choice` is set, the correct one and the
+ * Student's own wrong pick (if any) are marked, the explanation shows, and a
+ * single Далі moves the Round on — auto-graded, no self-assessment.
+ */
+export function examTestTopHtml(t, round) {
+  const q = round.current;
+  const options = q.options
+    .map((option, i) => {
+      if (!round.revealed) {
+        return `<li><button class="row" type="button" data-act="exam-test-choose" data-index="${i}"><span class="row-name">${option}</span></button></li>`;
+      }
+      const state = option === q.answer ? 'correct' : i === round.choice ? 'wrong' : '';
+      const label = state ? `<small class="aside">${t(`exam.test.${state}`)}</small>` : '';
+      return `<li><span class="row" ${state ? `data-state="${state}"` : ''}><span class="row-name">${option}</span>${label}</span></li>`;
+    })
+    .join('');
+  const action = round.revealed
+    ? `${q.source === 'outside' ? `<p class="exam-outside">${t('exam.outside')}</p>` : ''}
+       <p class="exam-explanation">${q.explanation}</p>
+       ${q.caveat ? `<p class="exam-caveat">${q.caveat}</p>` : ''}
+       <div class="card-go"><button class="main" type="button" data-act="exam-test-next">${t('exam.test.next')}</button></div>`
+    : '';
+  return `<h1 tabindex="-1">${q.question}</h1><ul class="list">${options}</ul>${action}`;
+}
+
+/** What a screen reader is told once a choice is made: heard, not only seen in colour. */
+export function examTestAnnounce(t, round) {
+  const q = round.current;
+  const correct = q.options[round.choice] === q.answer;
+  return `${t(correct ? 'exam.test.correct' : 'exam.test.wrong')}. ${t('exam.answer')}: ${q.answer}.`;
+}
+
 // ── The map's colours ────────────────────────────────────────────────────
 
 /**

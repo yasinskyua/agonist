@@ -109,6 +109,13 @@ const STRINGS = {
   'exam.cards.topic': { uk: 'Одна Тема', en: 'One Topic' },
   'exam.answer': { uk: 'Відповідь', en: 'Answer' },
   'exam.digest': { uk: 'До Конспекту', en: 'To the Digest' },
+
+  // The Exam's Test Format (ADR-0008, ticket 07): four options, auto-graded —
+  // the length picker reuses the Cards strings above, unchanged wording.
+  'exam.test': { uk: 'Тест', en: 'Test' },
+  'exam.test.next': { uk: 'Далі', en: 'Next' },
+  'exam.test.correct': { uk: 'Правильно', en: 'Correct' },
+  'exam.test.wrong': { uk: 'Неправильно', en: 'Incorrect' },
 };
 
 export const KEYS = Object.keys(STRINGS);

@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { createAtlas, ROLES } from './atlas.mjs';
 import { createExam } from './exam.mjs';
 import { translator } from './i18n.mjs';
-import { createQuiz, createExamQuiz } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import {
   indexHtml,
   searchHtml,
@@ -30,6 +30,9 @@ import {
   examCardListHtml,
   examCardAnnounce,
   examSummaryHtml,
+  examTestPickerHtml,
+  examTestTopHtml,
+  examTestAnnounce,
 } from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
@@ -498,4 +501,90 @@ test('a perfect Exam Round is praised, and has nothing to review', () => {
 
   assert.ok(html.includes(t('round.perfect')));
   assert.ok(!html.includes(t('round.review')));
+});
+
+// ── The Exam: Test (ADR-0008, ticket 07) ─────────────────────────────────
+
+const examTestQuiz = () => createExamTestQuiz({ exam });
+
+test('the Test length picker offers ten, every Topic, and all of them — over the testable Questions, the count never hardcoded', () => {
+  const html = examTestPickerHtml(t, exam);
+  assert.ok(html.includes(t('exam.cards.ten')));
+  assert.ok(html.includes(String(exam.testable().length)));
+  for (const topic of exam.topics()) {
+    assert.ok(html.includes(topic.uk));
+    assert.ok(html.includes(`>${exam.testable().filter((q) => q.topic === topic.id).length}<`), topic.id);
+  }
+});
+
+test('a Question before a choice shows the four options and nothing more — no answer marked, no explanation, no Далі', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  const top = examTestTopHtml(t, round);
+
+  assert.ok(top.includes(round.current.question));
+  for (const option of round.current.options) assert.ok(top.includes(option));
+  assert.ok(!top.includes(round.current.explanation));
+  assert.ok(!top.includes(t('exam.test.next')));
+  assert.ok(!top.includes(t('exam.test.correct')) && !top.includes(t('exam.test.wrong')));
+  assert.ok(!top.includes(t('card.yes')) && !top.includes(t('card.no')), 'the Test Format has no self-grade');
+});
+
+test('choosing the correct option shows it marked correct, the explanation and Далі — never self-grade buttons', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  round.choose(round.current.options.indexOf(round.current.answer));
+  const top = examTestTopHtml(t, round);
+
+  assert.ok(top.includes(round.current.explanation));
+  assert.ok(top.includes(t('exam.test.next')));
+  assert.ok(top.includes(t('exam.test.correct')));
+  assert.ok(!top.includes(t('card.yes')) && !top.includes(t('card.no')));
+});
+
+test('a wrong pick is marked wrong, alongside the correct one marked correct', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  const wrongIndex = round.current.options.findIndex((o) => o !== round.current.answer);
+  round.choose(wrongIndex);
+  const top = examTestTopHtml(t, round);
+
+  assert.ok(top.includes(t('exam.test.correct')));
+  assert.ok(top.includes(t('exam.test.wrong')));
+});
+
+test('the «не з матеріалів клубу» badge appears on a revealed Question only when it is sourced outside the club', () => {
+  const outside = { ...exam.question('17'), source: 'outside' };
+  const club = { ...exam.question('18'), source: 'club' };
+  const fromExam = createExam({ questions: { outside, club }, atlas });
+  const round = createExamTestQuiz({ exam: fromExam, random: () => 0 }).round();
+
+  round.choose(0);
+  const top = examTestTopHtml(t, round);
+  assert.equal(top.includes(t('exam.outside')), round.current.source === 'outside');
+});
+
+test('a choice is announced by whether it was correct, and the answer, for a screen reader', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  round.choose(round.current.options.indexOf(round.current.answer));
+  assert.ok(examTestAnnounce(t, round).includes(t('exam.test.correct')));
+  assert.ok(examTestAnnounce(t, round).includes(round.current.answer));
+});
+
+test('a wrong choice is announced as wrong', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  const wrongIndex = round.current.options.findIndex((o) => o !== round.current.answer);
+  round.choose(wrongIndex);
+  assert.ok(examTestAnnounce(t, round).includes(t('exam.test.wrong')));
+});
+
+test('the summary reused from Cards works the same over a Test Round, and links the mistakes into the Digest', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  for (let i = 0; i < 10; i++) {
+    round.choose(i % 4);
+    round.grade(round.current.options[round.choice] === round.current.answer);
+  }
+  const { score, total, mistakes } = round.summary();
+  const html = examSummaryHtml(t, round);
+
+  assert.ok(html.includes(`>${score}</b>`));
+  assert.ok(html.includes(`/${total}`));
+  for (const m of mistakes) assert.ok(hrefs(html).includes(`#/exam/q/${m.id}`));
 });

@@ -9,10 +9,10 @@
 
 import { createAtlas } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz, createExamQuiz } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { parseRoute, muscleHref, HOME, GAME, EXAM, EXAM_CARDS } from './route.mjs';
+import { parseRoute, muscleHref, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
 import {
   pageTopHtml,
   pageListHtml,
@@ -31,6 +31,9 @@ import {
   examCardListHtml,
   examCardAnnounce,
   examSummaryHtml,
+  examTestPickerHtml,
+  examTestTopHtml,
+  examTestAnnounce,
 } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
@@ -101,8 +104,10 @@ export async function start() {
   const exam = createExam({ questions: examContent.questions, atlas });
   const quiz = createQuiz({ atlas });
   const examQuiz = createExamQuiz({ exam });
+  const examTestQuiz = createExamTestQuiz({ exam });
   let round = null; // the Round in play, once the Trainer has entered the Game
   let examRound = null; // the Round in play, once a length is picked in Cards
+  let examTestRound = null; // the Round in play, once a length is picked in Test
 
   // A Muscle with no Exercises has nothing to show, so it is not tappable on
   // the map. Search still opens it: its name and Function are worth it.
@@ -529,19 +534,23 @@ export async function start() {
     document.documentElement.lang = state.lang;
     el('brand').setAttribute('aria-label', `Agonist: ${t('home')}`);
     el('play').textContent = t('flash.enter');
-    el('play').hidden = here.screen === 'game' || here.screen === 'examCards';
-    el('tally').hidden = here.screen !== 'game' && here.screen !== 'examCards';
+    el('play').hidden = here.screen === 'game' || here.screen === 'examCards' || here.screen === 'examTest';
+    el('tally').hidden = here.screen !== 'game' && here.screen !== 'examCards' && here.screen !== 'examTest';
     el('lang').textContent = t('lang.other');
     all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
     tabs.setAttribute('aria-label', t('tabs.label'));
-    // 'game' and 'exam' get their own tab; Cards is a screen of the Exam
-    // section too. Every other screen (home, muscle, exercise — everything
-    // the body map and search reach) is «Довідник».
+    // 'game' and 'exam' get their own tab; Cards and Test are screens of the
+    // Exam section too. Every other screen (home, muscle, exercise —
+    // everything the body map and search reach) is «Довідник».
     const current =
-      here.screen === 'game' ? 'game' : here.screen === 'exam' || here.screen === 'examCards' ? 'exam' : 'reference';
+      here.screen === 'game'
+        ? 'game'
+        : here.screen === 'exam' || here.screen === 'examCards' || here.screen === 'examTest'
+          ? 'exam'
+          : 'reference';
     for (const tab of tabEls) {
       tab.textContent = t(`tabs.${tab.dataset.tab}`);
       if (tab.dataset.tab === current) tab.setAttribute('aria-current', 'page');
@@ -570,13 +579,18 @@ export async function start() {
       // the length is chosen every time, same as Game starts a fresh Round.
       if (fresh) examRound = null;
       syncExamCards(t);
+    } else if (here.screen === 'examTest') {
+      delete el('page').dataset.game;
+      // Same as Cards: a fresh step opens on the length picker, not a stale Round.
+      if (fresh) examTestRound = null;
+      syncExamTest(t);
     } else {
       delete el('page').dataset.game;
       // A revealed Card's announcement does not outlive the Round.
       el('status').textContent = '';
 
       if (here.screen === 'exam') {
-        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go"><a class="main" href="${EXAM_CARDS}">${t('exam.cards')}</a></div>`;
+        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go"><a class="main" href="${EXAM_CARDS}">${t('exam.cards')}</a><a class="main" href="${EXAM_TEST}">${t('exam.test')}</a></div>`;
         list.innerHTML = examDigestHtml(t, state.lang, atlas, exam);
         el('paint').textContent = '';
         map.classList.remove('painted');
@@ -596,7 +610,7 @@ export async function start() {
     // Round has only the small way out. Two or more steps in on any other
     // screen, a shortcut home stands beside Back.
     el('bottom').innerHTML =
-      here.screen === 'game' || here.screen === 'examCards'
+      here.screen === 'game' || here.screen === 'examCards' || here.screen === 'examTest'
         ? `<button class="ic" type="button" data-act="home" aria-label="${t('close')}">${icon('close')}</button>`
         : here.screen === 'home'
           ? ''
@@ -700,6 +714,37 @@ export async function start() {
   function redrawExamCards(fresh) {
     draw(fresh ? 'forward' : 'fade', () => {
       syncExamCards(translator(state.lang));
+      makeRoom();
+      if (fresh) {
+        scrollTo(0, 0);
+        settled = scrollY;
+      }
+      top.querySelector('h1')?.focus({ preventScroll: true });
+    });
+  }
+
+  // ── The Exam: Test, a Round of four-option Questions (ticket 07) ────────
+
+  /** The picker, a Question, or the summary — the same shape as `syncExamCards`. */
+  function syncExamTest(t) {
+    el('tally').hidden = !examTestRound;
+    if (!examTestRound) {
+      top.innerHTML = `<h1 tabindex="-1">${t('exam.test')}</h1>${examTestPickerHtml(t, exam)}`;
+      list.innerHTML = '';
+      el('tally').textContent = '';
+      el('status').textContent = '';
+      return;
+    }
+    top.innerHTML = examTestRound.finished ? examSummaryHtml(t, examTestRound) : examTestTopHtml(t, examTestRound);
+    list.innerHTML = '';
+    el('tally').textContent = examTestRound.finished ? '' : roundTally(t, examTestRound);
+    el('status').textContent = !examTestRound.finished && examTestRound.revealed ? examTestAnnounce(t, examTestRound) : '';
+  }
+
+  /** Redraw Test outside of `render()`: picking a length, choosing, Далі. */
+  function redrawExamTest(fresh) {
+    draw(fresh ? 'forward' : 'fade', () => {
+      syncExamTest(translator(state.lang));
       makeRoom();
       if (fresh) {
         scrollTo(0, 0);
@@ -940,6 +985,20 @@ export async function start() {
       examRound.grade(button.dataset.knew === '1');
       redrawExamCards(true);
     },
+    'exam-test-round': (button) => {
+      const { topic, length } = button.dataset;
+      examTestRound = examTestQuiz.round({ topic, length: length ? Number(length) : undefined });
+      redrawExamTest(true);
+    },
+    'exam-test-choose': (button) => {
+      examTestRound.choose(Number(button.dataset.index));
+      redrawExamTest(false);
+    },
+    'exam-test-next': () => {
+      const q = examTestRound.current;
+      examTestRound.grade(q.options[examTestRound.choice] === q.answer);
+      redrawExamTest(true);
+    },
     clear: clearSearch,
     lang() {
       state.lang = otherLang(state.lang);
@@ -962,6 +1021,7 @@ export async function start() {
     const here = parseRoute(location.hash, atlas);
     if (round && !round.finished && here.screen === 'game') return event.preventDefault();
     if (examRound && !examRound.finished && here.screen === 'examCards') return event.preventDefault();
+    if (examTestRound && !examTestRound.finished && here.screen === 'examTest') return event.preventDefault();
     // Leaving the search for a result lets the keyboard go. The query stays in
     // the step we leave, so Back returns to the same results.
     event.preventDefault();

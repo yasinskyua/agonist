@@ -162,6 +162,11 @@ const STRINGS = {
   'welcome.game': { uk: 'Партія карток: назви Агоніста вголос', en: 'A round of cards: say the Agonist out loud' },
   'welcome.exam': { uk: 'Конспект і партії до Іспиту Школи Тренерів', en: 'Digest and rounds for the Trainer School Exam' },
   'welcome.start': { uk: 'Почати', en: 'Start' },
+
+  // The one-time «add to home screen» strip on home (ticket 14). The quoted
+  // names are iOS's own, as its Share menu shows them for the phone's language.
+  'install.hint': { uk: 'Додати на початковий екран: Поділитися → На початковий екран', en: 'Add to Home Screen: Share → Add to Home Screen' },
+  'install.close': { uk: 'Закрити підказку', en: 'Dismiss the hint' },
 };
 
 export const KEYS = Object.keys(STRINGS);

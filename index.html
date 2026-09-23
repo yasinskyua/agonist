@@ -13,6 +13,17 @@
          subpath on Pages. -->
     <link rel="icon" href="assets/icon/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/icon/apple-touch-icon.png" />
+    <!-- Add to Home Screen (ticket 14): the manifest for Android and desktop
+         Chrome, the meta tags for iOS, which reads only these. No service
+         worker on purpose — the app is not offline (ticket 08 stays cancelled).
+         «default» keeps the status bar its own opaque strip above the page, so
+         nothing slides under the clock or the notch; #bar still pads by the
+         safe area for the day iOS says otherwise. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Agonist" />
     <!-- The product name, not a translated string: it is the same in both
          languages, and it is what a bookmark and a home-screen icon carry.
          The heading inside the app stays descriptive. -->
@@ -27,6 +38,7 @@
     <link rel="modulepreload" href="app/quiz.mjs" />
     <link rel="modulepreload" href="app/i18n.mjs" />
     <link rel="modulepreload" href="app/icons.mjs" />
+    <link rel="modulepreload" href="app/install.mjs" />
     <link rel="modulepreload" href="app/route.mjs" />
     <link rel="modulepreload" href="app/screens.mjs" />
     <link rel="modulepreload" href="app/spy.mjs" />
@@ -66,6 +78,13 @@
           <button id="lang" type="button" data-act="lang"></button>
         </span>
       </header>
+
+      <!-- One-time «add to home screen» hint (ticket 14); ui.mjs decides whether
+           it is up, and says it in the current language. -->
+      <aside id="install" class="install" hidden>
+        <p></p>
+        <button type="button" data-act="close-install"></button>
+      </aside>
 
       <!-- Heard, not seen: search counts and, in the Game, a revealed Card's
            Agonist. Outside #top, which a redraw replaces whole. -->

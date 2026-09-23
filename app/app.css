@@ -706,6 +706,21 @@ html:not(.full-map) .zoom .lbl {
   bottom: calc(100% + 0.4rem);
 }
 
+/* ── The «add to home screen» hint: one strip above home (ticket 14) ───── */
+
+.install {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 var(--gr) 0 var(--gl);
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+  color: var(--body);
+}
+.install[hidden] { display: none; }
+.install p { margin: 0.5rem 0; flex: 1 1 auto; line-height: 1.35; }
+.install button { flex: none; min-width: var(--tap); min-height: var(--tap); padding: 0; border: 0; background: none; color: var(--dim); }
+
 /* ── The welcome: first launch's own state of home (ticket 04) ─────────── */
 
 .welcome-doors { margin-top: 1rem; }

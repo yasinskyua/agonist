@@ -13,6 +13,7 @@ import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
 import { loadWelcomeSeen, saveWelcomeSeen } from './welcome.mjs';
+import { loadInstallHintClosed, saveInstallHintClosed, installHintWanted } from './install.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM } from './route.mjs';
 import {
@@ -155,6 +156,10 @@ export async function start() {
     saveWelcomeSeen(storage);
     welcomeSeen = true;
   }
+  // The one-time «add to home screen» hint (ticket 14): closed for good, in the
+  // same kind of memory as the welcome.
+  let installClosed = loadInstallHintClosed(storage);
+  const installed = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 
   // Each step keeps where it was read to; Back puts it there again. The browser
   // would do it after the fact, and after our own redraw, so it is told not to.
@@ -610,6 +615,15 @@ export async function start() {
     }
 
     el('page').dataset.screen = here.screen;
+    // On home only, once the welcome is out of the way (ticket 14).
+    const install = el('install');
+    install.hidden = !(
+      here.screen === 'home' &&
+      installHintWanted({ userAgent: navigator.userAgent, standalone: installed(), welcomeSeen, closed: installClosed })
+    );
+    install.querySelector('p').textContent = t('install.hint');
+    install.querySelector('button').innerHTML = icon('close');
+    install.querySelector('button').setAttribute('aria-label', t('install.close'));
     // The welcome has no map to show: hidden the same way the Digest hides it.
     if (showWelcome) el('page').dataset.welcome = '1';
     else delete el('page').dataset.welcome;
@@ -1118,6 +1132,13 @@ export async function start() {
       examTestRound.grade(knew);
       saveAnswer(storage, q.id, knew);
       redrawExamTest(true);
+    },
+    'close-install'() {
+      installClosed = true;
+      saveInstallHintClosed(storage);
+      el('install').hidden = true;
+      // The focused ✕ just vanished: hand focus to the page's heading.
+      top.querySelector('h1')?.focus({ preventScroll: true });
     },
     clear: clearSearch,
     cancel: cancelSearch,

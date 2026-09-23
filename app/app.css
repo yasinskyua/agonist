@@ -29,6 +29,13 @@
   --tap: 44px;
   /* The bottom tab bar's own height, safe area excluded (added where it's used). */
   --tabsh: 3.9rem;
+  /* The round Back/Home button (#bottom, .ic): its own height, the gap it
+     keeps above the tab bar, and the room a screen with it needs at its foot
+     — the gap again, on top of the button, so nothing reading ends up under
+     it (safe area added where each is used). */
+  --backh: 3rem;
+  --backgap: 0.75rem;
+  --backclear: calc(var(--tabsh) + var(--backgap) * 2 + var(--backh));
   /* The page's side gutters: 1.25rem, plus the notch or rounded corner when
      the phone lies on its side (both insets are 0 upright). */
   --gl: calc(1.25rem + env(safe-area-inset-left));
@@ -317,7 +324,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 
 /* ── The page and its pinned map ───────────────────────────────────────── */
 
-#page { padding-bottom: calc(6rem + var(--tabsh) + env(safe-area-inset-bottom)); }
+#page { padding-bottom: calc(var(--backclear) + env(safe-area-inset-bottom)); }
 
 #dock {
   position: sticky;
@@ -558,7 +565,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   left: max(1rem, env(safe-area-inset-left));
   /* Above the tab bar, except in the Game, where the tab bar is gone and Back/✕
      goes back down where the thumb is. */
-  bottom: calc(var(--tabsh) + 0.75rem + env(safe-area-inset-bottom));
+  bottom: calc(var(--tabsh) + var(--backgap) + env(safe-area-inset-bottom));
   display: flex;
   gap: 0.5rem;
 }
@@ -569,8 +576,8 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .ic {
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
+  width: var(--backh);
+  height: var(--backh);
   padding: 0;
   border: 1px solid var(--ink);
   border-radius: 4px;

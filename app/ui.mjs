@@ -14,7 +14,7 @@ import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
 import { loadWelcomeSeen, saveWelcomeSeen } from './welcome.mjs';
 import { icon } from './icons.mjs';
-import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
+import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM } from './route.mjs';
 import {
   pageTopHtml,
   navStart,
@@ -29,6 +29,7 @@ import {
   roundTally,
   summaryHtml,
   examDigestHtml,
+  examDigestTopHtml,
   examCardsPickerHtml,
   examCardTopHtml,
   examCardListHtml,
@@ -636,7 +637,7 @@ export async function start() {
       el('status').textContent = '';
 
       if (here.screen === 'exam') {
-        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go"><a class="main" href="${EXAM_CARDS}">${t('exam.cards')}</a><a class="main" href="${EXAM_TEST}">${t('exam.test')}</a></div>`;
+        top.innerHTML = examDigestTopHtml(t);
         list.innerHTML = examDigestHtml(t, state.lang, atlas, exam);
         el('paint').textContent = '';
         map.classList.remove('painted');

@@ -35,6 +35,7 @@ import {
   examSummaryHtml,
   examTestPickerHtml,
   examTestTopHtml,
+  examDigestTopHtml,
   examTestAnnounce,
 } from './screens.mjs';
 
@@ -781,4 +782,31 @@ test('the summary reused from Cards works the same over a Test Round, and links 
   assert.ok(html.includes(`>${score}</b>`));
   assert.ok(html.includes(`/${total}`));
   for (const m of mistakes) assert.ok(hrefs(html).includes(`#/exam/q/${m.id}`));
+});
+
+// ── Ticket 10: the Exam's tap targets look like buttons ──────────────────
+
+test('every Test option is a bordered button before a choice (ticket 10)', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  const top = examTestTopHtml(t, round);
+  const buttons = top.match(/<button class="row option"[^>]*data-act="exam-test-choose"/g) ?? [];
+  assert.equal(buttons.length, round.current.options.length);
+});
+
+test('after a choice the options are no longer buttons, but keep their correct/wrong marks (ticket 10)', () => {
+  const round = examTestQuiz().round({ length: 10 });
+  round.choose(round.current.options.findIndex((o) => o !== round.current.answer));
+  const top = examTestTopHtml(t, round);
+  assert.ok(!top.includes('exam-test-choose'));
+  assert.ok(top.includes('data-state="correct"') && top.includes('data-state="wrong"'));
+});
+
+test('the Digest header offers Cards and Test as buttons, each with a line saying what it does (ticket 10)', () => {
+  for (const [lang, tr] of [['uk', t], ['en', translator('en')]]) {
+    const top = examDigestTopHtml(tr);
+    assert.ok(top.includes(`class="main" href="#/exam/cards"`) && top.includes(tr('exam.cards')));
+    assert.ok(top.includes(`class="main" href="#/exam/test"`) && top.includes(tr('exam.test')));
+    assert.ok(top.includes(tr('exam.cards.does')) && top.includes(tr('exam.test.does')));
+    assert.notEqual(tr('exam.cards.does'), 'exam.cards.does', `${lang}: label exists`);
+  }
 });

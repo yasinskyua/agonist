@@ -8,7 +8,7 @@
 import { ROLES } from './atlas.mjs';
 import { otherLang, exerciseCount } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { muscleHref, exerciseHref, examQuestionHref, HOME, GAME, EXAM, isRound } from './route.mjs';
+import { muscleHref, exerciseHref, examQuestionHref, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST, isRound } from './route.mjs';
 
 const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>` : '');
 
@@ -335,6 +335,16 @@ function digestNavHtml(topics, exam) {
   );
 }
 
+/**
+ * The Digest's header: the way into the two Formats, each button with half a
+ * sentence under it saying what the Format asks of the Student (ticket 10).
+ */
+export function examDigestTopHtml(t) {
+  const mode = (href, name, does) =>
+    `<div><a class="main" href="${href}">${t(name)}</a><small class="does">${t(does)}</small></div>`;
+  return `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go">${mode(EXAM_CARDS, 'exam.cards', 'exam.cards.does')}${mode(EXAM_TEST, 'exam.test', 'exam.test.does')}</div>`;
+}
+
 /** The Digest: every Question the exam holds, grouped by Topic, in the set order. */
 export function examDigestHtml(t, lang, atlas, exam) {
   const topics = exam.topics();
@@ -477,11 +487,11 @@ export function examTestTopHtml(t, round) {
   const options = q.options
     .map((option, i) => {
       if (!round.revealed) {
-        return `<li><button class="row" type="button" data-act="exam-test-choose" data-index="${i}"><span class="row-name">${option}</span></button></li>`;
+        return `<li><button class="row option" type="button" data-act="exam-test-choose" data-index="${i}"><span class="row-name">${option}</span></button></li>`;
       }
       const state = option === q.answer ? 'correct' : i === round.choice ? 'wrong' : '';
       const label = state ? `<small class="aside">${t(`exam.test.${state}`)}</small>` : '';
-      return `<li><span class="row" ${state ? `data-state="${state}"` : ''}><span class="row-name">${option}</span>${label}</span></li>`;
+      return `<li><span class="row option" ${state ? `data-state="${state}"` : ''}><span class="row-name">${option}</span>${label}</span></li>`;
     })
     .join('');
   const action = round.revealed

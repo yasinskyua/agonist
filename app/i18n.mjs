@@ -131,6 +131,7 @@ const STRINGS = {
 
   // The Exam's Cards Format (ADR-0008): the same Question, self-graded.
   'exam.cards': { uk: 'Картки', en: 'Cards' },
+  'exam.cards.does': { uk: 'Згадати відповідь самому', en: 'Recall the answer yourself' },
   'exam.cards.hint': { uk: 'Скільки Питань? Оберіть довжину Партії.', en: 'How many Questions? Pick the length of the Round.' },
   'exam.cards.ten': { uk: '10 Питань', en: '10 Questions' },
   // «{n}» is the whole Exam's Question count — never hardcoded, so it can't drift from the content.
@@ -142,6 +143,7 @@ const STRINGS = {
   // The Exam's Test Format (ADR-0008, ticket 07): four options, auto-graded —
   // the length picker reuses the Cards strings above, unchanged wording.
   'exam.test': { uk: 'Тест', en: 'Test' },
+  'exam.test.does': { uk: 'Обрати з чотирьох варіантів', en: 'Pick from four options' },
   'exam.test.next': { uk: 'Далі', en: 'Next' },
   'exam.test.correct': { uk: 'Правильно', en: 'Correct' },
   'exam.test.wrong': { uk: 'Неправильно', en: 'Incorrect' },

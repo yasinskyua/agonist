@@ -390,6 +390,14 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .row:not([data-state]):active { background: var(--rule); }
 @media (hover: hover) { .row:not([data-state]):hover { background: var(--rule); } }
 
+/* Ticket 10: a Test option looks like what it is — a full-width bordered
+   button (still `.row`, so a revealed one keeps its correct/wrong marks). */
+.list li:has(> .option) { border-top: 0; margin-top: 0.5rem; }
+.row.option { padding: 0.6rem 0.9rem; border: 1px solid var(--ink); border-radius: 4px; align-items: center; }
+
+/* The half-sentence under an Exam mode button: what the Format asks of you. */
+.does { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: var(--dim); text-align: center; }
+
 /* ── The page and its pinned map ───────────────────────────────────────── */
 
 #page { padding-bottom: calc(var(--tabsh) + env(safe-area-inset-bottom)); }

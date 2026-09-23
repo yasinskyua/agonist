@@ -319,6 +319,23 @@ test("an Exercise page paints its whole Role Distribution, the Agonist last so i
   assert.match(rules[0], /var\(--r-stabilizer\)/, 'the lightest first');
 });
 
+// ── Chevrons: a row that opens a page says so (ticket 09) ────────────────
+
+test('a row that opens a Muscle or Exercise page ends in a chevron the screen reader skips; rows that open none do not', () => {
+  const pages = [
+    indexHtml(t, 'uk', atlas),
+    searchHtml(t, 'uk', atlas, 'жим'),
+    pageListHtml(t, 'uk', atlas, { screen: 'muscle', id: 'pectoralis_major' }),
+    pageListHtml(t, 'uk', atlas, ROLL),
+  ];
+  const linkRows = pages.flatMap((html) => html.match(/<a class="row"[^>]*href="#\/(?:muscle|exercise)\/[^]*?<\/a>/g) ?? []);
+  assert.ok(linkRows.length > 20);
+  for (const r of linkRows) assert.match(r, /<svg class="i chev" [^>]*aria-hidden="true"[^>]*>[^]*<\/svg><\/a>$/);
+
+  const notPages = [welcomeHtml(t), examDigestHtml(t, 'uk', atlas, exam), examCardsPickerHtml(t, exam), examTestPickerHtml(t, exam)];
+  for (const html of notPages) assert.doesNotMatch(html, /class="i chev"/);
+});
+
 // ── What a row lights while it is being read ─────────────────────────────
 
 test('every row says what it lights: a Muscle row its Muscle, an Exercise row its Exercise', () => {

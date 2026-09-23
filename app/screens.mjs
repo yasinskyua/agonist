@@ -19,10 +19,11 @@ const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>`
  * `data-exercise`; see `litRules`). The Note that explains the Role sits beside
  * the link, not in it: read as the link's name it would be a paragraph.
  * `icon` and `cls` are for the welcome's doors (ticket 04), unused elsewhere.
+ * `chevron` marks a row that opens a Muscle or Exercise page (ticket 09).
  */
-function row({ href, lights, name, sub = '', aside = '', role = '', note = '', icon: rowIcon = '', cls = '' }) {
+function row({ href, lights, name, sub = '', aside = '', role = '', note = '', icon: rowIcon = '', cls = '', chevron = false }) {
   return `<li><a class="row${cls ? ` ${cls}` : ''}" href="${href}" ${lights}${role ? ` data-role="${role}"` : ''}>
-    ${rowIcon}<span class="row-name"><b>${name}</b>${sub}</span>${aside ? `<small class="aside">${role ? '<i></i>' : ''}${aside}</small>` : ''}</a>${note ? `<p class="why">${note}</p>` : ''}</li>`;
+    ${rowIcon}<span class="row-name"><b>${name}</b>${sub}</span>${aside ? `<small class="aside">${role ? '<i></i>' : ''}${aside}</small>` : ''}${chevron ? icon('forward', 'chev') : ''}</a>${note ? `<p class="why">${note}</p>` : ''}</li>`;
 }
 
 const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) => {
@@ -35,11 +36,12 @@ const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) =
     aside: role ? t(`role.${role}`) : n ? exerciseCount(lang, n) : '',
     role,
     note,
+    chevron: true,
   });
 };
 
 const exerciseRow = (t, lang, e, { sub = '', aside = '', role = '' } = {}) =>
-  row({ href: exerciseHref(e.id), lights: `data-exercise="${e.id}"`, name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role });
+  row({ href: exerciseHref(e.id), lights: `data-exercise="${e.id}"`, name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role, chevron: true });
 
 const section = (title, body, id) => `<section${id ? ` id="${id}"` : ''}><h2 class="h">${title}</h2>${body}</section>`;
 const list = (rows, cls = 'list') => `<ul class="${cls}">${rows.join('')}</ul>`;

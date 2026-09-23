@@ -4,6 +4,7 @@
 
 const PATHS = {
   back: 'M15 18l-6-6 6-6',
+  forward: 'M9 18l6-6-6-6',
   close: 'M18 6L6 18M6 6l12 12',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
@@ -18,5 +19,5 @@ const PATHS = {
   exam: 'M12 5L20 9L12 13L4 9ZM20 9V14',
 };
 
-export const icon = (name) =>
-  `<svg class="i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${PATHS[name]}"/></svg>`;
+export const icon = (name, cls = '') =>
+  `<svg class="i${cls ? ` ${cls}` : ''}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${PATHS[name]}"/></svg>`;

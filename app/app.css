@@ -39,6 +39,8 @@
   --c-miss: var(--ink);
   /* The right Muscle in Знайди М'яз: green, which no Role is. */
   --c-right: #1a8f4d;
+  /* The Muscle asked about in Яка Роль: violet, which no Role is, or it would answer for it. */
+  --c-ask: #8a3ffc;
   /* The bottom tab bar's own height, safe area excluded (added where it's used). */
   --tabsh: 3.9rem;
   /* The sticky top bar's own rendered height, safe area excluded — what the
@@ -80,6 +82,7 @@ html[data-theme='dark'] { color-scheme: dark; }
   --c-detail: #666;
   --c-outline: #8a8a8a;
   --c-right: #3ecf7e;
+  --c-ask: #b98cff;
 
   --r-agonist: #ff5a4f;
   --r-synergist: #6f96ff;
@@ -360,7 +363,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .aside { flex: 0 1 auto; margin-left: auto; font: 400 0.75rem var(--mono); color: var(--dim); text-align: right; }
 
 /* The Role's colour, on the swatch beside its name. */
-.aside i, .legend i {
+.aside i, .legend i, .rolename i, .role-pick i {
   display: inline-block;
   width: 0.55rem;
   height: 0.55rem;
@@ -861,6 +864,17 @@ html:not(.full-map) .zoom .lbl {
   border-top: 1px solid var(--ink);
   background: var(--bg);
 }
+
+/* Яка Роль: the five Roles, two to a row and the last across, under the thumb;
+   the swatches are the legend's. The foot is three rows tall, so the page
+   leaves room for it in place of the one-button foot. */
+#page[data-game='task'][data-kind='role'] { --examgoh: calc(3 * 3.2rem + 2 * 0.5rem + 1.2rem + 1px); }
+.roles { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 3.2rem; gap: 0.5rem; }
+.role-pick { justify-content: flex-start; padding: 0 0.7rem; font-size: 0.85rem; line-height: 1.15; text-align: left; }
+.role-pick i { flex: none; margin-right: 0.5rem; }
+.role-pick:last-child { grid-column: 1 / -1; }
+.rolename { white-space: nowrap; }
+.rolename i { margin-right: 0.35rem; }
 
 /* The Game's wording: the action over the Exercise's name; the verdict, a mark and words. */
 .task-do { display: block; margin-bottom: 0.25rem; font: 500 0.7rem var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); }

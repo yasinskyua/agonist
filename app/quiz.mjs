@@ -107,7 +107,8 @@ const agonistOf = (atlas, exercise) => atlas.exerciseMuscles(exercise)[0].muscle
 
 /**
  * The kinds of Task (ADR-0010) — the list a Round is composed from. A kind says
- * every Task it could ask (`tasks`, off the atlas) and how an answer to one is
+ * every Task it could ask (`tasks`, off the atlas, in the order to take them —
+ * it is handed the Round's `shuffle`) and how an answer to one is
  * judged (`judge`); adding a kind is adding an entry, the composition below is
  * not touched. A Task names the Exercise and the Muscle it is about, so that no
  * Round asks about either twice — a kind that has no Exercise (Знайди М'яз)
@@ -116,7 +117,7 @@ const agonistOf = (atlas, exercise) => atlas.exerciseMuscles(exercise)[0].muscle
 export const KINDS = [
   {
     id: 'agonist',
-    tasks: (atlas) => atlas.exercises().map(({ id }) => ({ kind: 'agonist', exercise: id, muscle: agonistOf(atlas, id) })),
+    tasks: (atlas, shuffle) => shuffle(atlas.exercises().map(({ id }) => ({ kind: 'agonist', exercise: id, muscle: agonistOf(atlas, id) }))),
     /** `given` is the Muscle tapped. A miss carries that Muscle's Role in this Exercise — null where it does not work. */
     judge(atlas, task, given) {
       const tapped = given === DONT_KNOW ? null : given;
@@ -127,8 +128,26 @@ export const KINDS = [
   {
     id: 'find',
     // Only a Muscle that works in some Exercise is worth asking about (and is live on the map).
-    tasks: (atlas) => atlas.muscles().filter(({ id }) => atlas.muscleExercises(id).length > 0).map(({ id }) => ({ kind: 'find', muscle: id })),
+    tasks: (atlas, shuffle) => shuffle(atlas.muscles().filter(({ id }) => atlas.muscleExercises(id).length > 0).map(({ id }) => ({ kind: 'find', muscle: id }))),
     judge: (atlas, task, given) => ({ correct: given === task.muscle, tapped: given === DONT_KNOW ? null : given }),
+  },
+  {
+    id: 'role',
+    /**
+     * An Exercise first, then one of its Muscles, each uniformly: pass `k` offers
+     * every Exercise's k-th Muscle (its own shuffle), so an Exercise with twenty
+     * Muscles is not twenty times likelier than one with a single Muscle. The
+     * Round takes from the front, and only reaches a later pass when a Muscle
+     * was already taken. `given` is a Role, one of the atlas's `ROLES`.
+     */
+    tasks(atlas, shuffle) {
+      const perExercise = atlas.exercises().map(({ id }) =>
+        shuffle(atlas.exerciseMuscles(id)).map(({ muscle, role }) => ({ kind: 'role', exercise: id, muscle: muscle.id, role })),
+      );
+      const passes = Math.max(0, ...perExercise.map((tasks) => tasks.length));
+      return Array.from({ length: passes }, (_, k) => shuffle(perExercise.flatMap((tasks) => tasks[k] ?? []))).flat();
+    },
+    judge: (atlas, task, given) => ({ correct: given === task.role, chosen: given, role: task.role }),
   },
 ];
 
@@ -139,7 +158,7 @@ export function judge(atlas, task, given, kinds = KINDS) {
 
 /**
  * The Game's deck: kinds take turns (from a random one), each turn the next
- * Task of that kind off its shuffled pool that touches no Exercise or Muscle
+ * Task of that kind off its pool that touches no Exercise or Muscle
  * already in the Round; the deck is then shuffled again so the turns do not show.
  */
 export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
@@ -147,7 +166,7 @@ export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
 
   return {
     round(size = ROUND_SIZE) {
-      const pools = kinds.map((kind) => shuffle(kind.tasks(atlas)));
+      const pools = kinds.map((kind) => kind.tasks(atlas, shuffle));
       const start = Math.floor(random() * pools.length);
       const usedExercises = new Set();
       const usedMuscles = new Set();

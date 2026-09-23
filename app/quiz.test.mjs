@@ -6,9 +6,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { createAtlas } from './atlas.mjs';
+import { createAtlas, ROLES } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz, createExamQuiz, createExamTestQuiz, createRound, judge, DONT_KNOW, ROUND_SIZE } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz, createRound, judge, KINDS, DONT_KNOW, ROUND_SIZE } from './quiz.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -37,11 +37,14 @@ const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
 /** The first Task of `kind` in a seeded Round. */
 const taskOf = (kind, seed = 1) => quizWith(seed).round().cards.find((c) => c.kind === kind);
 
-/** Play a Round answering each Task right or wrong as told: 'K' (tap the Agonist) or 'U' («Не знаю»). */
+/** What answers a Task right: the Muscle to tap, or for «Яка Роль» the Role. */
+const rightAnswer = (task) => (task.kind === 'role' ? task.role : task.muscle);
+
+/** Play a Round answering each Task right or wrong as told: 'K' (right) or 'U' («Не знаю»). */
 function play(pattern, seed = 5) {
   const round = quizWith(seed).round();
   for (const c of pattern) {
-    round.choose(c === 'K' ? round.current.muscle : DONT_KNOW);
+    round.choose(c === 'K' ? rightAnswer(round.current) : DONT_KNOW);
     round.grade(judge(atlas, round.current, round.choice).correct);
   }
   return round;
@@ -59,11 +62,11 @@ test('a Round is exactly ten Tasks, no Exercise or Muscle twice', () => {
   }
 });
 
-test('a Round mixes «Хто Агоніст» and «Знайди М\'яз» about equally, and not in blocks', () => {
+test('a Round mixes the three kinds about equally — at least three of each — and not in blocks', () => {
   const orders = new Set();
   for (const { cards } of rounds()) {
     const count = (kind) => cards.filter((c) => c.kind === kind).length;
-    assert.deepEqual([count('agonist'), count('find')], [5, 5]);
+    assert.ok(['agonist', 'find', 'role'].every((kind) => count(kind) >= 3), cards.map((c) => c.kind).join());
     orders.add(cards.map((c) => c.kind[0]).join(''));
   }
   assert.ok(orders.size > 50, 'the order of kinds is shuffled');
@@ -130,6 +133,46 @@ test('«Знайди М\'яз»: tapping the Muscle is right, any other is a mis
   assert.deepEqual(judge(atlas, task, other), { correct: false, tapped: other });
 });
 
+// «Яка Роль»
+
+const KIND_ROLE = KINDS.find((k) => k.id === 'role');
+const roleTasks = () => rounds().flatMap(({ cards }) => cards.filter((c) => c.kind === 'role'));
+
+test("a «Яка Роль» Task names an Exercise and one of its Muscles, and its Role is the one the content gives that Muscle", () => {
+  for (const task of roleTasks()) {
+    const pair = atlas.exerciseMuscles(task.exercise).find((x) => x.muscle.id === task.muscle);
+    assert.ok(pair, `${task.muscle} works in ${task.exercise}`);
+    assert.equal(task.role, pair.role);
+  }
+});
+
+test('every one of the atlas\'s five Roles turns up as the right answer, the Agonist too — not only the Agonist', () => {
+  const seen = new Set(roleTasks().map((task) => task.role));
+  assert.deepEqual([...seen].sort(), [...ROLES].sort());
+});
+
+test('the right Role is right, any other Role or «Не знаю» is a miss that says which Role was picked', () => {
+  const task = roleTasks()[0];
+  assert.deepEqual(judge(atlas, task, task.role), { correct: true, chosen: task.role, role: task.role });
+  const other = ROLES.find((r) => r !== task.role);
+  assert.deepEqual(judge(atlas, task, other), { correct: false, chosen: other, role: task.role });
+  assert.equal(judge(atlas, task, DONT_KNOW).correct, false);
+});
+
+test('the Exercise is chosen first, evenly: one with a single Muscle is asked as often as one with twenty', () => {
+  const muscles = (n) => Array.from({ length: n }, (_, i) => ({ muscle: { id: `m${n}-${i}` }, role: 'stabilizer' }));
+  const skewed = {
+    exercises: () => [{ id: 'small' }, { id: 'big' }],
+    exerciseMuscles: (id) => muscles(id === 'small' ? 1 : 20),
+  };
+  const asked = { small: 0, big: 0 };
+  for (let seed = 1; seed <= 2000; seed++) {
+    const quiz = createQuiz({ atlas: skewed, random: seeded(seed), kinds: [KIND_ROLE] });
+    asked[quiz.round(1).current.exercise]++;
+  }
+  assert.ok(Math.abs(asked.small - 1000) < 100, `small ×${asked.small}, big ×${asked.big}`);
+});
+
 // ── Answering and moving on ──────────────────────────────────────────────
 
 test('a Round opens on the first Task, unanswered', () => {
@@ -191,7 +234,10 @@ test('the summary gives the score and every missed Task once, each still naming 
   assert.equal(summary.score, 8);
   assert.equal(summary.total, ROUND_SIZE);
   assert.equal(summary.mistakes.length, 2);
-  for (const m of summary.mistakes) assert.ok(m.kind === 'find' || m.muscle === agonistOf(m.exercise));
+  for (const m of summary.mistakes) {
+    if (m.kind === 'agonist') assert.equal(m.muscle, agonistOf(m.exercise));
+    if (m.kind === 'role') assert.ok(ROLES.includes(m.role));
+  }
 });
 
 test('a perfect Round has no mistakes', () => {

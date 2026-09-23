@@ -93,6 +93,11 @@ const STRINGS = {
   // The Game's Tasks (ADR-0010): what is asked, the way out, and the verdict.
   'task.agonist': { uk: 'Тапни Агоніста', en: 'Tap the Agonist' },
   'task.find': { uk: 'Знайди на мапі', en: 'Find on the map' },
+  'task.role': { uk: 'Яка Роль?', en: 'Which Role?' },
+  'task.muscle': { uk: "М'яз", en: 'Muscle' },
+  'task.role.right': { uk: 'Правильна Роль', en: 'The right Role' },
+  'task.chosen': { uk: 'Ваш вибір', en: 'Your pick' },
+  'task.note': { uk: 'Пояснення', en: 'Explanation' },
   // The disclosure under the wording: what an Agonist is (ticket 05).
   'card.agonist.question': { uk: 'Хто такий Агоніст?', en: 'Who is the Agonist?' },
   'task.dontknow': { uk: 'Не знаю', en: "I don't know" },
@@ -171,7 +176,7 @@ const STRINGS = {
   // under each — reference/game/exam matches the tab it repeats.
   'welcome.about': { uk: "Довідник м'язів і вправ для персонального тренера.", en: 'A reference of muscles and exercises for personal trainers.' },
   'welcome.reference': { uk: "Мапа тіла, м'язи й вправи", en: 'Body map, muscles and exercises' },
-  'welcome.game': { uk: "Партія Завдань: тапни Агоніста чи знайди м'яз на мапі", en: 'A round of tasks: tap the Agonist or find a muscle on the map' },
+  'welcome.game': { uk: "Партія Завдань: тапни Агоніста, знайди м'яз на мапі, назви Роль", en: 'A round of tasks: tap the Agonist, find a muscle on the map, name a Role' },
   'welcome.exam': { uk: 'Конспект і партії до Іспиту Школи Тренерів', en: 'Digest and rounds for the Trainer School Exam' },
   'welcome.start': { uk: 'Почати', en: 'Start' },
 

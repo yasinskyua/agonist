@@ -656,6 +656,114 @@ test('«Знайди М\'яз» paints the right Muscle in a colour of its own, 
   assert.ok(!rules.includes('--r-'), 'no Role colour');
 });
 
+// «Яка Роль»
+
+/** A Role other than the Task's. */
+const wrongRole = (task) => ROLES.find((r) => r !== task.role);
+
+test('a «Яка Роль» Task names the Exercise and the Muscle in words, and offers the five Roles — no «Не знаю»', () => {
+  const round = roundOf('role');
+  const top = taskTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes(t('task.role')));
+  assert.ok(top.includes(atlas.exercise(round.current.exercise).uk));
+  assert.ok(top.includes(`${t('task.muscle')}: <b>${atlas.muscle(round.current.muscle).uk}</b>`));
+  assert.ok(!top.includes('dont-know'));
+  assert.ok(!top.includes('class="verdict"'));
+  assert.equal(taskListHtml(t, 'uk', atlas, round), '');
+});
+
+test('the Role buttons are the atlas\'s Roles in its order — the legend\'s — each in its own colour, and nothing else', () => {
+  const top = taskTopHtml(t, 'uk', atlas, roundOf('role'));
+  const picks = [...top.matchAll(/<button class="ghost role-pick"[^>]*data-role="([^"]+)"[^>]*><i><\/i>([^<]+)<\/button>/g)];
+
+  assert.deepEqual(picks.map((m) => m[1]), ROLES);
+  assert.deepEqual(picks.map((m) => m[2]), ROLES.map((r) => t(`role.${r}`)));
+  assert.ok(top.includes('data-act="answer-role"'));
+  // The legend of an Exercise page lists Roles from the same source, in the same order.
+  const legend = [...pageTopHtml(t, 'uk', atlas, { screen: 'exercise', id: 'back-squat' }).matchAll(/<li data-role="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(legend, ROLES.filter((r) => legend.includes(r)));
+});
+
+test('the Muscle asked about is lit on the map, in a colour no Role has; the Exercise is not painted yet', () => {
+  const round = roundOf('role');
+  assert.equal(taskPaintRules(atlas, round), `#map [data-muscle~="${round.current.muscle}"][fill] { fill: var(--c-ask); }`);
+  assert.equal(taskPaintRules(atlas, roundOf('agonist')), '');
+  assert.equal(taskPaintRules(atlas, roundOf('find')), '');
+});
+
+test('a right «Яка Роль» answer says so, names the Role and what it is, and gives the Explanation if there is one', () => {
+  const round = answered((task) => task.role, 'role');
+  const { exercise, muscle, role } = round.current;
+  const top = taskTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes('data-verdict="right"'));
+  assert.ok(top.includes(`${t('task.role.right')}:</b> <span class="rolename" data-role="${role}"><i></i>${t(`role.${role}`)}`));
+  assert.ok(top.includes(t(`role.${role}.sentence`)));
+  assert.ok(!top.includes(t('task.chosen')));
+  assert.ok(top.includes(`data-act="next">${t('task.next')}`));
+
+  const note = atlas.exercise(exercise).notes?.[muscle];
+  assert.equal(top.includes(`${t('task.note')}:`), Boolean(note));
+});
+
+test('a wrong «Яка Роль» pick shows the right Role and the Trainer\'s own, in words', () => {
+  const round = answered(wrongRole, 'role');
+  const top = taskTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes('data-verdict="wrong"'));
+  assert.ok(top.includes(`${t('task.role.right')}:</b> <span class="rolename" data-role="${round.current.role}"`));
+  assert.ok(top.includes(`${t('task.chosen')}:</b> <span class="rolename" data-role="${round.choice}"`));
+});
+
+test('an answered «Яка Роль» paints the whole Exercise by Role, and lists its Muscles by Role below the map', () => {
+  const round = answered((task) => task.role, 'role');
+  const { exercise } = round.current;
+
+  assert.equal(taskPaintRules(atlas, round), paintRules(atlas, { screen: 'exercise', id: exercise }));
+  const list = taskListHtml(t, 'uk', atlas, round);
+  for (const { muscle, role } of atlas.exerciseMuscles(exercise)) assert.ok(list.includes(`data-muscle="${muscle.id}" data-role="${role}"`), muscle.id);
+});
+
+test('a «Яка Роль» answer is announced: verdict, the right Role, and on a miss the Role picked', () => {
+  const right = answered((task) => task.role, 'role');
+  assert.equal(taskAnnounce(t, atlas, right), `${t('task.right')}. ${t('task.role.right')}: ${t(`role.${right.current.role}`)}.`);
+
+  const miss = answered(wrongRole, 'role');
+  const said = taskAnnounce(t, atlas, miss);
+  assert.ok(said.startsWith(t('task.wrong')));
+  assert.ok(said.includes(`${t('task.role.right')}: ${t(`role.${miss.current.role}`)}`));
+  assert.ok(said.includes(`${t('task.chosen')}: ${t(`role.${miss.choice}`)}`));
+});
+
+test('«Далі» sits in the same place for «Яка Роль» as for the other kinds', () => {
+  const next = (given, kind) => taskTopHtml(t, 'uk', atlas, answered(given, kind)).match(/<div class="card-go task-go">.*<\/div>/s)[0];
+  assert.equal(next((task) => task.role, 'role'), next(wrongRole, 'role'));
+  assert.equal(next(wrongRole, 'role'), next(DONT_KNOW, 'agonist'));
+});
+
+test('the new «Яка Роль» wordings exist in both languages', () => {
+  for (const key of ['task.role', 'task.muscle', 'task.role.right', 'task.chosen', 'task.note']) {
+    assert.ok(t(key) !== key && tEn(key) !== key, key);
+    assert.notEqual(t(key), tEn(key), key);
+  }
+});
+
+test('a missed «Яка Роль» is a row of its Exercise, with the Muscle and the right Role, linking to the Exercise\'s page', () => {
+  const round = roundOf('role');
+  for (let i = 0; i < 10; i++) {
+    round.choose(DONT_KNOW);
+    round.grade(false);
+  }
+  const html = summaryHtml(t, 'uk', atlas, round);
+  for (const m of round.summary().mistakes.filter((x) => x.kind === 'role')) {
+    assert.ok(hrefs(html).includes(`#/exercise/${m.exercise}`));
+    assert.ok(html.includes(`data-exercise="${m.exercise}" data-role="${m.role}"`));
+    assert.ok(html.includes(atlas.muscle(m.muscle).uk));
+    assert.ok(html.includes(t(`role.${m.role}`)));
+  }
+});
+
 test('the tally names the Task in play, out of ten, and how many are right — «правильно», not «знав» — in words', () => {
   const round = roundOf();
   assert.ok(roundTally(t, round, 'round.right').startsWith('1 з 10'));

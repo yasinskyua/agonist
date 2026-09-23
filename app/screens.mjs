@@ -236,22 +236,44 @@ export function pageListHtml(t, lang, atlas, here, query = '') {
 /** The verdict on the Task in play — only asked once the Trainer has answered. */
 const verdictOf = (atlas, round) => judge(atlas, round.current, round.choice);
 
+/** A Role by its colour and name: the swatch is the legend's (`data-role` gives the colour to CSS). */
+const roleName = (t, r) => `<span class="rolename" data-role="${r}"><i></i>${t(`role.${r}`)}</span>`;
+
+/** The Role buttons of «Яка Роль», one per Role the atlas has, in its order — the legend's. */
+const roleButtons = (t) =>
+  `<div class="card-go task-go roles">${ROLES.map(
+    (r) => `<button class="ghost role-pick" type="button" data-act="answer-role" data-role="${r}"><i></i>${t(`role.${r}`)}</button>`,
+  ).join('')}</div>`;
+
+/** «Яка Роль» after the answer: the right Role and, on a miss, the Trainer's; what the Role is; and the Explanation, if the Exercise gives one. */
+function roleAnswerHtml(t, atlas, task, v) {
+  const note = atlas.exercise(task.exercise).notes?.[task.muscle];
+  return `<p class="lead"><b>${t('task.role.right')}:</b> ${roleName(t, task.role)}</p>
+    ${v.correct ? '' : `<p class="lead"><b>${t('task.chosen')}:</b> ${roleName(t, v.chosen)}</p>`}
+    <p class="lead">${t(`role.${task.role}.sentence`)}</p>
+    ${note ? `<p class="lead"><b>${t('task.note')}:</b> ${note}</p>` : ''}`;
+}
+
 /**
- * A Task: its wording — the action and its subject, the Exercise (Хто Агоніст) or
- * the Muscle (Знайди М'яз) — and, at the foot (in the thumb zone, `.task-go`),
- * «Не знаю» while it waits for a tap, or once answered the verdict and «Далі» in
- * the same place. The verdict is a mark and words, never colour alone, and the
- * right answer is named in words too — the map is not the only way to read it.
+ * A Task: its wording — the action and its subject, the Exercise (Хто Агоніст,
+ * Яка Роль) or the Muscle (Знайди М'яз) — and, at the foot (in the thumb zone,
+ * `.task-go`), «Не знаю» while it waits for a tap (or for Яка Роль the five Role
+ * buttons), or once answered the verdict and «Далі» in the same place. The
+ * verdict is a mark and words, never colour alone, and the right answer is named
+ * in words too — the map is not the only way to read it.
  */
 export function taskTopHtml(t, lang, atlas, round) {
   const task = round.current;
-  const find = task.kind === 'find';
+  const { kind } = task;
+  const find = kind === 'find';
   const subject = find ? atlas.muscle(task.muscle).uk : atlas.exercise(task.exercise)[lang];
-  const heading = `<h1 tabindex="-1"><small class="task-do">${t(find ? 'task.find' : 'task.agonist')}</small>${subject}</h1>`;
+  // Яка Роль points at its Muscle on the map, and names it: not everyone can tell it by the colour.
+  const asked = kind === 'role' ? `<p class="lead">${t('task.muscle')}: <b>${atlas.muscle(task.muscle).uk}</b></p>` : '';
+  const heading = `<h1 tabindex="-1"><small class="task-do">${t(`task.${kind}`)}</small>${subject}</h1>${asked}`;
   if (!round.revealed) {
-    const who = find ? '' : `\n      <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>`;
-    return `${heading}${who}
-      <div class="card-go task-go"><button class="ghost" type="button" data-act="dont-know">${t('task.dontknow')}</button></div>`;
+    const who = kind === 'agonist' ? `\n      <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>` : '';
+    const go = kind === 'role' ? roleButtons(t) : `<div class="card-go task-go"><button class="ghost" type="button" data-act="dont-know">${t('task.dontknow')}</button></div>`;
+    return `${heading}${who}\n      ${go}`;
   }
   const v = verdictOf(atlas, round);
   const tapped = v.tapped && !v.correct
@@ -260,10 +282,11 @@ export function taskTopHtml(t, lang, atlas, round) {
   const answer = find
     ? `<p class="lead">${atlas.muscle(task.muscle).action}</p>`
     : `<p class="lead"><b>${t('role.agonist')}:</b> ${atlas.muscle(task.muscle).uk}</p>`;
+  const lines = kind === 'role' ? roleAnswerHtml(t, atlas, task, v) : find ? tapped + answer : answer + tapped;
   return `${heading}
     <p class="verdict" data-verdict="${v.correct ? 'right' : 'wrong'}"><span aria-hidden="true">${v.correct ? '✓' : '✕'}</span> ${t(v.correct ? 'task.right' : 'task.wrong')}</p>
-    ${find ? tapped + answer : answer + tapped}
-    ${find ? '' : legendHtml(t, rolesIn(atlas.exerciseMuscles(task.exercise)))}
+    ${lines}
+    ${kind === 'agonist' ? legendHtml(t, rolesIn(atlas.exerciseMuscles(task.exercise))) : ''}
     <div class="card-go task-go"><button class="main" type="button" data-act="next">${t('task.next')}</button></div>`;
 }
 
@@ -282,22 +305,30 @@ export function taskListHtml(t, lang, atlas, round) {
 /** What a screen reader is told once a Task is answered: verdict and the right answer, heard, not only seen in colour. */
 export function taskAnnounce(t, atlas, round) {
   const v = verdictOf(atlas, round);
-  const find = round.current.kind === 'find';
+  const { kind, muscle, role } = round.current;
+  if (kind === 'role') {
+    const chosen = v.correct ? '' : ` ${t('task.chosen')}: ${t(`role.${v.chosen}`)}.`;
+    return `${t(v.correct ? 'task.right' : 'task.wrong')}. ${t('task.role.right')}: ${t(`role.${role}`)}.${chosen}`;
+  }
+  const find = kind === 'find';
   const said = v.tapped && !v.correct ? ` ${t('task.tapped')}: ${atlas.muscle(v.tapped).uk}${find ? '' : ` — ${v.role ? t(`role.${v.role}`) : t('task.idle')}`}.` : '';
-  const { uk, action } = atlas.muscle(round.current.muscle);
+  const { uk, action } = atlas.muscle(muscle);
   const answer = find ? ` ${uk}. ${action}` : ` ${t('role.agonist')}: ${uk}.`;
   return `${t(v.correct ? 'task.right' : 'task.wrong')}.${answer}${said}`;
 }
 
 /**
- * What the map shows once a Task is answered: the Exercise's Role Distribution
- * (Хто Агоніст) or the right Muscle alone in `--c-right` (Знайди М'яз), and over
- * it a wrong Muscle the Trainer tapped in `--c-miss` — colours no Role has, so
+ * What the map shows for a Task. Waiting, Яка Роль lights its Muscle in `--c-ask`
+ * — a colour no Role has, or it would give the answer away; the taps ones show
+ * the plain map. Answered: the Exercise's Role Distribution (Хто Агоніст, Яка
+ * Роль) or the right Muscle alone in `--c-right` (Знайди М'яз), and over it a
+ * wrong Muscle the Trainer tapped in `--c-miss` — colours no Role has, so
  * neither is mistaken for one.
  */
 export function taskPaintRules(atlas, round) {
-  const { tapped, correct } = verdictOf(atlas, round);
   const { kind, exercise, muscle } = round.current;
+  if (!round.revealed) return kind === 'role' ? `#map [data-muscle~="${muscle}"][fill] { fill: var(--c-ask); }` : '';
+  const { tapped, correct } = verdictOf(atlas, round);
   const base = kind === 'find' ? `#map [data-muscle~="${muscle}"][fill] { fill: var(--c-right); }` : paintRules(atlas, { screen: 'exercise', id: exercise });
   const miss = tapped && !correct ? `\n#map [data-muscle~="${tapped}"][fill] { fill: var(--c-miss); }` : '';
   return base + miss;
@@ -308,7 +339,7 @@ export function roundTally(t, round, word = 'round.known') {
   return `${round.index + 1} ${t('round.of')} ${round.total} · ${t(word)} ${round.score}`;
 }
 
-/** The Round's end: the score, and the Tasks missed, linked for a review — to the Exercise, or for Знайди М'яз to the Muscle. */
+/** The Round's end: the score, and the Tasks missed, linked for a review — to the Exercise (Хто Агоніст, Яка Роль — with the right Role), or for Знайди М'яз to the Muscle. */
 export function summaryHtml(t, lang, atlas, round) {
   const { score, total, mistakes } = round.summary();
   return `
@@ -325,9 +356,11 @@ export function summaryHtml(t, lang, atlas, round) {
             mistakes.map((m) =>
               m.kind === 'find'
                 ? muscleRow(t, lang, atlas, atlas.muscle(m.muscle))
-                : exerciseRow(t, lang, atlas.exercise(m.exercise), {
-                    aside: `${t('search.agonist')}: ${atlas.muscle(m.muscle).uk}`,
-                  }),
+                : m.kind === 'role'
+                  ? exerciseRow(t, lang, atlas.exercise(m.exercise), { sub: `<small class="sub">${atlas.muscle(m.muscle).uk}</small>`, role: m.role })
+                  : exerciseRow(t, lang, atlas.exercise(m.exercise), {
+                      aside: `${t('search.agonist')}: ${atlas.muscle(m.muscle).uk}`,
+                    }),
             ),
           )}`
         : ''

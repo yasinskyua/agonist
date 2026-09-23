@@ -274,6 +274,8 @@ export async function start() {
    * its units, the Task's Muscle with its zone (`resolveTap`). Empty ground is undefined.
    */
   function gameTap(x, y) {
+    // Яка Роль is answered by the buttons: the map is only looked at.
+    if (round.current.kind === 'role') return;
     const svg = map.querySelector(`[data-view="${map.dataset.side}"] svg`);
     const { baseVal: view } = svg.viewBox;
     const rect = svg.getBoundingClientRect();
@@ -760,8 +762,7 @@ export async function start() {
       clearTimeout(pendingTap);
       pendingTap = null;
       restoreView(here);
-      // Every Task opens on the whole body, front — where a Muscle is is part of the answer.
-      if (here.screen === 'game') setSide('front');
+      if (here.screen === 'game') openTask();
       // A summary's mistake link opens the Digest scrolled to the Question it
       // names, instead of the bookmark or the top — an id out of the address
       // is untrusted, so a stale one just leaves the scroll where it was.
@@ -789,16 +790,30 @@ export async function start() {
   function syncGame(t) {
     const answered = !round.finished && round.revealed;
     el('page').dataset.game = round.finished ? 'done' : answered ? 'answered' : 'task';
+    // The foot of a waiting Task is taller for Яка Роль: its five buttons (see `--examgoh`).
+    el('page').dataset.kind = round.finished ? '' : round.current.kind;
     top.innerHTML = round.finished ? summaryHtml(t, state.lang, atlas, round) : taskTopHtml(t, state.lang, atlas, round);
     list.innerHTML = answered ? taskListHtml(t, state.lang, atlas, round) : '';
 
-    const paint = answered ? taskPaintRules(atlas, round) : '';
+    const paint = round.finished ? '' : taskPaintRules(atlas, round);
     el('paint').textContent = paint;
     map.classList.toggle('painted', Boolean(paint));
 
     el('tally').textContent = roundTally(t, round, 'round.right');
     // Heard, not only seen in colour: answering paints the map, which says nothing on its own.
     el('status').textContent = answered ? taskAnnounce(t, atlas, round) : '';
+  }
+
+  /**
+   * A Task opens on the whole body, front — where a Muscle is is part of the
+   * answer. Not Яка Роль: its question is not about the place, so the figure
+   * stands on the Muscle's side and closes in on it.
+   */
+  function openTask() {
+    if (round.finished || round.current.kind !== 'role') return setSide('front');
+    const { muscle } = round.current;
+    setSide(atlas.muscle(muscle).views[0]);
+    frameMuscle(muscle);
   }
 
   /**
@@ -815,7 +830,7 @@ export async function start() {
       syncGame(translator(state.lang));
       makeRoom();
       if (newTask) {
-        setSide('front');
+        openTask();
         scrollTo(0, 0);
         settled = scrollY;
       } else {
@@ -1172,6 +1187,7 @@ export async function start() {
     'zoom-in': () => zoomBy(STEP),
     'zoom-out': () => zoomBy(1 / STEP),
     'dont-know': () => answerTask(DONT_KNOW),
+    'answer-role': (button) => answerTask(button.dataset.role),
     next: () => {
       round.grade(judge(atlas, round.current, round.choice).correct);
       redrawGame(true);

@@ -619,6 +619,8 @@ export async function start() {
               steps >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
             }`;
 
+    foldForSearch(here.screen);
+
     // Before the scroll below: the page has to be tall enough to reach the place
     // the step was left at.
     makeRoom();
@@ -847,16 +849,34 @@ export async function start() {
   // second `document.startViewTransition` inside an active one is not safe.
 
   /** Hide the map down to its strip, or bring it back. The choice stays across screens. */
-  function setHidden(hidden) {
+  function setHidden(hidden, { pressed = true } = {}) {
     dock.hidden = hidden;
     mapbar.hidden = !hidden;
     // No map, nothing to light: the rows go back to being rows.
     unlight();
     makeRoom();
     // The button that was pressed is gone; the keyboard goes to the one that took its place.
-    (hidden ? mapbar : hideMap).focus({ preventScroll: true });
+    // Folded by the search, nothing was pressed: the caret stays in the field.
+    if (pressed) (hidden ? mapbar : hideMap).focus({ preventScroll: true });
     if (hidden) show(IDENTITY);
     else restoreView();
+  }
+
+  // The search on home folds the map while it has text, or its results sit
+  // under the keyboard: 'folded' — the search folded it and will unfold it;
+  // 'declined' — the strip was tapped mid-search, so it stays open until the
+  // field is empty; 'off' — nothing of the search's own.
+  let searchFold = 'off';
+
+  function foldForSearch(screen) {
+    const searching = screen === 'home' && Boolean(state.query.trim());
+    if (searching && searchFold === 'off' && !dock.hidden) {
+      searchFold = 'folded';
+      setHidden(true, { pressed: false });
+    } else if (!searching) {
+      if (searchFold === 'folded') setHidden(false, { pressed: false });
+      searchFold = 'off';
+    }
   }
 
   /** Choose a Muscle on the expanded map (or, with `null`, choose none). */
@@ -928,6 +948,7 @@ export async function start() {
     const t = translator(state.lang);
     unlight();
     list.innerHTML = pageListHtml(t, state.lang, atlas, { screen: 'home' }, query);
+    foldForSearch('home');
     makeRoom();
     el('status').textContent = query.trim() ? `${t('search.count')}: ${list.querySelectorAll('.row').length}` : '';
     syncSearch();
@@ -955,8 +976,14 @@ export async function start() {
     back: goBack,
     home: goHome,
     all: unlight,
-    'hide-map': () => draw('fade', () => setHidden(true)),
-    'show-map': () => draw('fade', () => setHidden(false)),
+    'hide-map': () => {
+      searchFold = 'off';
+      draw('fade', () => setHidden(true));
+    },
+    'show-map': () => {
+      if (state.query.trim()) searchFold = 'declined';
+      draw('fade', () => setHidden(false));
+    },
     'full-map': openFull,
     'close-map': () => history.back(),
     side: (button) => draw('fade', () => setSide(button.dataset.side)),

@@ -547,8 +547,11 @@ p.sub[translate='no'] { font-style: italic; }
   gap: 0.5rem;
 }
 
-/* #bottom is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+/* `.chrome-hidden` is kept on `html` by `syncChrome()` in ui.mjs, computed
+   from the same state (`here.screen`, `full`) this rule cares about — a real
+   ancestor's class, unlike a sibling combinator, keeps working however
+   index.html orders #page/#bottom/#tabs under #app. */
+.chrome-hidden #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
 
 .ic {
   display: grid;
@@ -595,8 +598,8 @@ p.sub[translate='no'] { font-style: italic; }
 
 /* Nothing to switch to mid-Round, and nothing left to switch to under the
    full-screen map — hidden rather than fought over for the thumb's reach.
-   #tabs is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #tabs, .full-map #tabs { display: none; }
+   `.chrome-hidden` (see #bottom, above) covers both cases. */
+.chrome-hidden #tabs { display: none; }
 
 /* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
 

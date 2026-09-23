@@ -493,6 +493,13 @@ export async function start() {
   let shown = ''; // the screen on display: a language switch is not a new screen
   let drawn = ''; // …and what exactly was drawn, so one step is drawn once
 
+  /** #bottom and #tabs read this one class instead of reaching for `#page`'s
+   * state themselves — a real ancestor's class survives index.html being
+   * reshuffled, where a sibling-combinator selector would silently stop matching. */
+  function syncChrome() {
+    document.documentElement.classList.toggle('chrome-hidden', full || el('page').dataset.screen === 'game');
+  }
+
   function render() {
     // Drawing a screen ends the expanded map, however we came to it.
     if (full && !history.state?.full) setFull(false);
@@ -550,6 +557,7 @@ export async function start() {
     }
 
     el('page').dataset.screen = here.screen;
+    syncChrome();
 
     if (here.screen === 'game') {
       // A fresh step into the Game is a fresh Round — reloading it starts over too.
@@ -773,6 +781,7 @@ export async function start() {
   function setFull(on) {
     if (on === full) return;
     full = on;
+    syncChrome();
     // A tap still waiting for its double meant the other mode: it must not
     // open a page from the map that has just closed, or pick on the page.
     clearTimeout(pendingTap);

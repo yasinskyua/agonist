@@ -40,8 +40,15 @@ const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) =
 const exerciseRow = (t, lang, e, { sub = '', aside = '', role = '' } = {}) =>
   row({ href: exerciseHref(e.id), lights: `data-exercise="${e.id}"`, name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role });
 
-const section = (title, body) => `<section><h2 class="h">${title}</h2>${body}</section>`;
+const section = (title, body, id) => `<section${id ? ` id="${id}"` : ''}><h2 class="h">${title}</h2>${body}</section>`;
 const list = (rows, cls = 'list') => `<ul class="${cls}">${rows.join('')}</ul>`;
+
+/** A Topic row: name and Question count, `data-act`-dispatched — the Cards
+ *  length picker starts a Round with it, the Digest nav scrolls with it. */
+const topicRowHtml = (act, topic, count) => `<li><button class="row" type="button" data-act="${act}" data-topic="${topic.id}">
+    <span class="row-name"><b>${topic.uk}</b></span>
+    <small class="aside">${count}</small>
+  </button></li>`;
 
 // ── Home ─────────────────────────────────────────────────────────────────
 
@@ -240,10 +247,23 @@ function questionHtml(t, lang, atlas, q) {
   </li>`;
 }
 
+/**
+ * The Topic nav at the top of the Digest: name and Question count, same shape
+ * as the Cards length picker's Topic rows (`examCardsPickerHtml`) — but a tap
+ * here scrolls to the Topic's own section below (`data-act="exam-goto"`)
+ * instead of starting a Round.
+ */
+function digestNavHtml(topics, exam) {
+  return list(
+    topics.map((topic) => topicRowHtml('exam-goto', topic, exam.questions({ topic: topic.id }).length)),
+    'list exam-nav',
+  );
+}
+
 /** The Digest: every Question the exam holds, grouped by Topic, in the set order. */
 export function examDigestHtml(t, lang, atlas, exam) {
-  return exam
-    .topics()
+  const topics = exam.topics();
+  const sections = topics
     .map((topic) =>
       section(
         topic.uk,
@@ -251,9 +271,11 @@ export function examDigestHtml(t, lang, atlas, exam) {
           exam.questions({ topic: topic.id }).map((q) => questionHtml(t, lang, atlas, q)),
           'exam-list',
         ),
+        `topic-${topic.id}`,
       ),
     )
     .join('');
+  return digestNavHtml(topics, exam) + sections;
 }
 
 // ── The Exam: Cards, a Round of Questions (ADR-0008) ────────────────────
@@ -278,12 +300,7 @@ export function examCardsPickerHtml(t, exam, weakCount = 0) {
   const all = exam.questions();
   const topics = exam
     .topics()
-    .map(
-      (topic) => `<li><button class="row" type="button" data-act="exam-round" data-topic="${topic.id}">
-        <span class="row-name"><b>${topic.uk}</b></span>
-        <small class="aside">${all.filter((q) => q.topic === topic.id).length}</small>
-      </button></li>`,
-    );
+    .map((topic) => topicRowHtml('exam-round', topic, all.filter((q) => q.topic === topic.id).length));
   return `
     <p class="lead">${t('exam.cards.hint')}</p>
     <div class="card-go">

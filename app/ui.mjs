@@ -977,6 +977,10 @@ export async function start() {
       round = quiz.round();
       redrawGame(true);
     },
+    // The Digest's own Topic nav: scroll to the Topic's section, no route change.
+    'exam-goto': (button) => {
+      el(`topic-${button.dataset.topic}`)?.scrollIntoView({ block: 'start' });
+    },
     'exam-round': (button) => {
       const { topic, length, weak } = button.dataset;
       examRound = examQuiz.round({ topic, length: length ? Number(length) : undefined, ids: weak ? loadWeak(storage) : undefined });

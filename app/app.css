@@ -309,6 +309,19 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .exam-exercise { margin: 0.5rem 0 0; font-size: 0.85rem; }
 .exam-exercise a { color: inherit; }
 
+/* The Topic nav sits above the first section — a plain row list, no heading,
+   kept out of the way of the first Question. */
+.exam-nav { margin-bottom: 0.4rem; }
+
+/* Each Topic's own heading sticks to the top while its Questions scroll by —
+   the same slot #dock/#mapbar use, which the Digest already leaves empty. */
+#page[data-screen='exam'] .h {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 5;
+  background: var(--bg);
+}
+
 /* ── The Exam: Test, four options (ADR-0008, ticket 07) ───────────────── */
 
 .row[data-state='correct'] { font-weight: 700; }

@@ -410,6 +410,27 @@ test('every Question in the Digest is a target a summary link can scroll to', ()
   for (const q of exam.questions()) assert.ok(html.includes(`id="q-${q.id}"`), q.id);
 });
 
+test('the Digest nav (ticket 09) lists every Topic with its Question count, before any Topic section', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+  const topics = exam.topics();
+  const firstSection = html.indexOf('<section');
+
+  for (const topic of topics) {
+    assert.ok(html.includes(`data-act="exam-goto" data-topic="${topic.id}"`), topic.id);
+    assert.ok(html.includes(`>${exam.questions({ topic: topic.id }).length}<`), topic.id);
+    const navPosition = html.indexOf(`data-topic="${topic.id}"`);
+    assert.ok(navPosition < firstSection, topic.id);
+  }
+});
+
+test('the Digest nav (ticket 09): each Topic button scrolls to that Topic\'s own section', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+  for (const topic of exam.topics()) {
+    assert.ok(html.includes(`data-topic="${topic.id}"`), topic.id);
+    assert.ok(html.includes(`id="topic-${topic.id}"`), topic.id);
+  }
+});
+
 // ── The Exam: Cards (ADR-0008) ────────────────────────────────────────────
 
 const examQuiz = () => createExamQuiz({ exam });

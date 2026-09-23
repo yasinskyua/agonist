@@ -1188,7 +1188,10 @@ export async function start() {
     'zoom-out': () => zoomBy(1 / STEP),
     'dont-know': () => answerTask(DONT_KNOW),
     'answer-role': (button) => answerTask(button.dataset.role),
+    // The guards below: a second tap lands on the old button while the screen
+    // is still changing; it must not grade or reveal twice.
     next: () => {
+      if (round.finished || !round.revealed) return;
       round.grade(judge(atlas, round.current, round.choice).correct);
       redrawGame(true);
     },
@@ -1206,10 +1209,12 @@ export async function start() {
       redrawExamCards(true);
     },
     'exam-reveal': () => {
+      if (examRound.finished || examRound.revealed) return;
       examRound.reveal();
       redrawExamCards(false);
     },
     'exam-grade': (button) => {
+      if (examRound.finished || !examRound.revealed) return;
       const id = examRound.current.id;
       const knew = button.dataset.knew === '1';
       // grade() first: it throws on a stale click (already finished, not
@@ -1224,10 +1229,12 @@ export async function start() {
       redrawExamTest(true);
     },
     'exam-test-choose': (button) => {
+      if (examTestRound.finished || examTestRound.revealed) return;
       examTestRound.choose(Number(button.dataset.index));
       redrawExamTest(false);
     },
     'exam-test-next': () => {
+      if (examTestRound.finished || !examTestRound.revealed) return;
       const q = examTestRound.current;
       const knew = q.options[examTestRound.choice] === q.answer;
       // grade() first, same reason as 'exam-grade': never write a memory the

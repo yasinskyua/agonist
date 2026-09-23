@@ -241,6 +241,10 @@ p.sub[translate='no'] { font-style: italic; }
   text-decoration: none;
 }
 
+/* A row that is a button (the Cards Format's Topic picker) rather than a link
+   to another page: no browser button chrome, full width, text kept left. */
+button.row { width: 100%; border: 0; background: none; text-align: left; }
+
 .row-name { flex: 1 1 10rem; min-width: 0; }
 .row b { font-size: 1rem; font-weight: 500; line-height: 1.3; hyphens: auto; overflow-wrap: anywhere; }
 .row .sub { display: block; margin: 0; font-size: 0.8rem; }
@@ -322,15 +326,18 @@ p.sub[translate='no'] { font-style: italic; }
 
 #page[data-screen='home'] #dock { height: 44svh; }
 #page[data-screen='home'] { padding-bottom: calc(2rem + var(--tabsh) + env(safe-area-inset-bottom)); }
-/* The tab bar is gone in the Game (it hides for the whole Round, summary
-   included — CONTEXT.md counts the score at the end as part of the Round), so
-   its own padding-bottom does not need the tab bar's height added back in. */
-#page[data-screen='game'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+/* The tab bar is gone in the Game and in Cards (both hide it for the whole
+   Round, summary included — CONTEXT.md counts the score at the end as part
+   of the Round), so neither needs the tab bar's height added back in. */
+#page[data-screen='game'], #page[data-screen='examCards'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 /* The Round's summary has nothing to paint: the map goes with the Card. */
 #page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
 /* The Digest has no use for the body map: it is text to read, not a picture to tap. */
 #page[data-screen='exam'] #dock, #page[data-screen='exam'] #mapbar { display: none; }
 #page[data-screen='exam'] #top { margin-bottom: 0.6rem; }
+/* The Cards Format (ADR-0008) has no body map either — the picker, a Card and
+   its summary are all just text. */
+#page[data-screen='examCards'] #dock, #page[data-screen='examCards'] #mapbar { display: none; }
 
 #map {
   position: relative;
@@ -548,7 +555,7 @@ p.sub[translate='no'] { font-style: italic; }
 }
 
 /* #bottom is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+#page[data-screen='game'] ~ #bottom, #page[data-screen='examCards'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
 
 .ic {
   display: grid;
@@ -596,7 +603,7 @@ p.sub[translate='no'] { font-style: italic; }
 /* Nothing to switch to mid-Round, and nothing left to switch to under the
    full-screen map — hidden rather than fought over for the thumb's reach.
    #tabs is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #tabs, .full-map #tabs { display: none; }
+#page[data-screen='game'] ~ #tabs, #page[data-screen='examCards'] ~ #tabs, .full-map #tabs { display: none; }
 
 /* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
 

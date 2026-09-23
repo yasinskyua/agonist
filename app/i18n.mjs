@@ -99,6 +99,16 @@ const STRINGS = {
   // The Exam's Digest: Питання за Темами, відповідь відкрита одразу.
   'exam.outside': { uk: 'не з матеріалів клубу', en: 'not from the club materials' },
   'exam.exercise': { uk: 'Вправа', en: 'Exercise' },
+
+  // The Exam's Cards Format (ADR-0008): the same Question, self-graded.
+  'exam.cards': { uk: 'Картки', en: 'Cards' },
+  'exam.cards.hint': { uk: 'Скільки Питань? Оберіть довжину Партії.', en: 'How many Questions? Pick the length of the Round.' },
+  'exam.cards.ten': { uk: '10 Питань', en: '10 Questions' },
+  // «{n}» is the whole Exam's Question count — never hardcoded, so it can't drift from the content.
+  'exam.cards.all': { uk: 'Усі {n}', en: 'All {n}' },
+  'exam.cards.topic': { uk: 'Одна Тема', en: 'One Topic' },
+  'exam.answer': { uk: 'Відповідь', en: 'Answer' },
+  'exam.digest': { uk: 'До Конспекту', en: 'To the Digest' },
 };
 
 export const KEYS = Object.keys(STRINGS);

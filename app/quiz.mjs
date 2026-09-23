@@ -1,9 +1,9 @@
 // A Round: a deck of Cards played in order, each self-graded «Знав» / «Не
 // знав» before moving to the next (ADR-0007). The Round doesn't know whether
-// a Card is a Game Exercise or, later, an Exam Question — the deck is just a
-// list, built by the caller. `createQuiz` is that caller for the Game: it
-// asks the atlas and knows nothing about the screen, so a Round can be
-// played and checked in Node on the real content.
+// a Card is a Game Exercise or an Exam Question (ADR-0008) — the deck is just
+// a list, built by the caller. `createQuiz` and `createExamQuiz` are those
+// callers: they ask the atlas or the exam and know nothing about the screen,
+// so a Round can be played and checked in Node on the real content.
 //
 // Randomness comes from the caller (`random` returns [0, 1) like
 // `Math.random`), so a test can replay any Round from a seed.
@@ -16,6 +16,18 @@
 //   round.summary();            // once finished: { score, total, mistakes }
 
 export const ROUND_SIZE = 10;
+
+/** Fisher–Yates, seedable through `random` so a Round replays from a seed. */
+function shuffleWith(random) {
+  return (list) => {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+}
 
 /** A Round over any deck of Cards, sliced to `size` (ten, typically). */
 export function createRound(deck, size = ROUND_SIZE) {
@@ -73,15 +85,7 @@ export function createRound(deck, size = ROUND_SIZE) {
 
 /** The Game's deck: every Exercise, shuffled, each Card naming its Agonist (the atlas lists it first). */
 export function createQuiz({ atlas, random = Math.random }) {
-  const shuffle = (list) => {
-    const out = [...list];
-    for (let i = out.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [out[i], out[j]] = [out[j], out[i]];
-    }
-    return out;
-  };
-
+  const shuffle = shuffleWith(random);
   const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
 
   return {
@@ -89,6 +93,23 @@ export function createQuiz({ atlas, random = Math.random }) {
       const ids = shuffle(atlas.exercises().map((e) => e.id)).slice(0, size);
       const deck = ids.map((exercise) => ({ exercise, answer: agonistOf(exercise) }));
       return createRound(deck, size);
+    },
+  };
+}
+
+/**
+ * The Exam Cards' deck: Questions, shuffled — every one, one Topic's, or a
+ * caller-picked slice of them. `topic` narrows the pool before shuffling;
+ * `length` slices it after — left out, the whole (possibly topic-narrowed)
+ * pool plays, which is how «one Topic» and «all 51» both get their exact count.
+ */
+export function createExamQuiz({ exam, random = Math.random }) {
+  const shuffle = shuffleWith(random);
+
+  return {
+    round({ topic, length } = {}) {
+      const deck = shuffle(exam.questions({ topic }));
+      return createRound(deck, length ?? deck.length);
     },
   };
 }

@@ -9,10 +9,10 @@
 
 import { createAtlas } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz } from './quiz.mjs';
+import { createQuiz, createExamQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { parseRoute, muscleHref, HOME, GAME, EXAM } from './route.mjs';
+import { parseRoute, muscleHref, HOME, GAME, EXAM, EXAM_CARDS } from './route.mjs';
 import {
   pageTopHtml,
   pageListHtml,
@@ -26,6 +26,11 @@ import {
   roundTally,
   summaryHtml,
   examDigestHtml,
+  examCardsPickerHtml,
+  examCardTopHtml,
+  examCardListHtml,
+  examCardAnnounce,
+  examSummaryHtml,
 } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
@@ -95,7 +100,9 @@ export async function start() {
   });
   const exam = createExam({ questions: examContent.questions, atlas });
   const quiz = createQuiz({ atlas });
+  const examQuiz = createExamQuiz({ exam });
   let round = null; // the Round in play, once the Trainer has entered the Game
+  let examRound = null; // the Round in play, once a length is picked in Cards
 
   // A Muscle with no Exercises has nothing to show, so it is not tappable on
   // the map. Search still opens it: its name and Function are worth it.
@@ -522,17 +529,19 @@ export async function start() {
     document.documentElement.lang = state.lang;
     el('brand').setAttribute('aria-label', `Agonist: ${t('home')}`);
     el('play').textContent = t('flash.enter');
-    el('play').hidden = here.screen === 'game';
-    el('tally').hidden = here.screen !== 'game';
+    el('play').hidden = here.screen === 'game' || here.screen === 'examCards';
+    el('tally').hidden = here.screen !== 'game' && here.screen !== 'examCards';
     el('lang').textContent = t('lang.other');
     all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
     tabs.setAttribute('aria-label', t('tabs.label'));
-    // 'game' and 'exam' get their own tab; every other screen (home, muscle,
-    // exercise — everything the body map and search reach) is «Довідник».
-    const current = here.screen === 'game' || here.screen === 'exam' ? here.screen : 'reference';
+    // 'game' and 'exam' get their own tab; Cards is a screen of the Exam
+    // section too. Every other screen (home, muscle, exercise — everything
+    // the body map and search reach) is «Довідник».
+    const current =
+      here.screen === 'game' ? 'game' : here.screen === 'exam' || here.screen === 'examCards' ? 'exam' : 'reference';
     for (const tab of tabEls) {
       tab.textContent = t(`tabs.${tab.dataset.tab}`);
       if (tab.dataset.tab === current) tab.setAttribute('aria-current', 'page');
@@ -555,13 +564,19 @@ export async function start() {
       // A fresh step into the Game is a fresh Round — reloading it starts over too.
       if (fresh) round = quiz.round();
       syncGame(t);
+    } else if (here.screen === 'examCards') {
+      delete el('page').dataset.game;
+      // A fresh step into Cards opens on the length picker, not a stale Round —
+      // the length is chosen every time, same as Game starts a fresh Round.
+      if (fresh) examRound = null;
+      syncExamCards(t);
     } else {
       delete el('page').dataset.game;
       // A revealed Card's announcement does not outlive the Round.
       el('status').textContent = '';
 
       if (here.screen === 'exam') {
-        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1>`;
+        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go"><a class="main" href="${EXAM_CARDS}">${t('exam.cards')}</a></div>`;
         list.innerHTML = examDigestHtml(t, state.lang, atlas, exam);
         el('paint').textContent = '';
         map.classList.remove('painted');
@@ -581,7 +596,7 @@ export async function start() {
     // Round has only the small way out. Two or more steps in on any other
     // screen, a shortcut home stands beside Back.
     el('bottom').innerHTML =
-      here.screen === 'game'
+      here.screen === 'game' || here.screen === 'examCards'
         ? `<button class="ic" type="button" data-act="home" aria-label="${t('close')}">${icon('close')}</button>`
         : here.screen === 'home'
           ? ''
@@ -599,13 +614,18 @@ export async function start() {
       clearTimeout(pendingTap);
       pendingTap = null;
       restoreView(here);
-      scrollTo(0, history.state?.scroll ?? 0);
+      // A summary's mistake link opens the Digest scrolled to the Question it
+      // names, instead of the bookmark or the top — an id out of the address
+      // is untrusted, so a stale one just leaves the scroll where it was.
+      const named = here.screen === 'exam' && here.id ? document.getElementById(`q-${here.id}`) : null;
+      if (named) named.scrollIntoView({ block: 'start' });
+      else scrollTo(0, history.state?.scroll ?? 0);
       settled = scrollY;
       // The row that was pressed is gone with the old page; without this the
       // keyboard's place falls back to the top of the page and a screen reader
-      // says nothing. The new page's heading takes it.
+      // says nothing. The new page's heading — or the named Question — takes it.
       if (document.activeElement === document.body || !document.activeElement || map.contains(document.activeElement)) {
-        top.querySelector('h1')?.focus({ preventScroll: true });
+        (named ?? top.querySelector('h1'))?.focus({ preventScroll: true });
       }
     }
   }
@@ -645,6 +665,43 @@ export async function start() {
       makeRoom();
       if (newCard) {
         show(IDENTITY);
+        scrollTo(0, 0);
+        settled = scrollY;
+      }
+      top.querySelector('h1')?.focus({ preventScroll: true });
+    });
+  }
+
+  // ── The Exam: Cards, a Round of Questions ────────────────────────────────
+
+  /**
+   * The picker, a Card, or the summary, drawn: `examRound` is null until a
+   * length is picked. No body map here — a Question is text, not a Muscle —
+   * so unlike `syncGame` there is nothing to paint.
+   */
+  function syncExamCards(t) {
+    // Nothing to tally before a length is picked — an empty box would sit in
+    // the header for no reason.
+    el('tally').hidden = !examRound;
+    if (!examRound) {
+      top.innerHTML = `<h1 tabindex="-1">${t('exam.cards')}</h1>${examCardsPickerHtml(t, exam)}`;
+      list.innerHTML = '';
+      el('tally').textContent = '';
+      el('status').textContent = '';
+      return;
+    }
+    top.innerHTML = examRound.finished ? examSummaryHtml(t, examRound) : examCardTopHtml(t, examRound);
+    list.innerHTML = examRound.finished ? '' : examCardListHtml(t, state.lang, atlas, examRound);
+    el('tally').textContent = examRound.finished ? '' : roundTally(t, examRound);
+    el('status').textContent = !examRound.finished && examRound.revealed ? examCardAnnounce(t, examRound) : '';
+  }
+
+  /** Redraw Cards outside of `render()`: picking a length, reveal, grade. */
+  function redrawExamCards(fresh) {
+    draw(fresh ? 'forward' : 'fade', () => {
+      syncExamCards(translator(state.lang));
+      makeRoom();
+      if (fresh) {
         scrollTo(0, 0);
         settled = scrollY;
       }
@@ -870,6 +927,19 @@ export async function start() {
       round = quiz.round();
       redrawGame(true);
     },
+    'exam-round': (button) => {
+      const { topic, length } = button.dataset;
+      examRound = examQuiz.round({ topic, length: length ? Number(length) : undefined });
+      redrawExamCards(true);
+    },
+    'exam-reveal': () => {
+      examRound.reveal();
+      redrawExamCards(false);
+    },
+    'exam-grade': (button) => {
+      examRound.grade(button.dataset.knew === '1');
+      redrawExamCards(true);
+    },
     clear: clearSearch,
     lang() {
       state.lang = otherLang(state.lang);
@@ -885,11 +955,13 @@ export async function start() {
     if (!target.matches('a')) return ACTIONS[target.dataset.act](target);
     // Cmd/Ctrl/Shift-click on a row is the browser's own: a new tab or window.
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    // A Round in play: a Muscle in the revealed Card's list is not a way out of
-    // it — only the Round's own end, ✕, offers that. The summary's own links
-    // (a review of the Round just finished) are not a Round in play, so they open.
-    // preventDefault or the link's own href still moves the address bar's hash.
-    if (round && !round.finished && parseRoute(location.hash, atlas).screen === 'game') return event.preventDefault();
+    // A Round in play: a Muscle in the revealed Card's list, or the Exercise an
+    // exam Question names, is not a way out of it — only the Round's own end,
+    // ✕, offers that. The summary's own links (a review of the Round just
+    // finished) are not a Round in play, so they open.
+    const here = parseRoute(location.hash, atlas);
+    if (round && !round.finished && here.screen === 'game') return event.preventDefault();
+    if (examRound && !examRound.finished && here.screen === 'examCards') return event.preventDefault();
     // Leaving the search for a result lets the keyboard go. The query stays in
     // the step we leave, so Back returns to the same results.
     event.preventDefault();

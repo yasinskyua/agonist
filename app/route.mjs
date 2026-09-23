@@ -5,8 +5,10 @@
 export const HOME = '#/';
 export const GAME = '#/game';
 export const EXAM = '#/exam';
+export const EXAM_CARDS = '#/exam/cards';
 export const muscleHref = (id) => `#/muscle/${id}`;
 export const exerciseHref = (id) => `#/exercise/${id}`;
+export const examQuestionHref = (id) => `#/exam/q/${id}`;
 
 const SIDES = ['front', 'back'];
 
@@ -16,13 +18,21 @@ const SIDES = ['front', 'back'];
  * `undefined` for what is not theirs.
  */
 export function parseRoute(hash, atlas) {
-  const [first, second] = hash.replace(/^#\/?/, '').split('/');
+  const [first, second, third] = hash.replace(/^#\/?/, '').split('/');
   if (first === 'muscle' && atlas.muscle(second)) return { screen: 'muscle', id: second };
   if (first === 'exercise' && atlas.exercise(second)) return { screen: 'exercise', id: second };
   if (first === 'game') return { screen: 'game' };
-  // Cards and Test (tickets 06-07) will read `second` as a Format; today every
-  // #/exam/* address — a stale link, a typo, an unknown Topic — opens the Digest.
-  if (first === 'exam') return { screen: 'exam' };
+  if (first === 'exam') {
+    // Cards (ticket 06) and Test (ticket 07) are their own Formats — Partiya
+    // screens, not the Digest.
+    if (second === 'cards') return { screen: 'examCards' };
+    // A summary's mistake links land here, on the Digest, at the Question it
+    // names — `id` is untrusted (a stale link, a typo), so the Digest just
+    // does not scroll to it, rather than break.
+    if (second === 'q' && third) return { screen: 'exam', id: third };
+    // Every other #/exam/* address — a typo, an unknown Topic — opens the Digest.
+    return { screen: 'exam' };
+  }
   // Links from before the sheet: #/front/pectoralis_major. The bare #/front and
   // #/back — the map, one side at a time — are home now: it shows both sides.
   if (SIDES.includes(first) && atlas.muscle(second)) return { screen: 'muscle', id: second };

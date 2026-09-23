@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
-import { createQuiz, createRound, ROUND_SIZE } from './quiz.mjs';
+import { createExam } from './exam.mjs';
+import { createQuiz, createExamQuiz, createRound, ROUND_SIZE } from './quiz.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -17,6 +18,8 @@ const atlas = createAtlas({
   exercises: read('content/exercises.json').exercises,
   atlasMuscles: read('assets/atlas/muscle-ids.json').muscles,
 });
+
+const exam = createExam({ questions: read('content/exam.json').questions, atlas });
 
 /** mulberry32: a small seeded generator returning numbers in [0, 1) like Math.random. */
 const seeded = (seed) => () => {
@@ -147,4 +150,49 @@ test('the Round length is up to the caller, ten by default', () => {
   assert.equal(createRound(deck).total, ROUND_SIZE);
   assert.equal(createRound(deck, 5).total, 5);
   assert.equal(createRound(deck, 20).total, 20);
+});
+
+// ── The Exam Cards: a Round over a deck of Questions ────────────────────
+
+const examQuizWith = (seed) => createExamQuiz({ exam, random: seeded(seed) });
+
+test('«десять Питань» gives exactly ten, out of the whole Exam', () => {
+  for (const seed of SEEDS) {
+    const round = examQuizWith(seed).round({ length: 10 });
+    assert.equal(round.total, 10);
+    assert.equal(new Set(round.cards.map((q) => q.id)).size, 10, 'no repeats');
+  }
+});
+
+test('one Topic gives every Question it has, and only its own', () => {
+  for (const topic of exam.topics()) {
+    const round = examQuizWith(1).round({ topic: topic.id });
+    const want = exam.questions({ topic: topic.id });
+    assert.equal(round.total, want.length);
+    assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(want.map((q) => q.id)));
+  }
+});
+
+test('«всі 51» gives every Question the Exam has', () => {
+  const round = examQuizWith(1).round();
+  assert.equal(round.total, exam.questions().length);
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(exam.questions().map((q) => q.id)));
+});
+
+test('the same seed gives the same Exam Round, another seed another one', () => {
+  const ids = (round) => round.cards.map((q) => q.id);
+  assert.deepEqual(ids(examQuizWith(7).round()), ids(examQuizWith(7).round()));
+  assert.notDeepEqual(ids(examQuizWith(7).round()), ids(examQuizWith(8).round()));
+});
+
+test('an Exam Round plays the same way a Game Round does: reveal, grade, summary', () => {
+  const round = examQuizWith(2).round({ length: 5 });
+  for (let i = 0; i < 5; i++) {
+    round.reveal();
+    round.grade(i % 2 === 0);
+  }
+  const summary = round.summary();
+  assert.equal(summary.total, 5);
+  assert.equal(summary.mistakes.length, 2);
+  for (const m of summary.mistakes) assert.ok(exam.question(m.id));
 });

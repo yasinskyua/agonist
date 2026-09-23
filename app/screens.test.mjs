@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { createAtlas, ROLES } from './atlas.mjs';
 import { createExam } from './exam.mjs';
 import { translator } from './i18n.mjs';
-import { createQuiz } from './quiz.mjs';
+import { createQuiz, createExamQuiz } from './quiz.mjs';
 import {
   indexHtml,
   searchHtml,
@@ -25,6 +25,11 @@ import {
   roundTally,
   summaryHtml,
   examDigestHtml,
+  examCardsPickerHtml,
+  examCardTopHtml,
+  examCardListHtml,
+  examCardAnnounce,
+  examSummaryHtml,
 } from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
@@ -395,4 +400,102 @@ test('a Question linked to an Exercise opens it, named in the interface language
 
   const en = examDigestHtml(tEn, 'en', atlas, fromContent);
   assert.ok(en.includes(atlas.exercise(exerciseId).en));
+});
+
+test('every Question in the Digest is a target a summary link can scroll to', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+  for (const q of exam.questions()) assert.ok(html.includes(`id="q-${q.id}"`), q.id);
+});
+
+// ── The Exam: Cards (ADR-0008) ────────────────────────────────────────────
+
+const examQuiz = () => createExamQuiz({ exam });
+
+test('the length picker offers ten, every Topic, and all of them — the count never hardcoded', () => {
+  const html = examCardsPickerHtml(t, exam);
+  assert.ok(html.includes(t('exam.cards.ten')));
+  assert.ok(html.includes(String(exam.questions().length)));
+  for (const topic of exam.topics()) {
+    assert.ok(html.includes(topic.uk));
+    assert.ok(html.includes(`>${exam.questions({ topic: topic.id }).length}<`), topic.id);
+  }
+});
+
+test('a Card before reveal shows the Question and the way to reveal it, and nothing more — the costliest mistake this Format could make', () => {
+  const round = examQuiz().round({ length: 10 });
+  const top = examCardTopHtml(t, round);
+
+  assert.ok(top.includes(round.current.question));
+  assert.ok(top.includes(t('card.reveal')));
+  assert.ok(!top.includes(round.current.answer));
+  assert.ok(!top.includes(round.current.explanation));
+  assert.ok(!top.includes(t('card.yes')) && !top.includes(t('card.no')));
+  assert.equal(examCardListHtml(t, 'uk', atlas, round), '');
+});
+
+test('revealing a Card shows the answer, the explanation and both grades', () => {
+  const round = examQuiz().round({ length: 10 });
+  round.reveal();
+  const top = examCardTopHtml(t, round);
+
+  assert.ok(top.includes(round.current.answer));
+  assert.ok(top.includes(round.current.explanation));
+  assert.ok(top.includes(t('card.yes')) && top.includes(t('card.no')));
+});
+
+test('the «не з матеріалів клубу» badge appears on a revealed Card only when the Question is sourced outside the club', () => {
+  const outside = { ...exam.question('17'), source: 'outside' };
+  const club = { ...exam.question('18'), source: 'club' };
+  const fromExam = createExam({ questions: { outside, club }, atlas });
+  const round = createExamQuiz({ exam: fromExam, random: () => 0 }).round();
+
+  round.reveal();
+  const top = examCardTopHtml(t, round);
+  assert.equal(top.includes(t('exam.outside')), round.current.source === 'outside');
+});
+
+test('a revealed Card is announced by its answer, for a screen reader', () => {
+  const round = examQuiz().round({ length: 10 });
+  round.reveal();
+  assert.ok(examCardAnnounce(t, round).includes(round.current.answer));
+});
+
+test('a Card that names an Exercise links to it, once revealed', () => {
+  const exerciseId = atlas.exercises()[0].id;
+  const linked = { ...exam.question('17'), exercise: exerciseId };
+  const round = createExamQuiz({ exam: createExam({ questions: { linked }, atlas }), random: () => 0 }).round();
+
+  assert.equal(examCardListHtml(t, 'uk', atlas, round), '');
+  round.reveal();
+  assert.ok(hrefs(examCardListHtml(t, 'uk', atlas, round)).includes(`#/exercise/${exerciseId}`));
+});
+
+test('the summary gives the score and links every «Не знав» Question into the Digest', () => {
+  const round = examQuiz().round({ length: 10 });
+  for (let i = 0; i < 10; i++) {
+    round.reveal();
+    round.grade(i % 3 !== 0);
+  }
+  const { score, total, mistakes } = round.summary();
+  const html = examSummaryHtml(t, round);
+
+  assert.ok(html.includes(`>${score}</b>`));
+  assert.ok(html.includes(`/${total}`));
+  assert.ok(hrefs(html).includes('#/exam'));
+  for (const m of mistakes) {
+    assert.ok(hrefs(html).includes(`#/exam/q/${m.id}`));
+    assert.ok(html.includes(m.question));
+  }
+});
+
+test('a perfect Exam Round is praised, and has nothing to review', () => {
+  const round = examQuiz().round({ length: 10 });
+  for (let i = 0; i < 10; i++) {
+    round.reveal();
+    round.grade(true);
+  }
+  const html = examSummaryHtml(t, round);
+
+  assert.ok(html.includes(t('round.perfect')));
+  assert.ok(!html.includes(t('round.review')));
 });

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
-import { parseRoute, muscleHref, exerciseHref, HOME, GAME, EXAM } from './route.mjs';
+import { parseRoute, muscleHref, exerciseHref, HOME, GAME, EXAM, EXAM_CARDS } from './route.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -44,9 +44,18 @@ test('no address, the home address, the game address and the exam address', () =
   assert.deepEqual(parseRoute(EXAM, atlas), { screen: 'exam' });
 });
 
+test('the Cards Format has its own screen, under the exam address', () => {
+  assert.deepEqual(parseRoute(EXAM_CARDS, atlas), { screen: 'examCards' });
+  assert.deepEqual(parseRoute('#/exam/cards', atlas), { screen: 'examCards' });
+});
+
+test('a summary link opens the Digest at the Question it names', () => {
+  assert.deepEqual(parseRoute('#/exam/q/17', atlas), { screen: 'exam', id: '17' });
+});
+
 test('an unknown step under the exam address still opens the Digest, not a broken page', () => {
-  assert.deepEqual(parseRoute('#/exam/cards', atlas), { screen: 'exam' });
   assert.deepEqual(parseRoute('#/exam/no-such-topic', atlas), { screen: 'exam' });
+  assert.deepEqual(parseRoute('#/exam/q', atlas), { screen: 'exam' });
 });
 
 test('an id that is not in the content shows home instead of throwing', () => {

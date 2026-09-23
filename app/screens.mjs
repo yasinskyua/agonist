@@ -8,7 +8,7 @@
 import { ROLES } from './atlas.mjs';
 import { otherLang, exerciseCount } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { muscleHref, exerciseHref } from './route.mjs';
+import { muscleHref, exerciseHref, examQuestionHref, EXAM } from './route.mjs';
 
 const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>` : '');
 
@@ -230,7 +230,7 @@ function questionHtml(t, lang, atlas, q) {
   const exercise = q.exercise
     ? `<p class="exam-exercise"><a href="${exerciseHref(q.exercise)}">${t('exam.exercise')}: ${atlas.exercise(q.exercise)[lang]}</a></p>`
     : '';
-  return `<li class="exam-q">
+  return `<li class="exam-q" id="q-${q.id}" tabindex="-1">
     <p class="exam-question">${q.question}</p>
     <p class="exam-answer"><b>${q.answer}</b></p>
     ${outside}
@@ -254,6 +254,80 @@ export function examDigestHtml(t, lang, atlas, exam) {
       ),
     )
     .join('');
+}
+
+// ── The Exam: Cards, a Round of Questions (ADR-0008) ────────────────────
+
+/** Before a Round: the Student picks how many Questions play — ten, one Topic, or all. */
+export function examCardsPickerHtml(t, exam) {
+  const all = exam.questions();
+  const topics = exam
+    .topics()
+    .map(
+      (topic) => `<li><button class="row" type="button" data-act="exam-round" data-topic="${topic.id}">
+        <span class="row-name"><b>${topic.uk}</b></span>
+        <small class="aside">${all.filter((q) => q.topic === topic.id).length}</small>
+      </button></li>`,
+    );
+  return `
+    <p class="lead">${t('exam.cards.hint')}</p>
+    <div class="card-go">
+      <button class="main" type="button" data-act="exam-round" data-length="10">${t('exam.cards.ten')}</button>
+      <button class="main" type="button" data-act="exam-round">${t('exam.cards.all').replace('{n}', all.length)}</button>
+    </div>
+    <h2 class="h">${t('exam.cards.topic')}</h2>
+    <ul class="list">${topics.join('')}</ul>`;
+}
+
+/**
+ * A Card: the Question, then either the way to reveal its answer or, once
+ * revealed, the answer, its explanation and the two grades — the same
+ * content the Digest shows already open, read here one Question at a time.
+ */
+export function examCardTopHtml(t, round) {
+  const q = round.current;
+  const action = round.revealed
+    ? `<p class="exam-answer"><b>${q.answer}</b></p>
+       ${q.source === 'outside' ? `<p class="exam-outside">${t('exam.outside')}</p>` : ''}
+       <p class="exam-explanation">${q.explanation}</p>
+       ${q.caveat ? `<p class="exam-caveat">${q.caveat}</p>` : ''}
+       <div class="card-go">
+         <button class="ghost" type="button" data-act="exam-grade" data-knew="0">${t('card.no')}</button>
+         <button class="main" type="button" data-act="exam-grade" data-knew="1">${t('card.yes')}</button>
+       </div>`
+    : `<button class="main" type="button" data-act="exam-reveal">${t('card.reveal')}</button>`;
+  return `<h1 tabindex="-1">${q.question}</h1>${action}`;
+}
+
+/** Once revealed: the Exercise the Question names, if any — nothing invites leaving the Round before then. */
+export function examCardListHtml(t, lang, atlas, round) {
+  if (!round.revealed || !round.current.exercise) return '';
+  const { exercise } = round.current;
+  return `<p class="exam-exercise"><a href="${exerciseHref(exercise)}">${t('exam.exercise')}: ${atlas.exercise(exercise)[lang]}</a></p>`;
+}
+
+/** What a screen reader is told once a Card is revealed: heard, not only seen. */
+export function examCardAnnounce(t, round) {
+  return `${t('exam.answer')}: ${round.current.answer}.`;
+}
+
+/** The Round's end: the score, and the Questions graded «Не знав», linked into the Digest. */
+export function examSummaryHtml(t, round) {
+  const { score, total, mistakes } = round.summary();
+  return `
+    <h1 tabindex="-1">${t('round.done')}</h1>
+    <p class="score"><span class="sr">${t('round.score')}: </span><b>${score}</b>/${total}</p>
+    ${score === total ? `<p class="lead">${t('round.perfect')}</p>` : ''}
+    <div class="card-go"><a class="ghost" href="${EXAM}">${t('exam.digest')}</a></div>
+    ${
+      mistakes.length
+        ? `<h2 class="h">${t('round.review')}</h2>${list(
+            mistakes.map(
+              (m) => `<li><a class="row" href="${examQuestionHref(m.id)}"><span class="row-name"><b>${m.question}</b></span></a></li>`,
+            ),
+          )}`
+        : ''
+    }`;
 }
 
 // ── The map's colours ────────────────────────────────────────────────────

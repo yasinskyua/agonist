@@ -11,6 +11,11 @@ const PATHS = {
   down: 'M6 9l6 6 6-6',
   full: 'M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+  // Tab bar: named after the tab's data-tab value, so icon(tab.dataset.tab)
+  // resolves directly without a separate name-mapping table.
+  reference: 'M11 4H5v16h6M13 4h6v16h-6',
+  game: 'M9 3h10v14H9zM5 7h10v14H5z',
+  exam: 'M12 5L20 9L12 13L4 9ZM20 9V14',
 };
 
 export const icon = (name) =>

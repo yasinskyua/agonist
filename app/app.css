@@ -612,8 +612,10 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .tab {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.15rem;
   min-height: var(--tap);
   padding: 0.5rem 0;
   color: var(--dim);
@@ -624,6 +626,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 }
 
 .tab[aria-current='page'] { color: var(--ink); }
+.tab[aria-current='page'] .i { fill: currentColor; }
 
 /* Nothing to switch to mid-Round, and nothing left to switch to under the
    full-screen map — hidden rather than fought over for the thumb's reach.

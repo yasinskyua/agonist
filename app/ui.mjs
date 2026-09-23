@@ -554,7 +554,8 @@ export async function start() {
           ? 'exam'
           : 'reference';
     for (const tab of tabEls) {
-      tab.textContent = t(`tabs.${tab.dataset.tab}`);
+      const label = t(`tabs.${tab.dataset.tab}`);
+      tab.innerHTML = `${icon(tab.dataset.tab)}<span>${label}</span>`;
       if (tab.dataset.tab === current) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     }

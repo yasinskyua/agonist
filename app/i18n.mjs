@@ -122,6 +122,15 @@ const STRINGS = {
   // «{n}» is how many Questions are weak right now — never hardcoded.
   'exam.weak.repeat': { uk: 'Повторити слабкі ({n})', en: 'Repeat weak ({n})' },
   'exam.weak.empty': { uk: 'Поки нема чого повторювати.', en: 'Nothing to repeat yet.' },
+
+  // The first-launch welcome (ticket 04): home's own state until dismissed.
+  // The three doors reuse the tab names (tabs.*) above; these are the lines
+  // under each — reference/game/exam matches the tab it repeats.
+  'welcome.about': { uk: "Довідник м'язів і вправ для персонального тренера.", en: 'A reference of muscles and exercises for personal trainers.' },
+  'welcome.reference': { uk: "Мапа тіла, м'язи й вправи", en: 'Body map, muscles and exercises' },
+  'welcome.game': { uk: 'Партія карток: назви Агоніста вголос', en: 'A round of cards: say the Agonist out loud' },
+  'welcome.exam': { uk: 'Конспект і партії до Іспиту Школи Тренерів', en: 'Digest and rounds for the Trainer School Exam' },
+  'welcome.start': { uk: 'Почати', en: 'Start' },
 };
 
 export const KEYS = Object.keys(STRINGS);

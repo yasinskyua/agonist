@@ -383,6 +383,10 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 #page[data-screen='examCards'] #dock, #page[data-screen='examCards'] #mapbar,
 #page[data-screen='examTest'] #dock, #page[data-screen='examTest'] #mapbar { display: none; }
 
+/* The welcome (ticket 04) is home's own state, not its own screen — the map
+   is hidden by a flag of its own rather than a #page[data-screen] value. */
+#page[data-welcome] #dock, #page[data-welcome] #mapbar { display: none; }
+
 #map {
   position: relative;
   height: 100%;
@@ -594,6 +598,12 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   color: var(--ink);
 }
 
+/* ── The welcome: first launch's own state of home (ticket 04) ─────────── */
+
+.welcome-doors { margin-top: 1rem; }
+.door { align-items: center; gap: 0.6rem; }
+.door .i { flex: none; }
+
 /* ── The bottom tab bar: Довідник, Гра, Іспит (ADR-0008) ──────────────── */
 
 #tabs {
@@ -643,6 +653,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   padding: 0 1.2rem;
   border-radius: 4px;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .main { border: 0; background: var(--ink); color: var(--bg); }

@@ -12,6 +12,7 @@ import { createExam } from './exam.mjs';
 import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
+import { loadWelcomeSeen, saveWelcomeSeen } from './welcome.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
 import {
@@ -36,6 +37,7 @@ import {
   examTestPickerHtml,
   examTestTopHtml,
   examTestAnnounce,
+  welcomeHtml,
 } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
@@ -142,6 +144,16 @@ export async function start() {
   // address, so a link to a Muscle survives being sent to another Trainer.
   const storage = () => localStorage;
   const state = { lang: loadLang(storage), query: '' };
+  // First launch's own state of home (ticket 04) — not a route, so it lives
+  // here rather than in `state`, which `go()` bookmarks per step.
+  let welcomeSeen = loadWelcomeSeen(storage);
+  /** Dismiss the welcome, once — «Почати», a door or the tab bar leading to
+   *  the same places all mean the same thing (see `render()` and `go()`). */
+  function dismissWelcome() {
+    if (welcomeSeen) return;
+    saveWelcomeSeen(storage);
+    welcomeSeen = true;
+  }
 
   // Each step keeps where it was read to; Back puts it there again. The browser
   // would do it after the fact, and after our own redraw, so it is told not to.
@@ -465,7 +477,22 @@ export async function start() {
    * map's own step (the screen it opened on already holds the bookmark), so Back
    * returns to that screen and not to a map that is gone.
    */
+  // Home, whether a cold load left the address empty or already settled on
+  // HOME — both mean the welcome (ticket 04), still up, is not a step away.
+  const atHome = (hash) => hash === '' || hash === HOME;
+
   function go(hash) {
+    if (atHome(hash) && atHome(location.hash)) {
+      // Home, already open: the welcome (ticket 04) dismissed in place — the
+      // tab bar's own Довідник leads here too, same as the welcome's door —
+      // adding no history step, cold load's empty address included.
+      if (!welcomeSeen) {
+        dismissWelcome();
+        return draw('fade', render);
+      }
+      if (full) history.back();
+      return;
+    }
     if (hash === location.hash) {
       // The page we are on: there is nothing to open, only the map to close.
       if (full) history.back();
@@ -474,6 +501,9 @@ export async function start() {
     // The screen we are leaving, so the step we open can say where it came
     // from — the top bar's «‹ <name>» once we leave it in turn.
     const { screen, id } = parseRoute(location.hash, atlas);
+    // Leaving home dismisses the welcome (ticket 04), however it is left —
+    // its own doors, or the tab bar leading to the same places.
+    if (screen === 'home') dismissWelcome();
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
     if (full) history.replaceState({ depth: depth(), from: { screen, id } }, '', hash);
     else history.pushState({ depth: depth() + 1, from: { screen, id } }, '', hash);
@@ -518,14 +548,19 @@ export async function start() {
     // or a screen reader reads the page out twice.
     // The expanded map is a step, but not a screen: it does not make one deeper.
     const steps = depth() - (history.state?.full ? 1 : 0);
-    const signature = `${location.hash}|${state.lang}|${steps}`;
+    const here = parseRoute(location.hash, atlas);
+    // The welcome (ticket 04) is home's own state, not a route of its own, so
+    // its dismissal has to move the signature just as a real step would — or
+    // a tap that only flips `welcomeSeen` would leave `render()` thinking
+    // nothing changed and skip the redraw.
+    const showWelcome = here.screen === 'home' && !welcomeSeen;
+    const signature = `${location.hash}|${state.lang}|${steps}|${showWelcome}`;
     if (signature === drawn) return;
     drawn = signature;
 
     // The list is about to be replaced, and the row that was lit with it.
     unlight();
 
-    const here = parseRoute(location.hash, atlas);
     const key = `${here.screen}/${here.id ?? ''}`;
     const fresh = key !== shown;
     shown = key;
@@ -571,6 +606,9 @@ export async function start() {
     }
 
     el('page').dataset.screen = here.screen;
+    // The welcome has no map to show: hidden the same way the Digest hides it.
+    if (showWelcome) el('page').dataset.welcome = '1';
+    else delete el('page').dataset.welcome;
 
     if (here.screen === 'game') {
       // A fresh step into the Game is a fresh Round — reloading it starts over too.
@@ -595,6 +633,11 @@ export async function start() {
       if (here.screen === 'exam') {
         top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1><div class="card-go"><a class="main" href="${EXAM_CARDS}">${t('exam.cards')}</a><a class="main" href="${EXAM_TEST}">${t('exam.test')}</a></div>`;
         list.innerHTML = examDigestHtml(t, state.lang, atlas, exam);
+        el('paint').textContent = '';
+        map.classList.remove('painted');
+      } else if (showWelcome) {
+        top.innerHTML = welcomeHtml(t);
+        list.innerHTML = '';
         el('paint').textContent = '';
         map.classList.remove('painted');
       } else {

@@ -11,6 +11,7 @@ import { createExam } from './exam.mjs';
 import { translator } from './i18n.mjs';
 import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import {
+  welcomeHtml,
   indexHtml,
   searchHtml,
   pageTopHtml,
@@ -50,6 +51,29 @@ const t = translator('uk');
 const tEn = translator('en');
 const hrefs = (html) => [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
 const withExercises = (id) => atlas.muscleExercises(id).length > 0;
+
+// ── Welcome ──────────────────────────────────────────────────────────────
+
+test('the welcome names the app, says what it is, and offers three doors to the right address, in order', () => {
+  const html = welcomeHtml(t);
+  assert.ok(html.includes(`>${t('app.title')}<`));
+  assert.ok(html.includes(t('welcome.about')));
+  // In document order: Довідник, Гра, Іспит, then «Почати» — each door's own
+  // href, not just that the three addresses appear somewhere in the markup.
+  assert.deepEqual(hrefs(html), ['#/', '#/game', '#/exam', '#/']);
+  for (const tab of ['reference', 'game', 'exam']) {
+    assert.ok(html.includes(t(`tabs.${tab}`)), tab);
+    assert.ok(html.includes(t(`welcome.${tab}`)), tab);
+  }
+  assert.ok(html.includes(`>${t('welcome.start')}<`));
+});
+
+test('the welcome is drawn in whichever language it is asked for', () => {
+  const html = welcomeHtml(tEn);
+  assert.ok(html.includes(tEn('welcome.about')));
+  assert.ok(html.includes(tEn('tabs.game')));
+  assert.ok(!html.includes(t('welcome.about')));
+});
 
 // ── Home ─────────────────────────────────────────────────────────────────
 

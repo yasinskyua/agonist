@@ -8,7 +8,7 @@
 import { ROLES } from './atlas.mjs';
 import { otherLang, exerciseCount } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { muscleHref, exerciseHref, examQuestionHref, EXAM, isRound } from './route.mjs';
+import { muscleHref, exerciseHref, examQuestionHref, HOME, GAME, EXAM, isRound } from './route.mjs';
 
 const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>` : '');
 
@@ -18,10 +18,11 @@ const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>`
  * row lights on the map while it is read (`lights`: `data-muscle` or
  * `data-exercise`; see `litRules`). The Note that explains the Role sits beside
  * the link, not in it: read as the link's name it would be a paragraph.
+ * `icon` and `cls` are for the welcome's doors (ticket 04), unused elsewhere.
  */
-function row({ href, lights, name, sub = '', aside = '', role = '', note = '' }) {
-  return `<li><a class="row" href="${href}" ${lights}${role ? ` data-role="${role}"` : ''}>
-    <span class="row-name"><b>${name}</b>${sub}</span>${aside ? `<small class="aside">${role ? '<i></i>' : ''}${aside}</small>` : ''}</a>${note ? `<p class="why">${note}</p>` : ''}</li>`;
+function row({ href, lights, name, sub = '', aside = '', role = '', note = '', icon: rowIcon = '', cls = '' }) {
+  return `<li><a class="row${cls ? ` ${cls}` : ''}" href="${href}" ${lights}${role ? ` data-role="${role}"` : ''}>
+    ${rowIcon}<span class="row-name"><b>${name}</b>${sub}</span>${aside ? `<small class="aside">${role ? '<i></i>' : ''}${aside}</small>` : ''}</a>${note ? `<p class="why">${note}</p>` : ''}</li>`;
 }
 
 const muscleRow = (t, lang, atlas, m, { sub = '', role = '', note = '' } = {}) => {
@@ -49,6 +50,31 @@ const topicRowHtml = (act, topic, count) => `<li><button class="row" type="butto
     <span class="row-name"><b>${topic.uk}</b></span>
     <small class="aside">${count}</small>
   </button></li>`;
+
+// ── Welcome: first launch's own state of home (ticket 04) ──────────────────
+
+/** A door: the tab's own icon and name (ticket 03), with a line about what is behind it — an ordinary link to that section. */
+const doorHtml = (t, tab, href) =>
+  row({ href, lights: '', icon: icon(tab), cls: 'door', name: t(`tabs.${tab}`), sub: `<small class="sub">${t(`welcome.${tab}`)}</small>` });
+
+/**
+ * First launch: the app's name, one sentence on what it is, and the three
+ * ways in. Every one of these — the doors, «Почати» — is a plain link to
+ * where it says it goes; `ui.mjs` dismisses the welcome wherever a Trainer
+ * leaves home from, doors and the tab bar alike (see `go()`), so nothing
+ * here needs an action of its own.
+ */
+export function welcomeHtml(t) {
+  return `
+    <h1 tabindex="-1">${t('app.title')}</h1>
+    <p class="lead">${t('welcome.about')}</p>
+    <ul class="list welcome-doors">
+      ${doorHtml(t, 'reference', HOME)}
+      ${doorHtml(t, 'game', GAME)}
+      ${doorHtml(t, 'exam', EXAM)}
+    </ul>
+    <a class="main" href="${HOME}">${t('welcome.start')}</a>`;
+}
 
 // ── Home ─────────────────────────────────────────────────────────────────
 

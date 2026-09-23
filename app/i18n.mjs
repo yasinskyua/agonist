@@ -100,6 +100,9 @@ const STRINGS = {
   'task.note': { uk: 'Пояснення', en: 'Explanation' },
   // The disclosure under the wording: what an Agonist is (ticket 05).
   'card.agonist.question': { uk: 'Хто такий Агоніст?', en: 'Who is the Agonist?' },
+  'task.confirm': { uk: 'Відповісти', en: 'Answer' },
+  'task.pickhint': { uk: "Тапни М'яз на мапі", en: 'Tap a Muscle on the map' },
+  'task.picked': { uk: 'Обрано', en: 'Selected' },
   'task.dontknow': { uk: 'Не знаю', en: "I don't know" },
   'task.next': { uk: 'Далі', en: 'Next' },
   'task.right': { uk: 'Правильно', en: 'Correct' },

@@ -254,6 +254,11 @@ function roleAnswerHtml(t, atlas, task, v) {
     ${note ? `<p class="lead"><b>${t('task.note')}:</b> ${note}</p>` : ''}`;
 }
 
+/** The line under a Task's wording, while it waits for a tap: the hint, or the Muscle picked so far. */
+export function pickLineHtml(t, atlas, picked) {
+  return picked ? `${t('task.picked')}: <b>${atlas.muscle(picked).uk}</b>` : t('task.pickhint');
+}
+
 /**
  * A Task: its wording — the action and its subject, the Exercise (Хто Агоніст,
  * Яка Роль) or the Muscle (Знайди М'яз) — and, at the foot (in the thumb zone,
@@ -272,8 +277,12 @@ export function taskTopHtml(t, lang, atlas, round) {
   const heading = `<h1 tabindex="-1"><small class="task-do">${t(`task.${kind}`)}</small>${subject}</h1>${asked}`;
   if (!round.revealed) {
     const who = kind === 'agonist' ? `\n      <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>` : '';
-    const go = kind === 'role' ? roleButtons(t) : `<div class="card-go task-go"><button class="ghost" type="button" data-act="dont-know">${t('task.dontknow')}</button></div>`;
-    return `${heading}${who}\n      ${go}`;
+    const go = kind === 'role'
+      ? roleButtons(t)
+      : `<div class="card-go task-go"><button class="ghost" type="button" data-act="dont-know">${t('task.dontknow')}</button><button class="main" type="button" data-act="confirm-pick" disabled>${t('task.confirm')}</button></div>`;
+    // Where a tap goes to first: the Muscle it picked, named, before the Trainer answers with it.
+    const pick = kind === 'role' ? '' : `\n      <p class="lead pick-line" aria-live="polite">${pickLineHtml(t, atlas, null)}</p>`;
+    return `${heading}${who}${pick}\n      ${go}`;
   }
   const v = verdictOf(atlas, round);
   const tapped = v.tapped && !v.correct
@@ -325,9 +334,12 @@ export function taskAnnounce(t, atlas, round) {
  * wrong Muscle the Trainer tapped in `--c-miss` — colours no Role has, so
  * neither is mistaken for one.
  */
-export function taskPaintRules(atlas, round) {
+export function taskPaintRules(atlas, round, picked = null) {
   const { kind, exercise, muscle } = round.current;
-  if (!round.revealed) return kind === 'role' ? `#map [data-muscle~="${muscle}"][fill] { fill: var(--c-ask); }` : '';
+  if (!round.revealed) {
+    const asked = kind === 'role' ? muscle : picked;
+    return asked ? `#map [data-muscle~="${asked}"][fill] { fill: var(--c-ask); }` : '';
+  }
   const { tapped, correct } = verdictOf(atlas, round);
   const base = kind === 'find' ? `#map [data-muscle~="${muscle}"][fill] { fill: var(--c-right); }` : paintRules(atlas, { screen: 'exercise', id: exercise });
   const miss = tapped && !correct ? `\n#map [data-muscle~="${tapped}"][fill] { fill: var(--c-miss); }` : '';

@@ -31,10 +31,6 @@
 
   /* The finger minimum. ui.mjs reads it to size the tap zones on the map. */
   --tap: 44px;
-  /* The Game's tap zone (ADR-0010; ui.mjs reads it): a Muscle narrower or lower
-     than this is caught by a tap this close. The knob to turn if small Muscles
-     are hard to hit with one hand. */
-  --game-zone: 44px;
   /* A wrong Muscle the Trainer tapped in the Game: no Role has this colour. */
   --c-miss: var(--ink);
   /* The right Muscle in Знайди М'яз: green, which no Role is. */
@@ -914,3 +910,5 @@ html[data-dir='back']::view-transition-new(root) { animation-name: in-left; }
   .layer.glide, .fig path[data-muscle].live, .row.lit { transition: none; }
   .pick, .all { animation: none !important; }
 }
+
+button:disabled { opacity: 0.4; }

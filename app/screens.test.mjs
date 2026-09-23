@@ -26,6 +26,7 @@ import {
   taskListHtml,
   taskAnnounce,
   taskPaintRules,
+  pickLineHtml,
   roundTally,
   summaryHtml,
   examDigestHtml,
@@ -462,6 +463,23 @@ test('a Task waiting for its tap says what to do and names the Exercise, and off
   assert.ok(!top.includes('data-act="next"'));
   assert.ok(!top.includes('class="verdict"'));
   assert.equal(taskListHtml(t, 'uk', atlas, round), '');
+});
+
+test('a Task waiting for a tap offers «Відповісти», off until a Muscle is picked, beside «Не знаю»', () => {
+  const top = taskTopHtml(t, 'uk', atlas, roundOf());
+
+  assert.ok(top.includes(`data-act="confirm-pick" disabled>${t('task.confirm')}`));
+  assert.ok(top.includes(t('task.pickhint')), 'the hint says what to do first');
+});
+
+test('a picked Muscle is named on the line, and painted in the colour no Role has, until the answer', () => {
+  const round = roundOf();
+  const id = otherOf(round.current).muscle.id;
+
+  assert.ok(pickLineHtml(t, atlas, id).includes(atlas.muscle(id).uk));
+  assert.equal(pickLineHtml(t, atlas, null), t('task.pickhint'));
+  assert.equal(taskPaintRules(atlas, round, id), `#map [data-muscle~="${id}"][fill] { fill: var(--c-ask); }`);
+  assert.equal(taskPaintRules(atlas, round), '', 'nothing picked, nothing painted');
 });
 
 test('the wording follows the interface language: the Exercise in it, the Agonist\'s name always Ukrainian', () => {

@@ -100,6 +100,21 @@ test("a Test's own answer, not the Card's, is what a wrong variant is checked ag
   );
 });
 
+test('an empty wrong variant is an error, not a blank option on screen', () => {
+  const error = contentError({ x: { ...valid, test: { wrong: ['', 'b', 'c'] } } });
+  assert.match(error.message, /"x": порожній неправильний варіант Тесту/);
+});
+
+test('two identical wrong variants is an error, not a duplicate option on screen', () => {
+  const error = contentError({ x: { ...valid, test: { wrong: ['a', 'a', 'c'] } } });
+  assert.match(error.message, /"x": неправильні варіанти Тесту повторюються/);
+});
+
+test('a null Test block is an error, not a crash dereferencing it', () => {
+  const error = contentError({ x: { ...valid, test: null } });
+  assert.match(error.message, /"x": блок Тесту не може бути порожнім/);
+});
+
 test('all problems are reported in one pass, not one at a time', () => {
   const error = contentError({ a: { ...valid, answer: '' }, b: { ...valid, answer: '' } });
   assert.match(error.message, /"a"/);

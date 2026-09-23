@@ -45,7 +45,9 @@ function check({ questions, atlas }) {
       problems.push(`Питання "${id}" посилається на неіснуючу Вправу "${q.exercise}"`);
     }
 
-    if (q.test !== undefined) {
+    if (q.test === null) {
+      problems.push(`Питання "${id}": блок Тесту не може бути порожнім`);
+    } else if (q.test !== undefined) {
       const answer = q.test.answer ?? q.answer;
       if (q.test.question !== undefined && !q.test.question.trim()) {
         problems.push(`Питання "${id}": порожнє формулювання Тесту`);
@@ -57,6 +59,10 @@ function check({ questions, atlas }) {
         problems.push(`Питання "${id}": блок Тесту має мати рівно три неправильні варіанти`);
       } else if (q.test.wrong.some((w) => w === answer)) {
         problems.push(`Питання "${id}": неправильний варіант Тесту збігається з правильною відповіддю`);
+      } else if (q.test.wrong.some((w) => !w?.trim())) {
+        problems.push(`Питання "${id}": порожній неправильний варіант Тесту`);
+      } else if (new Set(q.test.wrong).size !== q.test.wrong.length) {
+        problems.push(`Питання "${id}": неправильні варіанти Тесту повторюються`);
       }
     }
   }
@@ -83,6 +89,6 @@ export function createExam({ questions, atlas }) {
     question: (id) => (Object.hasOwn(questions, id) ? questionView(id) : undefined),
 
     /** Every Question with a Test block — the deck the Format Тест can build a Round from. */
-    testable: () => all().filter((q) => q.test !== undefined),
+    testable: () => all().filter((q) => q.test != null),
   };
 }

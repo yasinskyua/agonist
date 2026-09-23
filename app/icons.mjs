@@ -4,7 +4,6 @@
 
 const PATHS = {
   back: 'M15 18l-6-6 6-6',
-  home: 'M4 11l8-7 8 7M6 9.5V20h12V9.5',
   close: 'M18 6L6 18M6 6l12 12',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',

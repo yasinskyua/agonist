@@ -13,9 +13,10 @@ import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
 import { icon } from './icons.mjs';
-import { parseRoute, muscleHref, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
+import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
 import {
   pageTopHtml,
+  navStart,
   pageListHtml,
   paintRules,
   litRules,
@@ -470,9 +471,12 @@ export async function start() {
       if (full) history.back();
       return;
     }
+    // The screen we are leaving, so the step we open can say where it came
+    // from — the top bar's «‹ <name>» once we leave it in turn.
+    const { screen, id } = parseRoute(location.hash, atlas);
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
-    if (full) history.replaceState({ depth: depth() }, '', hash);
-    else history.pushState({ depth: depth() + 1 }, '', hash);
+    if (full) history.replaceState({ depth: depth(), from: { screen, id } }, '', hash);
+    else history.pushState({ depth: depth() + 1, from: { screen, id } }, '', hash);
     draw('forward', render);
   }
 
@@ -533,10 +537,7 @@ export async function start() {
     if (fresh) state.query = here.screen === 'home' ? (history.state?.query ?? '') : '';
 
     document.documentElement.lang = state.lang;
-    el('brand').setAttribute('aria-label', `Agonist: ${t('home')}`);
-    el('play').textContent = t('flash.enter');
-    el('play').hidden = here.screen === 'game' || here.screen === 'examCards' || here.screen === 'examTest';
-    el('tally').hidden = here.screen !== 'game' && here.screen !== 'examCards' && here.screen !== 'examTest';
+    el('tally').hidden = !isRound(here.screen);
     el('lang').textContent = t('lang.other');
     all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
@@ -607,17 +608,18 @@ export async function start() {
       }
     }
 
-    // Back is always where the thumb is, except on home, which has none. A
-    // Round has only the small way out. Two or more steps in on any other
-    // screen, a shortcut home stands beside Back.
-    el('bottom').innerHTML =
-      here.screen === 'game' || here.screen === 'examCards' || here.screen === 'examTest'
-        ? `<button class="ic" type="button" data-act="home" aria-label="${t('close')}">${icon('close')}</button>`
-        : here.screen === 'home'
-          ? ''
-          : `<button class="ic" type="button" data-act="back" aria-label="${t('back')}">${icon('back')}</button>${
-              steps >= 2 ? `<button class="ic" type="button" data-act="home" aria-label="${t('home')}">${icon('home')}</button>` : ''
-            }`;
+    // The top bar's left slot (ADR-0009): Back, Home or Закрити — what a
+    // screen says comes from screens.mjs, same as the rest of the page.
+    const nav = navStart(t, state.lang, atlas, here, history.state?.from);
+    const navstart = el('navstart');
+    navstart.hidden = Boolean(nav.hidden);
+    if (!navstart.hidden) {
+      if (nav.html) navstart.innerHTML = nav.html;
+      else navstart.textContent = nav.text;
+      if (nav.ariaLabel) navstart.setAttribute('aria-label', nav.ariaLabel);
+      else navstart.removeAttribute('aria-label');
+      navstart.dataset.act = nav.act;
+    }
 
     foldForSearch(here.screen);
 
@@ -930,7 +932,9 @@ export async function start() {
    */
   function openFull() {
     history.replaceState({ ...history.state, scroll: scrollY, query: state.query }, '');
-    history.pushState({ depth: depth() + 1, full: true }, '');
+    // Carries `from` forward too, or a reload while the map is full-screen
+    // would lose it and the top bar's Back would say «Довідник» once closed.
+    history.pushState({ ...history.state, depth: depth() + 1, full: true }, '');
     draw('fade', () => setFull(true));
   }
 
@@ -991,7 +995,6 @@ export async function start() {
     fit: () => show(IDENTITY, true),
     'zoom-in': () => zoomBy(STEP),
     'zoom-out': () => zoomBy(1 / STEP),
-    play: () => go(GAME),
     reveal: () => {
       round.reveal();
       redrawGame(false);

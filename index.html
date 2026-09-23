@@ -59,10 +59,9 @@
   <body>
     <div id="app">
       <header id="bar">
-        <button id="brand" type="button" data-act="home">Agonist</button>
+        <button id="navstart" type="button"></button>
         <span class="bar-end">
           <span id="tally" class="tally" hidden></span>
-          <button id="play" type="button" data-act="play"></button>
           <button id="lang" type="button" data-act="lang"></button>
         </span>
       </header>
@@ -113,8 +112,6 @@
         </div>
         <div id="list"></div>
       </main>
-
-      <div id="bottom"></div>
 
       <!-- The three sections, reachable from any screen; ui.mjs sets each
            address once from route.mjs and the label in the current language. -->

@@ -8,7 +8,7 @@
 import { ROLES } from './atlas.mjs';
 import { otherLang, exerciseCount } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { muscleHref, exerciseHref, examQuestionHref, EXAM } from './route.mjs';
+import { muscleHref, exerciseHref, examQuestionHref, EXAM, isRound } from './route.mjs';
 
 const latin = (m) => (m.la ? `<small class="sub" translate="no">${m.la}</small>` : '');
 
@@ -128,6 +128,36 @@ export function pageTopHtml(t, lang, atlas, here) {
         .join('')}</ul>`;
   }
   return searchField(t);
+}
+
+/** A screen's own name, for the top bar's «‹ <name>» once it is the one just left. */
+export function screenName(t, lang, atlas, at) {
+  if (at.screen === 'muscle') return atlas.muscle(at.id)?.uk ?? '';
+  if (at.screen === 'exercise') return atlas.exercise(at.id)?.[lang] ?? '';
+  if (at.screen === 'exam') return t('tabs.exam');
+  if (at.screen === 'game') return t('tabs.game');
+  if (at.screen === 'examCards') return t('exam.cards');
+  if (at.screen === 'examTest') return t('exam.test');
+  return 'Agonist';
+}
+
+/**
+ * The top bar's left slot (ADR-0009): the app's name on home, nothing on the
+ * Digest (a tab's own top screen, same as home), «Закрити» in a Партія, and
+ * everywhere else «‹ <name of the screen we came from>» — «Довідник» when
+ * there is none (a link opened cold). `from` is the `{screen, id}` a step's
+ * own history entry was pushed with, or undefined.
+ */
+export function navStart(t, lang, atlas, here, from) {
+  if (here.screen === 'home') return { text: screenName(t, lang, atlas, here), act: 'home' };
+  if (isRound(here.screen)) return { text: t('close'), act: 'home' };
+  if (here.screen === 'exam') return { hidden: true };
+  const name = from ? screenName(t, lang, atlas, from) : t('tabs.reference');
+  return {
+    html: `${icon('back')}<span class="navlabel">${name}</span>`,
+    ariaLabel: `${t('back')}: ${name}`,
+    act: 'back',
+  };
 }
 
 /** The list under the map. On home: the index, or what the search found. */

@@ -14,6 +14,8 @@ import {
   indexHtml,
   searchHtml,
   pageTopHtml,
+  screenName,
+  navStart,
   pageListHtml,
   paintRules,
   litRules,
@@ -143,6 +145,62 @@ test('a Muscle without a Latin name has no empty line for it', () => {
   const top = pageTopHtml(t, 'uk', atlas, { screen: 'muscle', id: bare.id });
 
   assert.ok(!top.includes('class="sub"'));
+});
+
+// ── The top bar's «‹ <name>» (ADR-0009, ticket 02) ─────────────────────────
+
+test('screenName names a Muscle in Ukrainian and an Exercise in the interface language', () => {
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'muscle', id: 'pectoralis_major' }), atlas.muscle('pectoralis_major').uk);
+  assert.equal(screenName(t, 'uk', atlas, ROLL), atlas.exercise(ROLL.id).uk);
+  assert.equal(screenName(tEn, 'en', atlas, ROLL), atlas.exercise(ROLL.id).en);
+});
+
+test('screenName names the Digest, the Game and the Exam Formats by their own tab or picker word', () => {
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'exam' }), t('tabs.exam'));
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'game' }), t('tabs.game'));
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'examCards' }), t('exam.cards'));
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'examTest' }), t('exam.test'));
+});
+
+test('screenName names home «Agonist», the same in both languages', () => {
+  assert.equal(screenName(t, 'uk', atlas, { screen: 'home' }), 'Agonist');
+  assert.equal(screenName(tEn, 'en', atlas, { screen: 'home' }), 'Agonist');
+});
+
+test('navStart on home: the app\'s own name, no back', () => {
+  const nav = navStart(t, 'uk', atlas, { screen: 'home' }, undefined);
+  assert.equal(nav.text, 'Agonist');
+  assert.equal(nav.act, 'home');
+  assert.ok(!nav.hidden && !nav.html);
+});
+
+test('navStart on the Digest: hidden — no Back, no brand', () => {
+  assert.equal(navStart(t, 'uk', atlas, { screen: 'exam' }, undefined).hidden, true);
+});
+
+test('navStart in a Партія (Game, Cards, Test): «Закрити», not Back', () => {
+  for (const screen of ['game', 'examCards', 'examTest']) {
+    const nav = navStart(t, 'uk', atlas, { screen }, { screen: 'home' });
+    assert.equal(nav.text, t('close'));
+    assert.equal(nav.act, 'home');
+  }
+});
+
+test('navStart on a Muscle or Exercise page: «‹ <name we came from>», read together for a screen reader', () => {
+  const from = { screen: 'muscle', id: 'pectoralis_major' };
+  const nav = navStart(t, 'uk', atlas, { screen: 'exercise', id: 'ab-wheel-rollout' }, from);
+  const name = atlas.muscle('pectoralis_major').uk;
+
+  assert.ok(nav.html.includes(name));
+  assert.equal(nav.ariaLabel, `${t('back')}: ${name}`);
+  assert.equal(nav.act, 'back');
+});
+
+test('navStart with no screen to come from (a link opened cold): «Довідник», to home', () => {
+  const nav = navStart(t, 'uk', atlas, { screen: 'muscle', id: 'pectoralis_major' }, undefined);
+
+  assert.ok(nav.html.includes(t('tabs.reference')));
+  assert.equal(nav.act, 'back');
 });
 
 // ── Exercise page ────────────────────────────────────────────────────────

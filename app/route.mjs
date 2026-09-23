@@ -13,6 +13,9 @@ export const examQuestionHref = (id) => `#/exam/q/${id}`;
 
 const SIDES = ['front', 'back'];
 
+/** Game, Cards or Test: a Round is in play, or its length is still being picked. */
+export const isRound = (screen) => screen === 'game' || screen === 'examCards' || screen === 'examTest';
+
 /**
  * The screen an address asks for. An id out of a URL is untrusted — a stale
  * link must show home, not throw — and `atlas.muscle` / `atlas.exercise` answer

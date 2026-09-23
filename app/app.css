@@ -29,13 +29,10 @@
   --tap: 44px;
   /* The bottom tab bar's own height, safe area excluded (added where it's used). */
   --tabsh: 3.9rem;
-  /* The round Back/Home button (#bottom, .ic): its own height, the gap it
-     keeps above the tab bar, and the room a screen with it needs at its foot
-     — the gap again, on top of the button, so nothing reading ends up under
-     it (safe area added where each is used). */
-  --backh: 3rem;
-  --backgap: 0.75rem;
-  --backclear: calc(var(--tabsh) + var(--backgap) * 2 + var(--backh));
+  /* The sticky top bar's own rendered height, safe area excluded — what the
+     pinned map and the Digest's Topic headers below it need to clear. Its
+     content is --tap tall, plus the 1px border-bottom #bar is drawn with. */
+  --barh: calc(var(--tap) + 1px);
   /* The page's side gutters: 1.25rem, plus the notch or rounded corner when
      the phone lies on its side (both insets are 0 upright). */
   --gl: calc(1.25rem + env(safe-area-inset-left));
@@ -107,11 +104,16 @@ button { cursor: pointer; }
 /* ── Header ────────────────────────────────────────────────────────────── */
 
 #bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   min-height: var(--tap);
   padding-top: env(safe-area-inset-top);
+  background: var(--bg);
+  border-bottom: 1px solid var(--ink);
   /* Screens slide past it; the header itself holds still (see Motion below). */
   view-transition-name: head;
 }
@@ -123,10 +125,22 @@ button { cursor: pointer; }
   background: none;
 }
 
-#brand { padding-right: 1rem; font-weight: 800; }
-#play { padding: 0 0.6rem; font-weight: 700; }
+#navstart {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* The previous screen's name, or the Trainer's a long one: truncated, not wrapped. */
+#navstart .navlabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 #lang { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
-.bar-end { display: flex; align-items: center; gap: 0.3rem; }
+.bar-end { flex: none; margin-left: auto; display: flex; align-items: center; gap: 0.3rem; }
 
 /* The Round's «N/10 · знав K», where «Знав / Не знав» sits between Cards. */
 .tally { padding: 0 0.4rem; font: 600 0.85rem var(--mono); color: var(--dim); white-space: nowrap; }
@@ -317,7 +331,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
    the same slot #dock/#mapbar use, which the Digest already leaves empty. */
 #page[data-screen='exam'] .h {
   position: sticky;
-  top: env(safe-area-inset-top);
+  top: calc(var(--barh) + env(safe-area-inset-top));
   z-index: 5;
   background: var(--bg);
 }
@@ -337,12 +351,12 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 
 /* ── The page and its pinned map ───────────────────────────────────────── */
 
-#page { padding-bottom: calc(var(--backclear) + env(safe-area-inset-bottom)); }
+#page { padding-bottom: calc(var(--tabsh) + env(safe-area-inset-bottom)); }
 
 #dock {
   position: sticky;
   z-index: 5;
-  top: env(safe-area-inset-top);
+  top: calc(var(--barh) + env(safe-area-inset-top));
   height: 38svh;
   margin: 0.6rem calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));
   border-bottom: 1px solid var(--ink);
@@ -356,8 +370,9 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 #page[data-screen='home'] { padding-bottom: calc(2rem + var(--tabsh) + env(safe-area-inset-bottom)); }
 /* The tab bar is gone in the Game and in Cards (both hide it for the whole
    Round, summary included — CONTEXT.md counts the score at the end as part
-   of the Round), so neither needs the tab bar's height added back in. */
-#page[data-screen='game'], #page[data-screen='examCards'], #page[data-screen='examTest'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+   of the Round), and neither has any other fixed chrome at its foot either:
+   a little room under the last row is all they need. */
+#page[data-screen='game'], #page[data-screen='examCards'], #page[data-screen='examTest'] { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
 /* The Round's summary has nothing to paint: the map goes with the Card. */
 #page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
 /* The Digest has no use for the body map: it is text to read, not a picture to tap. */
@@ -380,7 +395,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 #mapbar {
   position: sticky;
   z-index: 5;
-  top: env(safe-area-inset-top);
+  top: calc(var(--barh) + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -478,8 +493,6 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   gap: 0.4rem;
 }
 
-.zoom .ic { width: var(--tap); height: var(--tap); }
-
 /* On the page: hide and expand, bottom left, opposite the zoom. */
 .tools {
   position: absolute;
@@ -490,14 +503,11 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   gap: 0.4rem;
 }
 
-.tools .ic { width: var(--tap); height: var(--tap); }
-
 /* ── The map on the whole screen ───────────────────────────────────────── */
 
 /* One side, on the full height. Only the map is on top: the page stays where
    it was, under it, and cannot be scrolled from here. */
 .full-map { overflow: hidden; }
-.full-map #bottom { display: none; }
 .full-map #map {
   position: fixed;
   inset: 0;
@@ -570,27 +580,13 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   font-weight: 700;
 }
 
-/* ── Back, where the thumb is ──────────────────────────────────────────── */
-
-#bottom {
-  position: fixed;
-  z-index: 6;
-  left: max(1rem, env(safe-area-inset-left));
-  /* Above the tab bar, except in the Game, where the tab bar is gone and Back/✕
-     goes back down where the thumb is. */
-  bottom: calc(var(--tabsh) + var(--backgap) + env(safe-area-inset-bottom));
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* #bottom is a sibling of #page, not its descendant — `~` reaches across. */
-#page[data-screen='game'] ~ #bottom, #page[data-screen='examCards'] ~ #bottom, #page[data-screen='examTest'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+/* ── Icon buttons on the map: hide/expand it, its zoom ─────────────────── */
 
 .ic {
   display: grid;
   place-items: center;
-  width: var(--backh);
-  height: var(--backh);
+  width: var(--tap);
+  height: var(--tap);
   padding: 0;
   border: 1px solid var(--ink);
   border-radius: 4px;

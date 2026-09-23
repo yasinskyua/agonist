@@ -17,6 +17,9 @@ const PATHS = {
   reference: 'M11 4H5v16h6M13 4h6v16h-6',
   game: 'M9 3h10v14H9zM5 7h10v14H5z',
   exam: 'M12 5L20 9L12 13L4 9ZM20 9V14',
+  // The theme switch shows the theme it goes to.
+  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
 };
 
 export const icon = (name, cls = '') =>

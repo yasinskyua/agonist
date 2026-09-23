@@ -3,11 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
+    <!-- The theme is on the page before it is painted: light, unless the
+         Trainer pinned dark (app/theme.mjs, key «theme»). Kept to a few lines
+         on purpose — a module would load too late and flash. -->
+    <script>
+      var dark = false;
+      try {
+        dark = localStorage.getItem('theme') === 'dark';
+      } catch (e) {}
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    </script>
     <!-- The browser bar takes the app's own background (--bg in app.css, one
-         value per theme), so the bar and the page read as one surface. -->
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+         value per theme), so the bar and the page read as one surface;
+         app/theme.mjs sets it for a pinned theme. -->
+    <meta name="theme-color" content="#ffffff" />
     <!-- SVG for tabs (sharp at 16-32 px); a 180 px PNG for the iOS/Android home
          screen, which do not take SVG. Relative paths: the app lives under a
          subpath on Pages. -->
@@ -42,6 +52,7 @@
     <link rel="modulepreload" href="app/route.mjs" />
     <link rel="modulepreload" href="app/screens.mjs" />
     <link rel="modulepreload" href="app/spy.mjs" />
+    <link rel="modulepreload" href="app/theme.mjs" />
     <link rel="modulepreload" href="app/zoom.mjs" />
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
@@ -75,6 +86,7 @@
         <button id="navstart" type="button"></button>
         <span class="bar-end">
           <span id="tally" class="tally" hidden></span>
+          <button id="theme" type="button" data-act="theme"></button>
           <button id="lang" type="button" data-act="lang"></button>
         </span>
       </header>
@@ -135,6 +147,9 @@
 
       <!-- The three sections, reachable from any screen; ui.mjs sets each
            address once from route.mjs and the label in the current language. -->
+      <!-- Up to the top after a long scroll (ui.mjs shows it, app.css places it above the tabs). -->
+      <button id="totop" type="button" data-act="top" hidden></button>
+
       <nav id="tabs">
         <a class="tab" data-tab="reference"></a>
         <a class="tab" data-tab="game"></a>

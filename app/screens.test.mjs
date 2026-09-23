@@ -830,3 +830,8 @@ test('the Digest header offers Cards and Test as buttons, each with a line sayin
     assert.notEqual(tr('exam.cards.does'), 'exam.cards.does', `${lang}: label exists`);
   }
 });
+
+test('the Digest numbers every Question with its number in the set', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+  for (const q of exam.questions()) assert.ok(html.includes(`<span class="exam-no">${q.id}.</span> ${q.question}`), q.id);
+});

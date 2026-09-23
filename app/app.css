@@ -1,5 +1,5 @@
-/* A laconic reference book: white, black, one red (at night: the phone's dark
-   setting swaps every token below; no switch of our own). No shadows, no gradients,
+/* A laconic reference book: white, black, one red (at night: <html data-theme>
+   swaps every token below — the app opens light and the Trainer's switch pins dark). No shadows, no gradients,
    nothing that moves for its own sake. The map is pinned under the top of the
    page while the list scrolls beneath it; the way back is at the bottom, where
    the thumb is. */
@@ -53,30 +53,30 @@
 /* Night: every colour again, nothing else changes. Text keeps 4.5:1 (app/theme.test.mjs
    checks it); the figure stays a body — muscles lighter than skin, an outline that
    reads — and the five Roles stay apart. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #f2f2f2;
-    --dim: #a0a0a0;
-    --rule: #2c2c2c;
-    --bg: #121212;
-    --red: #ff5a4f;
-    --body: #d0d0d0;
-    --hint: #a0a0a0;
-    --edge: rgb(255 255 255 / 0.3);
+html[data-theme='dark'] { color-scheme: dark; }
 
-    --c-muscle: #8a4f45;
-    --c-rest: #2c2c2c;
-    --c-tendon: #3d3a36;
-    --c-skin: #1c1c1c;
-    --c-detail: #666;
-    --c-outline: #8a8a8a;
+:root[data-theme='dark'] {
+  --ink: #f2f2f2;
+  --dim: #a0a0a0;
+  --rule: #2c2c2c;
+  --bg: #121212;
+  --red: #ff5a4f;
+  --body: #d0d0d0;
+  --hint: #a0a0a0;
+  --edge: rgb(255 255 255 / 0.3);
 
-    --r-agonist: #ff5a4f;
-    --r-synergist: #6f96ff;
-    --r-dynamic_stabilizer: #b8860b;
-    --r-stabilizer: #f2c200;
-    --r-antagonist_stabilizer: #f3de8a;
-  }
+  --c-muscle: #8a4f45;
+  --c-rest: #2c2c2c;
+  --c-tendon: #3d3a36;
+  --c-skin: #1c1c1c;
+  --c-detail: #666;
+  --c-outline: #8a8a8a;
+
+  --r-agonist: #ff5a4f;
+  --r-synergist: #6f96ff;
+  --r-dynamic_stabilizer: #b8860b;
+  --r-stabilizer: #f2c200;
+  --r-antagonist_stabilizer: #f3de8a;
 }
 
 [data-role='agonist'] { --role: var(--r-agonist); }
@@ -90,7 +90,7 @@
 /* Only double-tap zoom goes: it fired on quick taps of buttons. A pinch on the
    page still zooms it, for anyone who needs larger text. */
 html {
-  color-scheme: light dark; /* the browser's own scrollbars and controls follow */
+  color-scheme: light; /* the browser's own scrollbars and controls follow the theme */
   touch-action: manipulation;
   /* Text size follows the phone's setting: 17px on the default one. Everything
      else is in rem. Safari's Dynamic Type only reaches a font that names the
@@ -176,7 +176,7 @@ button { cursor: pointer; }
 /* The previous screen's name, or the Trainer's a long one: truncated, not wrapped. */
 #navstart .navlabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-#lang { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
+#lang, #theme { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
 .bar-end { flex: none; margin-left: auto; display: flex; align-items: center; gap: 0.3rem; }
 
 /* The Round's «N з 10 · знав K», spelled out in the app's own font, not --mono. */
@@ -370,6 +370,8 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 .exam-q { padding: 0.9rem 0; border-top: 1px solid var(--rule); }
 .exam-q:first-child { padding-top: 0.2rem; border-top: 0; }
 .exam-question { margin: 0; font-weight: 600; }
+/* The Question's number in the set (the source's own, so «Питання 22» means one thing everywhere). */
+.exam-no { color: var(--dim); font-variant-numeric: tabular-nums; }
 .exam-answer { margin: 0.4rem 0 0; font-size: 1.05rem; }
 
 .exam-outside {
@@ -760,6 +762,25 @@ html:not(.full-map) .zoom .lbl {
 
 .tab[aria-current='page'] { color: var(--ink); }
 .tab[aria-current='page'] .i { fill: currentColor; }
+
+/* Back to the top, above the tab bar, shown after a long scroll. */
+#totop {
+  position: fixed;
+  z-index: 6;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(var(--tabsh) + env(safe-area-inset-bottom) + 0.75rem);
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink);
+}
+#totop[hidden] { display: none; }
+#page[data-screen='game'] ~ #totop, #page[data-screen='examCards'] ~ #totop, #page[data-screen='examTest'] ~ #totop, .full-map #totop { display: none; }
 
 /* Nothing to switch to mid-Round, and nothing left to switch to under the
    full-screen map — hidden rather than fought over for the thumb's reach.

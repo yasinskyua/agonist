@@ -313,7 +313,7 @@ function questionHtml(t, lang, atlas, q) {
     ? `<p class="exam-exercise"><a href="${exerciseHref(q.exercise)}">${t('exam.exercise')}: ${atlas.exercise(q.exercise)[lang]}</a></p>`
     : '';
   return `<li class="exam-q" id="q-${q.id}" tabindex="-1">
-    <p class="exam-question">${q.question}</p>
+    <p class="exam-question"><span class="exam-no">${q.id}.</span> ${q.question}</p>
     <p class="exam-answer"><b>${q.answer}</b></p>
     ${outside}
     <p class="exam-explanation">${q.explanation}</p>

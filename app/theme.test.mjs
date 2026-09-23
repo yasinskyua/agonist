@@ -2,12 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+import { THEMES, BAR, loadTheme, saveTheme, applyTheme, otherTheme } from './theme.mjs';
+
 const css = readFileSync(new URL('./app.css', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 const tokens = (block) => Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{3,6})\b/gi)].map((m) => [m[1], m[2]]));
 const light = tokens(css.match(/:root \{([^]*?)\n\}/)[1]);
-const dark = { ...light, ...tokens(css.match(/prefers-color-scheme: dark\) \{\s*:root \{([^]*?)\n  \}/)[1]) };
+const dark = { ...light, ...tokens(css.match(/:root\[data-theme='dark'\] \{([^]*?)\n\}/)[1]) };
 
 const rgb = (hex) => {
   const h = hex.length === 4 ? [...hex.slice(1)].map((c) => c + c).join('') : hex.slice(1);
@@ -53,18 +55,55 @@ const name = 'dark';
 }
 
 test('every token has a dark value', () => {
-  const override = tokens(css.match(/prefers-color-scheme: dark\) \{\s*:root \{([^]*?)\n  \}/)[1]);
+  const override = tokens(css.match(/:root\[data-theme='dark'\] \{([^]*?)\n\}/)[1]);
   for (const k of Object.keys(light)) assert.ok(k in override, `--${k} has no dark value`);
 });
 
 test('the browser bar is coloured for both themes, matching --bg', () => {
-  assert.match(html, new RegExp(`theme-color" content="${dark.bg}" media="\\(prefers-color-scheme: dark\\)`));
-  assert.match(html, /theme-color" content="#ffffff" media="\(prefers-color-scheme: light\)/);
+  assert.equal(BAR.dark, dark.bg);
+  assert.equal(BAR.light, '#ffffff');
+  assert.match(html, /theme-color" content="#ffffff"/);
   assert.equal(light.bg, '#fff');
 });
 
 test('no colour is written outside the tokens', () => {
-  const rules = css.replace(/:root \{[^]*?\n\}/, '').replace(/@media \(prefers-color-scheme: dark\) \{[^]*?\n\}\n/, '');
+  const rules = css.replace(/:root \{[^]*?\n\}/, '').replace(/:root\[data-theme='dark'\] \{[^]*?\n\}\n/, '');
   const literals = rules.replace(/\/\*[^]*?\*\//g, '').replace(/\[(fill|stroke)='[^']*'\]/g, '').match(/#[0-9a-f]{3,8}\b|rgba?\(|(?<![-\w])(white|black)(?![-\w])/gi);
   assert.equal(literals, null);
+});
+
+const memory = (initial) => {
+  const map = new Map(initial);
+  return { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v) };
+};
+const blocked = () => {
+  throw new Error('blocked');
+};
+
+test('a saved theme comes back; junk and blocked storage mean «not pinned» (light)', () => {
+  const store = memory();
+  assert.equal(loadTheme(() => store), null);
+  saveTheme(() => store, 'dark');
+  assert.equal(loadTheme(() => store), 'dark');
+  assert.equal(loadTheme(() => memory([['theme', 'sepia']])), null);
+  assert.equal(loadTheme(blocked), null);
+  assert.doesNotThrow(() => saveTheme(blocked, 'dark'));
+});
+
+test('there are two themes and each has an other', () => {
+  assert.deepEqual(THEMES.map(otherTheme), ['dark', 'light']);
+});
+
+test('applyTheme sets the page theme and the bar colour', () => {
+  const meta = { content: '#ffffff' };
+  const doc = { documentElement: { dataset: {} }, querySelector: () => meta };
+  applyTheme(doc, 'dark');
+  assert.equal(doc.documentElement.dataset.theme, 'dark');
+  assert.equal(meta.content, '#121212');
+});
+
+test('the inline script in index.html reads the same key as theme.mjs and defaults to light', () => {
+  assert.match(html, /var dark = false;/);
+  assert.match(html, /localStorage\.getItem\('theme'\) === 'dark'/);
+  assert.doesNotMatch(html, /prefers-color-scheme/);
 });

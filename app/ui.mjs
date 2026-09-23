@@ -14,6 +14,7 @@ import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
 import { loadWelcomeSeen, saveWelcomeSeen } from './welcome.mjs';
 import { loadInstallHintClosed, saveInstallHintClosed, installHintWanted } from './install.mjs';
+import { loadTheme, saveTheme, applyTheme, otherTheme } from './theme.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, isRound, HOME, GAME, EXAM } from './route.mjs';
 import {
@@ -142,10 +143,19 @@ export async function start() {
   /** Whether the pointer is a finger. A mouse is hurt by help it did not need. */
   const coarsePointer = matchMedia('(pointer: coarse)');
 
-  // Only the language is remembered between launches. The screen lives in the
+  // Only the language and the theme are remembered between launches. The screen lives in the
   // address, so a link to a Muscle survives being sent to another Trainer.
   const storage = () => localStorage;
   const state = { lang: loadLang(storage), query: '' };
+  // Light until the Trainer taps the switch; then it is theirs.
+  let theme = loadTheme(storage) ?? 'light';
+  applyTheme(document, theme);
+  /** The switch names, and shows, the theme it goes to. */
+  function paintThemeButton(t) {
+    const next = otherTheme(theme);
+    el('theme').innerHTML = icon(next === 'dark' ? 'moon' : 'sun');
+    el('theme').setAttribute('aria-label', t(`theme.${next}`));
+  }
   // First launch's own state of home (ticket 04) — not a route, so it lives
   // here rather than in `state`, which `go()` bookmarks per step.
   let welcomeSeen = loadWelcomeSeen(storage);
@@ -579,6 +589,8 @@ export async function start() {
 
     document.documentElement.lang = state.lang;
     el('tally').hidden = !isRound(here.screen);
+    paintThemeButton(t);
+    el('totop').setAttribute('aria-label', t('top.label'));
     el('lang').textContent = t('lang.other');
     all.textContent = t('spy.all');
     // The spoken name starts with what is printed on it, so «tap EN» works.
@@ -896,6 +908,17 @@ export async function start() {
     light(rows[pickRow(rows.map((r) => r.getBoundingClientRect()), dock.getBoundingClientRect().bottom)] ?? null);
   }
 
+  // Back to the top: up after a page and a half of scrolling, not before.
+  const totop = el('totop');
+  totop.innerHTML = icon('up');
+  addEventListener(
+    'scroll',
+    () => {
+      totop.hidden = scrollY < innerHeight * 1.5;
+    },
+    { passive: true },
+  );
+
   addEventListener(
     'scroll',
     () => {
@@ -1142,6 +1165,17 @@ export async function start() {
     },
     clear: clearSearch,
     cancel: cancelSearch,
+    top() {
+      scrollTo({ top: 0, behavior: calm.matches ? 'auto' : 'smooth' });
+      // The button goes hidden on the way up: hand focus to the page's heading.
+      top.querySelector('h1')?.focus({ preventScroll: true });
+    },
+    theme() {
+      theme = otherTheme(theme);
+      saveTheme(storage, theme);
+      applyTheme(document, theme);
+      paintThemeButton(translator(state.lang));
+    },
     lang() {
       state.lang = otherLang(state.lang);
       saveLang(storage, state.lang);

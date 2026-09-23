@@ -250,9 +250,9 @@ export function cardAnnounce(t, atlas, round) {
   return `${t('role.agonist')}: ${atlas.muscle(round.current.answer).uk}.`;
 }
 
-/** The header's «N/10 · знав K», read off the Round in play. */
+/** The header's «N з 10 · знав K», read off the Round in play. */
 export function roundTally(t, round) {
-  return `${round.index + 1}/${round.total} · ${t('round.known')} ${round.score}`;
+  return `${round.index + 1} ${t('round.of')} ${round.total} · ${t('round.known')} ${round.score}`;
 }
 
 /** The Round's end: the score, and the Exercises graded «Не знав», linked for a review. */

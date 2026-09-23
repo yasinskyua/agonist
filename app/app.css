@@ -33,6 +33,9 @@
      pinned map and the Digest's Topic headers below it need to clear. Its
      content is --tap tall, plus the 1px border-bottom #bar is drawn with. */
   --barh: calc(var(--tap) + 1px);
+  /* Cards/Test (ticket 11): their action bar's own height, docked at the foot
+     in the thumb zone in place of the map neither has — safe area excluded. */
+  --examgoh: calc(var(--tap) + 1.2rem + 1px);
   /* The page's side gutters: 1.25rem, plus the notch or rounded corner when
      the phone lies on its side (both insets are 0 upright). */
   --gl: calc(1.25rem + env(safe-area-inset-left));
@@ -142,8 +145,8 @@ button { cursor: pointer; }
 #lang { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
 .bar-end { flex: none; margin-left: auto; display: flex; align-items: center; gap: 0.3rem; }
 
-/* The Round's «N/10 · знав K», where «Знав / Не знав» sits between Cards. */
-.tally { padding: 0 0.4rem; font: 600 0.85rem var(--mono); color: var(--dim); white-space: nowrap; }
+/* The Round's «N з 10 · знав K», spelled out in the app's own font, not --mono. */
+.tally { padding: 0 0.4rem; font-size: 0.85rem; color: var(--dim); white-space: nowrap; }
 
 /* ── Words ─────────────────────────────────────────────────────────────── */
 
@@ -373,6 +376,12 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
    of the Round), and neither has any other fixed chrome at its foot either:
    a little room under the last row is all they need. */
 #page[data-screen='game'], #page[data-screen='examCards'], #page[data-screen='examTest'] { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+/* Cards/Test dock their action buttons at the bottom while a Round is in
+   play (data-exam="card"; see #top > .main / .card-go below) — the page
+   needs extra room at its foot to clear that bar. */
+#page[data-screen='examCards'][data-exam='card'], #page[data-screen='examTest'][data-exam='card'] {
+  padding-bottom: calc(var(--examgoh) + 1rem + env(safe-area-inset-bottom));
+}
 /* The Round's summary has nothing to paint: the map goes with the Card. */
 #page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
 /* The Digest has no use for the body map: it is text to read, not a picture to tap. */
@@ -665,6 +674,24 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
 /* The two grades, or the summary's «На мапу» / «Ще партія» — side by side. */
 .card-go { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
 .card-go > * { flex: 1; }
+
+/* Ticket 11: Cards/Test have no map, so their action buttons («Показати
+   відповідь», «Знав»/«Не знав», «Далі») dock at the foot in the thumb zone
+   instead of sitting right under the question — same fixed-bar recipe #tabs
+   uses. The Game keeps them in normal flow: its map fills the middle. */
+#page[data-screen='examCards'][data-exam='card'] #top > .main,
+#page[data-screen='examCards'][data-exam='card'] #top > .card-go,
+#page[data-screen='examTest'][data-exam='card'] #top > .card-go {
+  position: fixed;
+  z-index: 6;
+  inset-inline: 0;
+  bottom: 0;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0.6rem var(--gr) calc(0.6rem + env(safe-area-inset-bottom)) var(--gl);
+  border-top: 1px solid var(--ink);
+  background: var(--bg);
+}
 
 .score { margin: 0.6rem 0 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; }
 .score b { font-variant-numeric: tabular-nums; }

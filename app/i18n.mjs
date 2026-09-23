@@ -69,6 +69,8 @@ const STRINGS = {
   'card.no': { uk: 'Не знав', en: "Didn't know it" },
   'card.yes': { uk: 'Знав', en: 'Knew it' },
   'round.known': { uk: 'знав', en: 'knew' },
+  // «1 з 10 · знав 0»: the tally spelled out in words, not «1/10».
+  'round.of': { uk: 'з', en: 'of' },
   'round.done': { uk: 'Підсумок', en: 'Results' },
   'round.score': { uk: 'Рахунок', en: 'Score' },
   'round.perfect': { uk: 'Без жодної помилки', en: 'Not a single mistake' },

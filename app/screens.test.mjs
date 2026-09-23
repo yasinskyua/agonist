@@ -388,14 +388,14 @@ test('a revealed Card is announced by its Agonist, for a screen reader', () => {
   assert.ok(cardAnnounce(t, atlas, round).includes(atlas.muscle(round.current.answer).uk));
 });
 
-test('the tally names the Card in play, out of ten, and the score so far', () => {
+test('the tally names the Card in play, out of ten, and the score so far — spelled out in words', () => {
   const round = quiz().round();
-  assert.ok(roundTally(t, round).startsWith('1/10'));
+  assert.ok(roundTally(t, round).startsWith('1 з 10'));
 
   round.reveal();
   round.grade(true);
   const tally = roundTally(t, round);
-  assert.ok(tally.startsWith('2/10'));
+  assert.ok(tally.startsWith('2 з 10'));
   assert.ok(tally.endsWith('1'));
 });
 

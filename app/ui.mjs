@@ -611,6 +611,7 @@ export async function start() {
     else delete el('page').dataset.welcome;
 
     if (here.screen === 'game') {
+      delete el('page').dataset.exam;
       // A fresh step into the Game is a fresh Round — reloading it starts over too.
       if (fresh) round = quiz.round();
       syncGame(t);
@@ -627,6 +628,7 @@ export async function start() {
       syncExamTest(t);
     } else {
       delete el('page').dataset.game;
+      delete el('page').dataset.exam;
       // A revealed Card's announcement does not outlive the Round.
       el('status').textContent = '';
 
@@ -747,6 +749,7 @@ export async function start() {
     // the header for no reason.
     el('tally').hidden = !examRound;
     if (!examRound) {
+      el('page').dataset.exam = 'picker';
       const weak = loadWeak(storage);
       const weakCount = exam.questions().filter((q) => weak.has(q.id)).length;
       top.innerHTML = `<h1 tabindex="-1">${t('exam.cards')}</h1>${examCardsPickerHtml(t, exam, weakCount)}`;
@@ -755,6 +758,9 @@ export async function start() {
       el('status').textContent = '';
       return;
     }
+    // «card» (ticket 11): a Round in play docks its reveal/grade buttons at
+    // the bottom, in the thumb zone — see #page[data-exam='card'] in app.css.
+    el('page').dataset.exam = examRound.finished ? 'done' : 'card';
     top.innerHTML = examRound.finished ? examSummaryHtml(t, examRound) : examCardTopHtml(t, examRound);
     list.innerHTML = examRound.finished ? '' : examCardListHtml(t, state.lang, atlas, examRound);
     el('tally').textContent = examRound.finished ? '' : roundTally(t, examRound);
@@ -780,6 +786,7 @@ export async function start() {
   function syncExamTest(t) {
     el('tally').hidden = !examTestRound;
     if (!examTestRound) {
+      el('page').dataset.exam = 'picker';
       const weak = loadWeak(storage);
       const weakCount = exam.testable().filter((q) => weak.has(q.id)).length;
       top.innerHTML = `<h1 tabindex="-1">${t('exam.test')}</h1>${examTestPickerHtml(t, exam, weakCount)}`;
@@ -788,6 +795,9 @@ export async function start() {
       el('status').textContent = '';
       return;
     }
+    // «card» (ticket 11): a Round in play docks its «Далі» button at the
+    // bottom, in the thumb zone — see #page[data-exam='card'] in app.css.
+    el('page').dataset.exam = examTestRound.finished ? 'done' : 'card';
     top.innerHTML = examTestRound.finished ? examSummaryHtml(t, examTestRound) : examTestTopHtml(t, examTestRound);
     list.innerHTML = '';
     el('tally').textContent = examTestRound.finished ? '' : roundTally(t, examTestRound);

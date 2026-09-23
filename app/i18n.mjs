@@ -27,6 +27,7 @@ const STRINGS = {
   'lang.switch': { uk: 'Switch to English', en: 'Перемкнути на українську' },
   'back': { uk: 'Назад', en: 'Back' },
   'close': { uk: 'Закрити', en: 'Close' },
+  'search.cancel': { uk: 'Скасувати', en: 'Cancel' },
   'search.clear': { uk: 'Очистити пошук', en: 'Clear search' },
   'search.count': { uk: 'Знайдено', en: 'Found' },
 

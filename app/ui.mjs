@@ -994,11 +994,18 @@ export async function start() {
 
   // ── Search ──────────────────────────────────────────────────────────────
 
-  /** The clear button shows once there is something to clear. */
-  const syncSearch = () => {
+  /** ✕ shows once there is something to clear; «Скасувати» while the field has the keyboard or a query. */
+  const syncSearch = (focused = document.activeElement?.id === 'q') => {
     const clear = top.querySelector('.clear');
     if (clear) clear.hidden = !state.query;
+    const cancel = top.querySelector('.cancel');
+    if (cancel) cancel.hidden = !(state.query || focused);
   };
+  top.addEventListener('focusin', (event) => event.target.id === 'q' && syncSearch(true));
+  top.addEventListener('focusout', (event) => event.target.id === 'q' && syncSearch(false));
+  // A tap on «Скасувати» must not take focus from the field first: the button
+  // would vanish (no query, no focus) before its click arrives.
+  top.addEventListener('pointerdown', (event) => event.target.closest('.cancel') && event.preventDefault());
 
   /** Only the list redraws while typing: redrawing the page would drop the caret on every letter. */
   function search(query) {
@@ -1025,6 +1032,13 @@ export async function start() {
   function clearSearch() {
     el('q').value = '';
     el('q').focus();
+    search('');
+  }
+
+  /** «Скасувати»: the query goes, the keyboard goes, and the map the search folded comes back (the person's own hiding stays). */
+  function cancelSearch() {
+    el('q').value = '';
+    el('q').blur();
     search('');
   }
 
@@ -1102,6 +1116,7 @@ export async function start() {
       redrawExamTest(true);
     },
     clear: clearSearch,
+    cancel: cancelSearch,
     lang() {
       state.lang = otherLang(state.lang);
       saveLang(storage, state.lang);

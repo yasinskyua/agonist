@@ -131,9 +131,13 @@ function searchField(t) {
   return `
     <h1 class="sr" tabindex="-1">${t('app.title')}</h1>
     <div class="find">
-      <input id="q" name="q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
-        placeholder="${t('search.placeholder')}" aria-label="${t('search.label')}" />
-      <button class="clear" type="button" data-act="clear" aria-label="${t('search.clear')}" hidden>${icon('close')}</button>
+      <div class="field">
+        ${icon('search')}
+        <input id="q" name="q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
+          placeholder="${t('search.placeholder')}" aria-label="${t('search.label')}" />
+        <button class="clear" type="button" data-act="clear" aria-label="${t('search.clear')}" hidden>${icon('close')}</button>
+      </div>
+      <button class="cancel" type="button" data-act="cancel" hidden>${t('search.cancel')}</button>
     </div>`;
 }
 

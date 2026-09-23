@@ -192,34 +192,47 @@ details > p { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--dim); }
 
 /* ── Search ────────────────────────────────────────────────────────────── */
 
+/* iPhone's own search: a rounded, tinted field with a magnifier and ✕ inside,
+   and «Скасувати» beside it while the field has the keyboard or a query. */
 .find {
   display: flex;
   align-items: center;
   margin-top: 0.4rem;
-  border-bottom: 2px solid var(--ink);
 }
+
+.field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-left: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--rule);
+  color: var(--dim);
+}
+
+.field:focus-within { outline: 2px solid var(--red); }
 
 #q {
   flex: 1;
   min-width: 0;
   min-height: var(--tap);
-  padding: 0;
+  padding: 0 0 0 0.5rem;
   border: 0;
   border-radius: 0;
   outline: 0;
   background: none;
-  font-size: 1.35rem; /* 16px or more, or iOS zooms the page on focus */
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-size: max(1rem, 16px); /* 16px or more, or iOS zooms the page on focus */
   -webkit-appearance: none;
   appearance: none;
 }
 
-#q::placeholder { color: #949494; } /* 3:1 on white: enough for text this large */
+#q::placeholder { color: #6b6b6b; } /* 4.5:1 on the field's grey */
 /* Our own clear button, a full finger wide; the native one is smaller. */
 #q::-webkit-search-cancel-button { display: none; }
 #q:focus-visible { outline: 0; }
-.find:focus-within { border-bottom-color: var(--red); }
 
 .clear {
   flex: none;
@@ -227,10 +240,21 @@ details > p { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--dim); }
   place-items: center;
   width: var(--tap);
   height: var(--tap);
-  margin-right: -0.7rem;
   padding: 0;
   border: 0;
   background: none;
+  color: var(--dim);
+}
+
+.cancel {
+  flex: none;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 0 0 0.75rem;
+  border: 0;
+  background: none;
+  font-size: max(1rem, 16px);
+  color: var(--red);
 }
 
 /* ── Icons: one set, one stroke weight ─────────────────────────────────── */

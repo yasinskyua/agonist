@@ -1,4 +1,5 @@
-/* A laconic reference book: white, black, one red. No shadows, no gradients,
+/* A laconic reference book: white, black, one red (at night: the phone's dark
+   setting swaps every token below; no switch of our own). No shadows, no gradients,
    nothing that moves for its own sake. The map is pinned under the top of the
    page while the list scrolls beneath it; the way back is at the bottom, where
    the thumb is. */
@@ -9,6 +10,9 @@
   --rule: #ececec;
   --bg: #fff;
   --red: #e10600;
+  --body: #333; /* running text: a step softer than --ink */
+  --hint: #6b6b6b; /* placeholder: 4.5:1 on the search field's grey */
+  --edge: rgb(0 0 0 / 0.18); /* the hairline round a Role's swatch */
 
   /* The map: what can be tapped is tinted, what has nothing to show is grey. */
   --c-muscle: #e6cdc6;
@@ -46,6 +50,35 @@
   --ease-glide: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* Night: every colour again, nothing else changes. Text keeps 4.5:1 (app/theme.test.mjs
+   checks it); the figure stays a body — muscles lighter than skin, an outline that
+   reads — and the five Roles stay apart. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f2f2f2;
+    --dim: #a0a0a0;
+    --rule: #2c2c2c;
+    --bg: #121212;
+    --red: #ff5a4f;
+    --body: #d0d0d0;
+    --hint: #a0a0a0;
+    --edge: rgb(255 255 255 / 0.3);
+
+    --c-muscle: #8a4f45;
+    --c-rest: #2c2c2c;
+    --c-tendon: #3d3a36;
+    --c-skin: #1c1c1c;
+    --c-detail: #666;
+    --c-outline: #8a8a8a;
+
+    --r-agonist: #ff5a4f;
+    --r-synergist: #6f96ff;
+    --r-dynamic_stabilizer: #b8860b;
+    --r-stabilizer: #f2c200;
+    --r-antagonist_stabilizer: #f3de8a;
+  }
+}
+
 [data-role='agonist'] { --role: var(--r-agonist); }
 [data-role='synergist'] { --role: var(--r-synergist); }
 [data-role='dynamic_stabilizer'] { --role: var(--r-dynamic_stabilizer); }
@@ -57,6 +90,7 @@
 /* Only double-tap zoom goes: it fired on quick taps of buttons. A pinch on the
    page still zooms it, for anyone who needs larger text. */
 html {
+  color-scheme: light dark; /* the browser's own scrollbars and controls follow */
   touch-action: manipulation;
   /* Text size follows the phone's setting: 17px on the default one. Everything
      else is in rem. Safari's Dynamic Type only reaches a font that names the
@@ -166,7 +200,7 @@ h1:focus { outline: none; }
 
 .sub { margin: 0.2rem 0 0; color: var(--dim); font-size: 0.95rem; }
 p.sub[translate='no'] { font-style: italic; }
-.lead { margin: 0.5rem 0 0; font-size: 0.95rem; line-height: 1.45; color: #333; }
+.lead { margin: 0.5rem 0 0; font-size: 0.95rem; line-height: 1.45; color: var(--body); }
 .caption { margin: 0.4rem 0 0; text-align: center; font-size: 0.78rem; color: var(--dim); }
 .none { padding: 1rem 0; color: var(--dim); }
 
@@ -229,7 +263,7 @@ details > p { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--dim); }
   appearance: none;
 }
 
-#q::placeholder { color: #6b6b6b; } /* 4.5:1 on the field's grey */
+#q::placeholder { color: var(--hint); }
 /* Our own clear button, a full finger wide; the native one is smaller. */
 #q::-webkit-search-cancel-button { display: none; }
 #q:focus-visible { outline: 0; }
@@ -320,7 +354,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   width: 0.55rem;
   height: 0.55rem;
   background: var(--role);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
+  box-shadow: inset 0 0 0 1px var(--edge);
 }
 
 .aside i { margin-right: 0.4rem; }
@@ -351,7 +385,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
   letter-spacing: 0.03em;
 }
 
-.exam-explanation { margin: 0.4rem 0 0; font-size: 0.9rem; color: #333; }
+.exam-explanation { margin: 0.4rem 0 0; font-size: 0.9rem; color: var(--body); }
 
 .exam-caveat {
   margin: 0.5rem 0 0;

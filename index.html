@@ -3,10 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="color-scheme" content="light" />
-    <!-- The browser bar takes the app's own background (--bg in app.css), so
-         the bar and the page read as one surface. -->
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- The browser bar takes the app's own background (--bg in app.css, one
+         value per theme), so the bar and the page read as one surface. -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
     <!-- SVG for tabs (sharp at 16-32 px); a 180 px PNG for the iOS/Android home
          screen, which do not take SVG. Relative paths: the app lives under a
          subpath on Pages. -->

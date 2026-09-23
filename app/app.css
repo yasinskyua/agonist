@@ -27,6 +27,8 @@
 
   /* The finger minimum. ui.mjs reads it to size the tap zones on the map. */
   --tap: 44px;
+  /* The bottom tab bar's own height, safe area excluded (added where it's used). */
+  --tabsh: 3.9rem;
   /* The page's side gutters: 1.25rem, plus the notch or rounded corner when
      the phone lies on its side (both insets are 0 upright). */
   --gl: calc(1.25rem + env(safe-area-inset-left));
@@ -262,6 +264,40 @@ p.sub[translate='no'] { font-style: italic; }
 
 .related .says { margin: 0 0 0.3rem; font-size: 0.85rem; color: var(--dim); }
 
+/* ── The Exam: the Digest (ADR-0008) ───────────────────────────────────── */
+
+.exam-list { margin: 0; padding: 0; list-style: none; }
+.exam-q { padding: 0.9rem 0; border-top: 1px solid var(--rule); }
+.exam-q:first-child { padding-top: 0.2rem; border-top: 0; }
+.exam-question { margin: 0; font-weight: 600; }
+.exam-answer { margin: 0.4rem 0 0; font-size: 1.05rem; }
+
+.exam-outside {
+  display: inline-block;
+  margin: 0.4rem 0 0;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--red);
+  border-radius: 4px;
+  color: var(--red);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.exam-explanation { margin: 0.4rem 0 0; font-size: 0.9rem; color: #333; }
+
+.exam-caveat {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--r-dynamic_stabilizer);
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
+.exam-exercise { margin: 0.5rem 0 0; font-size: 0.85rem; }
+.exam-exercise a { color: inherit; }
+
 /* Pressed state on a finger; hover only where there is a pointer to hover with,
    or it would stick after a tap. */
 .row:active { background: var(--rule); }
@@ -269,7 +305,7 @@ p.sub[translate='no'] { font-style: italic; }
 
 /* ── The page and its pinned map ───────────────────────────────────────── */
 
-#page { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+#page { padding-bottom: calc(6rem + var(--tabsh) + env(safe-area-inset-bottom)); }
 
 #dock {
   position: sticky;
@@ -285,9 +321,16 @@ p.sub[translate='no'] { font-style: italic; }
 }
 
 #page[data-screen='home'] #dock { height: 44svh; }
-#page[data-screen='home'] { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+#page[data-screen='home'] { padding-bottom: calc(2rem + var(--tabsh) + env(safe-area-inset-bottom)); }
+/* The tab bar is gone in the Game (it hides for the whole Round, summary
+   included — CONTEXT.md counts the score at the end as part of the Round), so
+   its own padding-bottom does not need the tab bar's height added back in. */
+#page[data-screen='game'] { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 /* The Round's summary has nothing to paint: the map goes with the Card. */
 #page[data-game='done'] #dock, #page[data-game='done'] #mapbar { display: none; }
+/* The Digest has no use for the body map: it is text to read, not a picture to tap. */
+#page[data-screen='exam'] #dock, #page[data-screen='exam'] #mapbar { display: none; }
+#page[data-screen='exam'] #top { margin-bottom: 0.6rem; }
 
 #map {
   position: relative;
@@ -497,10 +540,15 @@ p.sub[translate='no'] { font-style: italic; }
   position: fixed;
   z-index: 6;
   left: max(1rem, env(safe-area-inset-left));
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  /* Above the tab bar, except in the Game, where the tab bar is gone and Back/✕
+     goes back down where the thumb is. */
+  bottom: calc(var(--tabsh) + 0.75rem + env(safe-area-inset-bottom));
   display: flex;
   gap: 0.5rem;
 }
+
+/* #bottom is a sibling of #page, not its descendant — `~` reaches across. */
+#page[data-screen='game'] ~ #bottom { bottom: calc(1rem + env(safe-area-inset-bottom)); }
 
 .ic {
   display: grid;
@@ -513,6 +561,42 @@ p.sub[translate='no'] { font-style: italic; }
   background: var(--bg);
   color: var(--ink);
 }
+
+/* ── The bottom tab bar: Довідник, Гра, Іспит (ADR-0008) ──────────────── */
+
+#tabs {
+  position: fixed;
+  z-index: 6;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  max-width: 40rem;
+  margin-inline: auto;
+  border-top: 1px solid var(--ink);
+  background: var(--bg);
+  padding: 0 max(0.5rem, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(0.5rem, env(safe-area-inset-left));
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0.5rem 0;
+  color: var(--dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.tab[aria-current='page'] { color: var(--ink); }
+
+/* Nothing to switch to mid-Round, and nothing left to switch to under the
+   full-screen map — hidden rather than fought over for the thumb's reach.
+   #tabs is a sibling of #page, not its descendant — `~` reaches across. */
+#page[data-screen='game'] ~ #tabs, .full-map #tabs { display: none; }
 
 /* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
 

@@ -89,6 +89,16 @@ const STRINGS = {
     uk: 'Той самий агоніст — заміна, коли тренажер зайнятий',
     en: 'Same agonist — a swap when the machine is taken',
   },
+
+  // The bottom tab bar (ADR-0008): navigation between the app's sections.
+  'tabs.label': { uk: 'Розділи застосунку', en: 'App sections' },
+  'tabs.reference': { uk: 'Довідник', en: 'Reference' },
+  'tabs.game': { uk: 'Гра', en: 'Game' },
+  'tabs.exam': { uk: 'Іспит', en: 'Exam' },
+
+  // The Exam's Digest: Питання за Темами, відповідь відкрита одразу.
+  'exam.outside': { uk: 'не з матеріалів клубу', en: 'not from the club materials' },
+  'exam.exercise': { uk: 'Вправа', en: 'Exercise' },
 };
 
 export const KEYS = Object.keys(STRINGS);

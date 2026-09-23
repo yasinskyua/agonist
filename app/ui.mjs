@@ -8,10 +8,11 @@
 // without emulating a DOM.
 
 import { createAtlas } from './atlas.mjs';
+import { createExam } from './exam.mjs';
 import { createQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { icon } from './icons.mjs';
-import { parseRoute, muscleHref, HOME, GAME } from './route.mjs';
+import { parseRoute, muscleHref, HOME, GAME, EXAM } from './route.mjs';
 import {
   pageTopHtml,
   pageListHtml,
@@ -24,6 +25,7 @@ import {
   cardAnnounce,
   roundTally,
   summaryHtml,
+  examDigestHtml,
 } from './screens.mjs';
 import { pickRow, roomAtEnd, LINE_GAP } from './spy.mjs';
 import { IDENTITY, isZoomed, clampPan, zoomAt, pinch, panBy, frameOn } from './zoom.mjs';
@@ -76,11 +78,12 @@ const json = (path) => fetch(path).then((r) => r.json());
 const text = (path) => fetch(path).then((r) => r.text());
 
 export async function start() {
-  const [muscles, groups, exercises, atlasIds, ...svgSources] = await Promise.all([
+  const [muscles, groups, exercises, atlasIds, examContent, ...svgSources] = await Promise.all([
     json('content/muscles.json'),
     json('content/muscle-groups.json'),
     json('content/exercises.json'),
     json('assets/atlas/muscle-ids.json'),
+    json('content/exam.json'),
     ...VIEWS.map((view) => text(`assets/atlas/${view}.svg`)),
   ]);
 
@@ -90,6 +93,7 @@ export async function start() {
     exercises: exercises.exercises,
     atlasMuscles: atlasIds.muscles,
   });
+  const exam = createExam({ questions: examContent.questions, atlas });
   const quiz = createQuiz({ atlas });
   let round = null; // the Round in play, once the Trainer has entered the Game
 
@@ -106,6 +110,13 @@ export async function start() {
   const top = el('top');
   const list = el('list');
   const all = map.querySelector('.all');
+  const tabs = el('tabs');
+  const tabEls = [...tabs.querySelectorAll('.tab')];
+  // The addresses are set here, once, from the one place that owns them —
+  // route.mjs — rather than duplicated as literal hrefs in the markup.
+  tabs.querySelector('[data-tab="reference"]').href = HOME;
+  tabs.querySelector('[data-tab="game"]').href = GAME;
+  tabs.querySelector('[data-tab="exam"]').href = EXAM;
 
   /** The finger minimum. One source: the CSS that sizes the buttons too. */
   const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
@@ -518,6 +529,15 @@ export async function start() {
     // The spoken name starts with what is printed on it, so «tap EN» works.
     el('lang').setAttribute('aria-label', `${t('lang.other')}: ${t('lang.switch')}`);
     map.setAttribute('aria-label', t('map.label'));
+    tabs.setAttribute('aria-label', t('tabs.label'));
+    // 'game' and 'exam' get their own tab; every other screen (home, muscle,
+    // exercise — everything the body map and search reach) is «Довідник».
+    const current = here.screen === 'game' || here.screen === 'exam' ? here.screen : 'reference';
+    for (const tab of tabEls) {
+      tab.textContent = t(`tabs.${tab.dataset.tab}`);
+      if (tab.dataset.tab === current) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    }
     for (const [button, key] of [[fit, 'zoom.fit'], [zoomIn, 'zoom.in'], [zoomOut, 'zoom.out'], [hideMap, 'map.hide'], [fullMap, 'map.full'], [closeMap, 'map.close']]) {
       button.setAttribute('aria-label', t(key));
     }
@@ -537,16 +557,24 @@ export async function start() {
       syncGame(t);
     } else {
       delete el('page').dataset.game;
-      top.innerHTML = pageTopHtml(t, state.lang, atlas, here);
-      if (el('q')) el('q').value = state.query;
-      syncSearch();
-      list.innerHTML = pageListHtml(t, state.lang, atlas, here, state.query);
-
-      const paint = paintRules(atlas, here);
-      el('paint').textContent = paint;
-      map.classList.toggle('painted', Boolean(paint));
       // A revealed Card's announcement does not outlive the Round.
       el('status').textContent = '';
+
+      if (here.screen === 'exam') {
+        top.innerHTML = `<h1 tabindex="-1">${t('tabs.exam')}</h1>`;
+        list.innerHTML = examDigestHtml(t, state.lang, atlas, exam);
+        el('paint').textContent = '';
+        map.classList.remove('painted');
+      } else {
+        top.innerHTML = pageTopHtml(t, state.lang, atlas, here);
+        if (el('q')) el('q').value = state.query;
+        syncSearch();
+        list.innerHTML = pageListHtml(t, state.lang, atlas, here, state.query);
+
+        const paint = paintRules(atlas, here);
+        el('paint').textContent = paint;
+        map.classList.toggle('painted', Boolean(paint));
+      }
     }
 
     // Back is always where the thumb is, except on home, which has none. A

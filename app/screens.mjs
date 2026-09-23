@@ -41,7 +41,7 @@ const exerciseRow = (t, lang, e, { sub = '', aside = '', role = '' } = {}) =>
   row({ href: exerciseHref(e.id), lights: `data-exercise="${e.id}"`, name: e[lang], sub, aside: role ? t(`role.${role}`) : aside, role });
 
 const section = (title, body) => `<section><h2 class="h">${title}</h2>${body}</section>`;
-const list = (rows) => `<ul class="list">${rows.join('')}</ul>`;
+const list = (rows, cls = 'list') => `<ul class="${cls}">${rows.join('')}</ul>`;
 
 // ── Home ─────────────────────────────────────────────────────────────────
 
@@ -214,6 +214,46 @@ export function summaryHtml(t, lang, atlas, round) {
           )}`
         : ''
     }`;
+}
+
+// ── The Exam: the Digest (ADR-0008) ─────────────────────────────────────
+
+/**
+ * One Question: text, then the answer already open (this is the Digest — the
+ * one Format that shows it without a tap), then the explanation. The
+ * «не з матеріалів клубу» badge and the divergence note are content-driven:
+ * neither appears unless the Question itself carries it.
+ */
+function questionHtml(t, lang, atlas, q) {
+  const outside = q.source === 'outside' ? `<p class="exam-outside">${t('exam.outside')}</p>` : '';
+  const caveat = q.caveat ? `<p class="exam-caveat">${q.caveat}</p>` : '';
+  const exercise = q.exercise
+    ? `<p class="exam-exercise"><a href="${exerciseHref(q.exercise)}">${t('exam.exercise')}: ${atlas.exercise(q.exercise)[lang]}</a></p>`
+    : '';
+  return `<li class="exam-q">
+    <p class="exam-question">${q.question}</p>
+    <p class="exam-answer"><b>${q.answer}</b></p>
+    ${outside}
+    <p class="exam-explanation">${q.explanation}</p>
+    ${caveat}
+    ${exercise}
+  </li>`;
+}
+
+/** The Digest: every Question the exam holds, grouped by Topic, in the set order. */
+export function examDigestHtml(t, lang, atlas, exam) {
+  return exam
+    .topics()
+    .map((topic) =>
+      section(
+        topic.uk,
+        list(
+          exam.questions({ topic: topic.id }).map((q) => questionHtml(t, lang, atlas, q)),
+          'exam-list',
+        ),
+      ),
+    )
+    .join('');
 }
 
 // ── The map's colours ────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas } from './atlas.mjs';
-import { parseRoute, muscleHref, exerciseHref, HOME, GAME } from './route.mjs';
+import { parseRoute, muscleHref, exerciseHref, HOME, GAME, EXAM } from './route.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -37,10 +37,16 @@ test('the old links still open the screens they meant', () => {
   assert.deepEqual(parseRoute(`#/back/${muscle}`, atlas), { screen: 'muscle', id: muscle });
 });
 
-test('no address, the home address and the game address', () => {
+test('no address, the home address, the game address and the exam address', () => {
   assert.deepEqual(parseRoute('', atlas), { screen: 'home' });
   assert.deepEqual(parseRoute(HOME, atlas), { screen: 'home' });
   assert.deepEqual(parseRoute(GAME, atlas), { screen: 'game' });
+  assert.deepEqual(parseRoute(EXAM, atlas), { screen: 'exam' });
+});
+
+test('an unknown step under the exam address still opens the Digest, not a broken page', () => {
+  assert.deepEqual(parseRoute('#/exam/cards', atlas), { screen: 'exam' });
+  assert.deepEqual(parseRoute('#/exam/no-such-topic', atlas), { screen: 'exam' });
 });
 
 test('an id that is not in the content shows home instead of throwing', () => {

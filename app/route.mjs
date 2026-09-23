@@ -4,6 +4,7 @@
 
 export const HOME = '#/';
 export const GAME = '#/game';
+export const EXAM = '#/exam';
 export const muscleHref = (id) => `#/muscle/${id}`;
 export const exerciseHref = (id) => `#/exercise/${id}`;
 
@@ -19,6 +20,9 @@ export function parseRoute(hash, atlas) {
   if (first === 'muscle' && atlas.muscle(second)) return { screen: 'muscle', id: second };
   if (first === 'exercise' && atlas.exercise(second)) return { screen: 'exercise', id: second };
   if (first === 'game') return { screen: 'game' };
+  // Cards and Test (tickets 06-07) will read `second` as a Format; today every
+  // #/exam/* address — a stale link, a typo, an unknown Topic — opens the Digest.
+  if (first === 'exam') return { screen: 'exam' };
   // Links from before the sheet: #/front/pectoralis_major. The bare #/front and
   // #/back — the map, one side at a time — are home now: it shows both sides.
   if (SIDES.includes(first) && atlas.muscle(second)) return { screen: 'muscle', id: second };

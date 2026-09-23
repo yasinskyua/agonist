@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { createAtlas, ROLES } from './atlas.mjs';
+import { createExam } from './exam.mjs';
 import { translator } from './i18n.mjs';
 import { createQuiz } from './quiz.mjs';
 import {
@@ -23,6 +24,7 @@ import {
   cardAnnounce,
   roundTally,
   summaryHtml,
+  examDigestHtml,
 } from './screens.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
@@ -334,4 +336,63 @@ test('a perfect Round is praised, and has nothing to review', () => {
 
   assert.ok(html.includes(t('round.perfect')));
   assert.ok(!html.includes(t('round.review')));
+});
+
+// ── The Exam: the Digest ──────────────────────────────────────────────────
+
+const exam = createExam({ questions: read('content/exam.json').questions, atlas });
+
+test('the Digest shows every Question with its answer already open — this is the costliest mistake it could make', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+
+  for (const q of exam.questions()) {
+    assert.ok(html.includes(q.question), q.id);
+    assert.ok(html.includes(q.answer), q.id);
+    assert.ok(html.includes(q.explanation), q.id);
+  }
+});
+
+test('the Digest groups Questions under their Topic, in the set order', () => {
+  const html = examDigestHtml(t, 'uk', atlas, exam);
+  const topics = exam.topics();
+
+  for (const topic of topics) assert.ok(html.includes(`>${topic.uk}</h2>`));
+  const positions = topics.map((topic) => html.indexOf(`>${topic.uk}</h2>`));
+  assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
+});
+
+test('the «не з матеріалів клубу» badge appears only for a Question sourced outside the club', () => {
+  const outside = { ...exam.question('17'), source: 'outside' };
+  const club = { ...exam.question('18'), source: 'club' };
+  const fromContent = createExam({ questions: { outside, club }, atlas });
+  const html = examDigestHtml(t, 'uk', atlas, fromContent);
+
+  const [outsideHtml, clubHtml] = html.split(club.question);
+  assert.ok(outsideHtml.includes(t('exam.outside')));
+  assert.ok(!clubHtml.includes(t('exam.outside')));
+});
+
+test('a divergence note shows only where the content carries one', () => {
+  const noted = { ...exam.question('17'), caveat: 'Клуб каже одне, підручник — інше.' };
+  const bare = { ...exam.question('18') };
+  const fromContent = createExam({ questions: { noted, bare }, atlas });
+  const html = examDigestHtml(t, 'uk', atlas, fromContent);
+
+  assert.ok(html.includes(noted.caveat));
+  const [notedHtml, bareHtml] = html.split(bare.question);
+  assert.ok(!bareHtml.includes('exam-caveat'));
+  assert.ok(notedHtml.includes('exam-caveat'));
+});
+
+test('a Question linked to an Exercise opens it, named in the interface language', () => {
+  const exerciseId = atlas.exercises()[0].id;
+  const linked = { ...exam.question('17'), exercise: exerciseId };
+  const fromContent = createExam({ questions: { linked }, atlas });
+
+  const uk = examDigestHtml(t, 'uk', atlas, fromContent);
+  assert.ok(hrefs(uk).includes(`#/exercise/${exerciseId}`));
+  assert.ok(uk.includes(atlas.exercise(exerciseId).uk));
+
+  const en = examDigestHtml(tEn, 'en', atlas, fromContent);
+  assert.ok(en.includes(atlas.exercise(exerciseId).en));
 });

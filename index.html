@@ -22,6 +22,7 @@
          module's own imports are listed too, so they do not queue behind it. -->
     <link rel="modulepreload" href="app/ui.mjs" />
     <link rel="modulepreload" href="app/atlas.mjs" />
+    <link rel="modulepreload" href="app/exam.mjs" />
     <link rel="modulepreload" href="app/quiz.mjs" />
     <link rel="modulepreload" href="app/i18n.mjs" />
     <link rel="modulepreload" href="app/icons.mjs" />
@@ -32,6 +33,7 @@
     <link rel="preload" as="fetch" crossorigin href="content/muscles.json" />
     <link rel="preload" as="fetch" crossorigin href="content/muscle-groups.json" />
     <link rel="preload" as="fetch" crossorigin href="content/exercises.json" />
+    <link rel="preload" as="fetch" crossorigin href="content/exam.json" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/muscle-ids.json" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/front.svg" />
     <link rel="preload" as="fetch" crossorigin href="assets/atlas/back.svg" />
@@ -113,6 +115,14 @@
       </main>
 
       <div id="bottom"></div>
+
+      <!-- The three sections, reachable from any screen; ui.mjs sets each
+           address once from route.mjs and the label in the current language. -->
+      <nav id="tabs">
+        <a class="tab" data-tab="reference"></a>
+        <a class="tab" data-tab="game"></a>
+        <a class="tab" data-tab="exam"></a>
+      </nav>
     </div>
 
     <script type="module">

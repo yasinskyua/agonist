@@ -129,7 +129,7 @@ export async function start() {
     atlasMuscles: atlasIds.muscles,
   });
   const exam = createExam({ questions: examContent.questions, atlas });
-  const quiz = createQuiz({ atlas });
+  const quiz = createQuiz({ atlas, storage: () => localStorage });
   const examQuiz = createExamQuiz({ exam });
   const examTestQuiz = createExamTestQuiz({ exam });
   let round = null; // the Round in play, once the Trainer has entered the Game

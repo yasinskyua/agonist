@@ -31,3 +31,38 @@ export function saveAnswer(storage, id, knew) {
     // Storage unavailable: this grade just won't be remembered.
   }
 }
+
+// The Game's own memory (ADR-0010): Tasks the Trainer missed, apart from the
+// Exam's weak set above. Each weak Task keeps a count of right answers in a
+// row; the second one takes it off. A Task is asked at most once per Round, so
+// «in a row» means «in different Rounds» with no extra bookkeeping.
+
+const GAME_WEAK_KEY = 'game-weak';
+const STREAK_TO_CLEAR = 2;
+
+/** The weak Task keys and their streaks — a Map, empty when storage is unavailable or holds junk. */
+export function loadGameWeak(storage) {
+  try {
+    const saved = JSON.parse(storage().getItem(GAME_WEAK_KEY));
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return new Map();
+    return new Map(Object.entries(saved).filter(([, streak]) => Number.isInteger(streak) && streak >= 0));
+  } catch {
+    return new Map();
+  }
+}
+
+/** A Task's answer: a miss makes it weak from zero; a right answer counts only for a weak one. */
+export function saveGameAnswer(storage, key, correct) {
+  try {
+    const weak = loadGameWeak(storage);
+    if (!correct) weak.set(key, 0);
+    else if (weak.has(key)) {
+      const streak = weak.get(key) + 1;
+      if (streak >= STREAK_TO_CLEAR) weak.delete(key);
+      else weak.set(key, streak);
+    } else return;
+    storage().setItem(GAME_WEAK_KEY, JSON.stringify(Object.fromEntries(weak)));
+  } catch {
+    // Storage unavailable: this answer just won't be remembered.
+  }
+}

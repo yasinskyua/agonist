@@ -13,13 +13,15 @@
 // Randomness comes from the caller (`random` returns [0, 1) like
 // `Math.random`), so a test can replay any Round from a seed.
 //
-//   const quiz = createQuiz({ atlas, random: Math.random });
+//   const quiz = createQuiz({ atlas, random: Math.random, storage: () => localStorage });
 //   const round = quiz.round();
 //   round.current;              // a Task: { kind, muscle, exercise? } — Muscle and Exercise ids
 //   round.choose(tappedMuscle); // or DONT_KNOW
 //   judge(atlas, round.current, round.choice); // { correct, tapped, role }
 //   round.grade(correct);       // moves to the next Task
 //   round.summary();            // once finished: { score, total, mistakes }
+
+import { loadGameWeak, saveGameAnswer } from './memory.mjs';
 
 export const ROUND_SIZE = 10;
 
@@ -35,8 +37,8 @@ function shuffleWith(random) {
   };
 }
 
-/** A Round over any deck of Cards, sliced to `size` (ten, typically). */
-export function createRound(deck, size = ROUND_SIZE) {
+/** A Round over any deck of Cards, sliced to `size` (ten, typically). `onGrade(card, knew)` runs once a Card is graded — the Game's memory hooks in there. */
+export function createRound(deck, size = ROUND_SIZE, onGrade) {
   const cards = deck.slice(0, size);
   const results = cards.map(() => null); // 'known' | 'unknown' | null, one per Card
   let index = 0;
@@ -82,6 +84,7 @@ export function createRound(deck, size = ROUND_SIZE) {
       if (this.finished) throw new Error('the Round is over');
       if (!revealed) throw new Error('reveal the Card first');
       results[index] = knew ? 'known' : 'unknown';
+      onGrade?.(cards[index], knew);
       if (index < cards.length - 1) {
         index++;
         revealed = false;
@@ -156,12 +159,21 @@ export function judge(atlas, task, given, kinds = KINDS) {
   return kinds.find((k) => k.id === task.kind).judge(atlas, task, given);
 }
 
+/** The Task's key in the Game's memory: its kind and subject (an Exercise, a Muscle, or the pair). */
+export const taskKey = ({ kind, exercise, muscle }) => [kind, exercise, muscle].filter(Boolean).join(':');
+
+/** How many weak Tasks a Round takes on before the new ones. */
+export const WEAK_PER_ROUND = 5;
+
 /**
- * The Game's deck: kinds take turns (from a random one), each turn the next
- * Task of that kind off its pool that touches no Exercise or Muscle
- * already in the Round; the deck is then shuffled again so the turns do not show.
+ * The Game's deck: first up to five of the Trainer's weak Tasks, picked at
+ * random, then kinds take turns (from a random one), each turn the next Task
+ * of that kind off its pool. Every Task, weak or new, touches no Exercise or
+ * Muscle already in the Round; the deck is then shuffled again so neither the
+ * turns nor the weak ones show. `storage` is the Game's memory (memory.mjs),
+ * left out for a Game that remembers nothing.
  */
-export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
+export function createQuiz({ atlas, random = Math.random, kinds = KINDS, storage }) {
   const shuffle = shuffleWith(random);
 
   return {
@@ -172,6 +184,23 @@ export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
       const usedMuscles = new Set();
       const fresh = (task) => !usedExercises.has(task.exercise) && !usedMuscles.has(task.muscle);
       const deck = [];
+      const take = (task) => {
+        deck.push(task);
+        // A kind with no Exercise (or no Muscle) adds nothing: `undefined` must not block its siblings.
+        if (task.exercise) usedExercises.add(task.exercise);
+        if (task.muscle) usedMuscles.add(task.muscle);
+      };
+
+      // A remembered key with no Task in the content is not in the pools, so it is ignored.
+      if (storage) {
+        const weak = loadGameWeak(storage);
+        const known = pools.flatMap((pool, i) => pool.filter((task) => weak.has(taskKey(task))).map((task) => ({ task, i })));
+        // The ones not taken sit this Round out: five is the most a Round holds.
+        for (const { i } of known) pools[i] = pools[i].filter((task) => !weak.has(taskKey(task)));
+        for (const { task } of shuffle(known)) {
+          if (deck.length < Math.min(WEAK_PER_ROUND, size) && fresh(task)) take(task);
+        }
+      }
 
       // `dry` counts kinds in a row that had nothing left to offer: all of them, and the deck is as full as it gets.
       for (let turn = 0, dry = 0; deck.length < size && dry < pools.length; turn++) {
@@ -182,13 +211,10 @@ export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
           continue;
         }
         dry = 0;
-        const [task] = pool.splice(at, 1);
-        deck.push(task);
-        // A kind with no Exercise (or no Muscle) adds nothing: `undefined` must not block its siblings.
-        if (task.exercise) usedExercises.add(task.exercise);
-        if (task.muscle) usedMuscles.add(task.muscle);
+        take(pool.splice(at, 1)[0]);
       }
-      return createRound(shuffle(deck), size);
+      const remember = storage && ((task, correct) => saveGameAnswer(storage, taskKey(task), correct));
+      return createRound(shuffle(deck), size, remember);
     },
   };
 }

@@ -8,7 +8,8 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas, ROLES } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz, createExamQuiz, createExamTestQuiz, createRound, judge, KINDS, DONT_KNOW, ROUND_SIZE } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz, createRound, judge, taskKey, KINDS, DONT_KNOW, ROUND_SIZE, WEAK_PER_ROUND } from './quiz.mjs';
+import { loadGameWeak, loadWeak, saveAnswer } from './memory.mjs';
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
@@ -457,4 +458,133 @@ test('grading clears the choice along with the reveal, moving to the next Card',
   round.grade(true);
   assert.equal(round.choice, null);
   assert.equal(round.revealed, false);
+});
+
+// ── The Game's memory of weak Tasks ──────────────────────────────────────
+
+const memory = () => {
+  const map = new Map();
+  return { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => map.set(k, v), map };
+};
+const gameWith = (seed, store) => createQuiz({ atlas, random: seeded(seed), storage: () => store });
+
+/** Play one Round on `store`, answering every Task right ('K') or «Не знаю» ('U') as `answer(task, i)` says. */
+function playWith(store, seed, answer) {
+  const round = gameWith(seed, store).round();
+  const cards = [...round.cards];
+  cards.forEach((task, i) => {
+    round.choose(answer(task, i) === 'K' ? rightAnswer(task) : DONT_KNOW);
+    round.grade(judge(atlas, round.current, round.choice).correct);
+  });
+  return cards;
+}
+const weakKeys = (store) => new Set(loadGameWeak(() => store).keys());
+
+test('a miss makes the Task weak, a right answer to a Task that is not weak writes nothing', () => {
+  const store = memory();
+  const cards = playWith(store, 1, (_, i) => (i === 0 ? 'U' : 'K'));
+  assert.deepEqual(weakKeys(store), new Set([taskKey(cards[0])]));
+  const clean = memory();
+  playWith(clean, 1, () => 'K');
+  assert.equal(clean.map.size, 0);
+});
+
+test('a Round takes the weak Task back — the same kind and subject', () => {
+  for (const seed of SEEDS) {
+    const store = memory();
+    const [missed] = playWith(store, seed, (_, i) => (i === 0 ? 'U' : 'K'));
+    const back = gameWith(seed + 1000, store).round().cards.filter((c) => taskKey(c) === taskKey(missed));
+    assert.deepEqual(back, [missed]);
+  }
+});
+
+test('a Round takes up to five weak Tasks and fills the rest with new ones, no repeats', () => {
+  const store = memory();
+  for (const seed of [1, 2, 3, 4, 5, 6]) playWith(store, seed, () => 'U');
+  const weak = weakKeys(store);
+  assert.ok(weak.size > WEAK_PER_ROUND);
+  for (const seed of SEEDS) {
+    const round = gameWith(seed, store).round();
+    assert.equal(round.total, ROUND_SIZE);
+    assert.equal(round.cards.filter((c) => weak.has(taskKey(c))).length, WEAK_PER_ROUND);
+    const exercises = round.cards.filter((c) => c.exercise).map((c) => c.exercise);
+    const muscles = round.cards.map((c) => c.muscle);
+    assert.equal(new Set(exercises).size, exercises.length);
+    assert.equal(new Set(muscles).size, muscles.length);
+  }
+});
+
+test('weak Tasks are picked at random, and sit among the new ones', () => {
+  const store = memory();
+  for (const seed of [1, 2, 3, 4, 5, 6]) playWith(store, seed, () => 'U');
+  const weak = weakKeys(store);
+  const picked = new Set();
+  const positions = new Set();
+  for (const seed of SEEDS) {
+    gameWith(seed, store).round().cards.forEach((c, i) => {
+      if (!weak.has(taskKey(c))) return;
+      picked.add(taskKey(c));
+      positions.add(i);
+    });
+  }
+  assert.ok(picked.size > weak.size / 2, 'many different weak Tasks come up');
+  assert.ok(positions.size > 5, 'not bunched at the front');
+});
+
+test('two right answers in a row take the weak Task off; a miss between them starts the count again', () => {
+  const store = memory();
+  const [missed] = playWith(store, 1, (_, i) => (i === 0 ? 'U' : 'K'));
+  const key = taskKey(missed);
+  // Answer only the Task `key` names; the rest are right (and change nothing, not being weak).
+  const answerKey = (right) => (task) => (taskKey(task) === key ? right : 'K');
+  const streak = () => loadGameWeak(() => store).get(key);
+
+  playWith(store, 2, answerKey('K'));
+  assert.equal(streak(), 1);
+  playWith(store, 3, answerKey('U'));
+  assert.equal(streak(), 0, 'the miss reset the count');
+  playWith(store, 4, answerKey('K'));
+  assert.equal(streak(), 1);
+  playWith(store, 5, answerKey('K'));
+  assert.equal(streak(), undefined, 'two in a row took it off');
+});
+
+test('the memory outlives the Game, and is apart from the Exam\'s weak set', () => {
+  const store = memory();
+  playWith(store, 1, (_, i) => (i === 0 ? 'U' : 'K'));
+  assert.equal(weakKeys(store).size, 1);
+  assert.deepEqual(loadWeak(() => store), new Set(), 'the Exam does not see the Game\'s weak Tasks');
+
+  saveAnswer(() => store, '17', false);
+  assert.equal(weakKeys(store).size, 1, 'the Game does not see the Exam\'s');
+  assert.deepEqual(loadWeak(() => store), new Set(['17']));
+});
+
+test('a remembered Task the content no longer has is ignored', () => {
+  const store = memory();
+  store.setItem('game-weak', JSON.stringify({ 'agonist:gone': 0, 'find:gone': 1, 'role:gone:gone': 0 }));
+  for (const seed of SEEDS) assert.equal(gameWith(seed, store).round().total, ROUND_SIZE);
+  assert.deepEqual(weakKeys(store), new Set(['agonist:gone', 'find:gone', 'role:gone:gone']), 'left as it was, unasked');
+});
+
+test('junk in the Game\'s memory is no memory', () => {
+  const store = memory();
+  for (const junk of ['not json', 'null', '[1,2]', '"x"', '{"find:a":"soon","find:b":-1}']) {
+    store.setItem('game-weak', junk);
+    assert.equal(gameWith(1, store).round().total, ROUND_SIZE);
+    assert.deepEqual(weakKeys(store), new Set());
+  }
+});
+
+test('blocked storage plays a Game without memory, not an error', () => {
+  const blocked = () => {
+    throw new Error('SecurityError');
+  };
+  const round = createQuiz({ atlas, random: seeded(1), storage: blocked }).round();
+  assert.equal(round.total, ROUND_SIZE);
+  for (let i = 0; i < round.total; i++) {
+    round.choose(DONT_KNOW);
+    assert.doesNotThrow(() => round.grade(false));
+  }
+  assert.equal(round.finished, true);
 });

@@ -177,6 +177,8 @@ button { cursor: pointer; }
 #navstart .navlabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 #lang, #theme { min-width: var(--tap); color: var(--dim); font-size: 0.9rem; font-weight: 600; }
+/* An inline icon sits on the text baseline, a few px above the button's middle. */
+#theme { display: grid; place-items: center; }
 .bar-end { flex: none; margin-left: auto; display: flex; align-items: center; gap: 0.3rem; }
 
 /* The Round's «N з 10 · знав K», spelled out in the app's own font, not --mono. */

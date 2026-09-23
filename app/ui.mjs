@@ -9,7 +9,7 @@
 
 import { createAtlas } from './atlas.mjs';
 import { createExam } from './exam.mjs';
-import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
+import { createQuiz, createExamQuiz, createExamTestQuiz, judge, DONT_KNOW } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
 import { loadWeak, saveAnswer } from './memory.mjs';
 import { loadWelcomeSeen, saveWelcomeSeen } from './welcome.mjs';
@@ -25,9 +25,10 @@ import {
   litRules,
   pageLights,
   openingSide,
-  cardTopHtml,
-  cardListHtml,
-  cardAnnounce,
+  taskTopHtml,
+  taskListHtml,
+  taskAnnounce,
+  taskPaintRules,
   roundTally,
   summaryHtml,
   examDigestHtml,
@@ -86,6 +87,25 @@ export function expand(box, min) {
   };
 }
 
+/**
+ * The Muscle a tap in the Game is for (ADR-0010). Everything is in the figure's
+ * own units. `under` is the Muscles drawn under the finger; `target` the one the
+ * Task is about, `box` where it lies and `min` the width of a finger. The target
+ * wins when it is under the finger — or when it is narrower or lower than a
+ * finger and the tap is in its zone (the box stretched to a finger, as the
+ * atlas's tap zones are), even if a neighbour is drawn there. Any other tap is
+ * the Muscle under the finger, or nothing (undefined) on empty ground. A big
+ * Muscle has no zone: only what is under the finger counts.
+ */
+export function resolveTap({ tap, under, target, box, min }) {
+  if (under.includes(target)) return target;
+  if (box && (box.width < min || box.height < min)) {
+    const zone = expand(box, min);
+    if (tap.x >= zone.x && tap.x <= zone.x + zone.width && tap.y >= zone.y && tap.y <= zone.y + zone.height) return target;
+  }
+  return under[0];
+}
+
 /** The Muscles an atlas path belongs to. On the neck one path carries two. */
 const musclesOf = (element) => element.getAttribute('data-muscle').split(' ');
 
@@ -138,7 +158,12 @@ export async function start() {
   tabs.querySelector('[data-tab="exam"]').href = EXAM;
 
   /** The finger minimum. One source: the CSS that sizes the buttons too. */
-  const minTapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tap'));
+  const cssPx = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  const minTapPx = cssPx('--tap');
+  /** The Game's tap zone (ADR-0010) — its own knob in the CSS, to tune once tried on a phone. */
+  const gameZonePx = cssPx('--game-zone');
+
+  const inGame = () => parseRoute(location.hash, atlas).screen === 'game';
 
   /** Whether the pointer is a finger. A mouse is hurt by help it did not need. */
   const coarsePointer = matchMedia('(pointer: coarse)');
@@ -209,6 +234,12 @@ export async function start() {
     return hit && musclesOf(hit).find((m) => withExercises.has(m));
   }
 
+  /** The live Muscles of the path drawn under the finger — on the neck, two. The Game has no zones: only what is drawn. */
+  function drawnAt(x, y) {
+    const hit = document.elementsFromPoint(x, y).find((e) => e.matches('#map [data-muscle]:not(.tap)'));
+    return hit ? musclesOf(hit).filter((m) => withExercises.has(m)) : [];
+  }
+
   // A Muscle's box in viewBox units does not move with the layout, and the SVG
   // is fixed for the session, so each is measured once per figure.
   const boxes = new WeakMap();
@@ -239,6 +270,24 @@ export async function start() {
   }
 
   /**
+   * A tap in the Game, as the Muscle it counts for: the figure on show, the tap in
+   * its units, the Task's Muscle with its zone (`resolveTap`). Empty ground is undefined.
+   */
+  function gameTap(x, y) {
+    const svg = map.querySelector(`[data-view="${map.dataset.side}"] svg`);
+    const { baseVal: view } = svg.viewBox;
+    const rect = svg.getBoundingClientRect();
+    const scale = pixelsPerUnit(svg);
+    // The figure is centred in its box, so a spare margin on one axis is not the figure.
+    const tap = {
+      x: view.x + (x - rect.left - (rect.width - view.width * scale) / 2) / scale,
+      y: view.y + (y - rect.top - (rect.height - view.height * scale) / 2) / scale,
+    };
+    const target = round.current.muscle;
+    return resolveTap({ tap, under: drawnAt(x, y), target, box: boxOn(svg, target), min: gameZonePx / scale });
+  }
+
+  /**
    * Tap zones over the figure, recomputed whenever its size or the zoom changes:
    * 44 px is screen pixels, while a Muscle's box lives in viewBox units.
    *
@@ -253,7 +302,8 @@ export async function start() {
    */
   function layTapZones(svg) {
     for (const zone of svg.querySelectorAll('rect.tap')) zone.remove();
-    const scale = coarsePointer.matches && pixelsPerUnit(svg);
+    // The Game asks about one Muscle at a time and draws its zone itself (`gameTap`).
+    const scale = coarsePointer.matches && !inGame() && pixelsPerUnit(svg);
     if (!scale) return;
 
     const min = minTapPx / scale;
@@ -443,11 +493,12 @@ export async function start() {
       pendingTap = null;
       return show(isZoomed(zoom) ? IDENTITY : zoomAt(zoom, DOUBLE_TAP_ZOOM, local({ x: event.clientX, y: event.clientY }), mapSize()), true);
     }
-    const id = muscleAt(event.clientX, event.clientY);
+    // In the Game a tap is an answer, never a way to a Muscle's page.
+    const game = inGame();
+    const id = game ? (round.revealed || round.finished ? undefined : gameTap(event.clientX, event.clientY)) : muscleAt(event.clientX, event.clientY);
     pendingTap = setTimeout(() => {
       pendingTap = null;
-      // A Round: the map is for looking at (double tap still zooms it), not for leaving it by.
-      if (parseRoute(location.hash, atlas).screen === 'game') return;
+      if (game) return id && answerTask(id);
       // Expanded, a tap only picks — a miss costs one more tap, not a trip to the wrong page.
       if (full) return pick(id);
       if (id) go(muscleHref(id));
@@ -709,6 +760,8 @@ export async function start() {
       clearTimeout(pendingTap);
       pendingTap = null;
       restoreView(here);
+      // Every Task opens on the whole body, front — where a Muscle is is part of the answer.
+      if (here.screen === 'game') setSide('front');
       // A summary's mistake link opens the Digest scrolled to the Question it
       // names, instead of the bookmark or the top — an id out of the address
       // is untrusted, so a stale one just leaves the scroll where it was.
@@ -725,46 +778,60 @@ export async function start() {
     }
   }
 
-  // ── The Game: a Round of Cards ───────────────────────────────────────────
+  // ── The Game: a Round of Tasks ───────────────────────────────────────────
 
   /**
-   * The Round in play, drawn: the Card or, once it is finished, the summary.
-   * Reveal, grade and «Ще партія» change nothing in the address — they redraw
-   * through here instead of through `render()`.
+   * The Round in play, drawn: the Task waiting for its tap, the Task answered,
+   * or once it is finished the summary. Answering, «Далі» and «Ще партія»
+   * change nothing in the address — they redraw through here instead of
+   * through `render()`.
    */
   function syncGame(t) {
-    el('page').dataset.game = round.finished ? 'done' : 'card';
-    top.innerHTML = round.finished ? summaryHtml(t, state.lang, atlas, round) : cardTopHtml(t, state.lang, atlas, round);
-    list.innerHTML = round.finished ? '' : cardListHtml(t, state.lang, atlas, round);
+    const answered = !round.finished && round.revealed;
+    el('page').dataset.game = round.finished ? 'done' : answered ? 'answered' : 'task';
+    top.innerHTML = round.finished ? summaryHtml(t, state.lang, atlas, round) : taskTopHtml(t, state.lang, atlas, round);
+    list.innerHTML = answered ? taskListHtml(t, state.lang, atlas, round) : '';
 
-    const paint = !round.finished && round.revealed ? paintRules(atlas, { screen: 'exercise', id: round.current.exercise }) : '';
+    const paint = answered ? taskPaintRules(atlas, round) : '';
     el('paint').textContent = paint;
     map.classList.toggle('painted', Boolean(paint));
 
-    el('tally').textContent = roundTally(t, round);
-    // Heard, not only seen in colour: revealing paints the map, which says nothing on its own.
-    el('status').textContent = !round.finished && round.revealed ? cardAnnounce(t, atlas, round) : '';
+    el('tally').textContent = roundTally(t, round, 'round.right');
+    // Heard, not only seen in colour: answering paints the map, which says nothing on its own.
+    el('status').textContent = answered ? taskAnnounce(t, atlas, round) : '';
   }
 
   /**
-   * Redraw the Game outside of `render()`: reveal, grade, «Ще партія». Either
+   * Redraw the Game outside of `render()`: an answer, «Далі», «Ще партія». Either
    * way the heading is rebuilt from scratch, taking whatever had the keyboard's
    * place with it — the heading takes it back, as a fresh step's always does.
-   * `newCard` is true whenever the Card itself changes (not just revealed), so
-   * the map resets and the page opens on it again too.
+   * `newTask` is true whenever the Task itself changes, so the map turns to the
+   * front, whole, and the page opens on it again; an answer instead turns the
+   * figure to the Agonist and closes in on it.
    */
-  function redrawGame(newCard) {
-    draw(newCard ? 'forward' : 'fade', () => {
+  function redrawGame(newTask) {
+    draw(newTask ? 'forward' : 'fade', () => {
       unlight();
       syncGame(translator(state.lang));
       makeRoom();
-      if (newCard) {
-        show(IDENTITY);
+      if (newTask) {
+        setSide('front');
         scrollTo(0, 0);
         settled = scrollY;
+      } else {
+        const { muscle } = round.current;
+        setSide(atlas.muscle(muscle).views[0]);
+        frameMuscle(muscle);
       }
       top.querySelector('h1')?.focus({ preventScroll: true });
     });
+  }
+
+  /** What was tapped (a Muscle) or given up (`DONT_KNOW`) answers the Task in play — once. */
+  function answerTask(given) {
+    if (round.finished || round.revealed) return;
+    round.choose(given);
+    redrawGame(false);
   }
 
   // ── The Exam: Cards, a Round of Questions ────────────────────────────────
@@ -1104,12 +1171,9 @@ export async function start() {
     fit: () => show(IDENTITY, true),
     'zoom-in': () => zoomBy(STEP),
     'zoom-out': () => zoomBy(1 / STEP),
-    reveal: () => {
-      round.reveal();
-      redrawGame(false);
-    },
-    grade: (button) => {
-      round.grade(button.dataset.knew === '1');
+    'dont-know': () => answerTask(DONT_KNOW),
+    next: () => {
+      round.grade(judge(atlas, round.current, round.choice).correct);
       redrawGame(true);
     },
     again: () => {

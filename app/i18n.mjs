@@ -90,15 +90,23 @@ const STRINGS = {
     en: 'An Antagonist stabilizer is a Muscle that contracts on the opposite side of a joint so a two-joint Muscle keeps its tension at the neighboring joint — the quadriceps in a lying leg curl.',
   },
 
-  // The header's way into the Game (ADR-0007): the two grades of a Card.
-  'flash.enter': { uk: 'Знав / Не знав', en: 'Knew it / Didn\'t' },
-  'card.hint': { uk: 'Назви Агоніста вголос, потім перевір себе', en: 'Say the Agonist out loud, then check yourself' },
-  // The Card's own disclosure (ticket 05), before reveal: what the task asks for.
+  // The Game's Tasks (ADR-0010): what is asked, the way out, and the verdict.
+  'task.agonist': { uk: 'Тапни Агоніста', en: 'Tap the Agonist' },
+  // The disclosure under the wording: what an Agonist is (ticket 05).
   'card.agonist.question': { uk: 'Хто такий Агоніст?', en: 'Who is the Agonist?' },
+  'task.dontknow': { uk: 'Не знаю', en: "I don't know" },
+  'task.next': { uk: 'Далі', en: 'Next' },
+  'task.right': { uk: 'Правильно', en: 'Correct' },
+  'task.wrong': { uk: 'Неправильно', en: 'Incorrect' },
+  'task.tapped': { uk: 'Тапнуто', en: 'Tapped' },
+  'task.idle': { uk: 'у цій Вправі не працює', en: 'not working in this Exercise' },
+  // The Exam's Cards, self-graded (ADR-0007).
   'card.reveal': { uk: 'Показати відповідь', en: 'Show the answer' },
   'card.no': { uk: 'Не знав', en: "Didn't know it" },
   'card.yes': { uk: 'Знав', en: 'Knew it' },
+  // The tally: the Exam's Cards say «знав» (self-graded), the Game «правильно» (checked).
   'round.known': { uk: 'знав', en: 'knew' },
+  'round.right': { uk: 'правильно', en: 'correct' },
   // «1 з 10 · знав 0»: the tally spelled out in words, not «1/10».
   'round.of': { uk: 'з', en: 'of' },
   'round.done': { uk: 'Підсумок', en: 'Results' },
@@ -162,7 +170,7 @@ const STRINGS = {
   // under each — reference/game/exam matches the tab it repeats.
   'welcome.about': { uk: "Довідник м'язів і вправ для персонального тренера.", en: 'A reference of muscles and exercises for personal trainers.' },
   'welcome.reference': { uk: "Мапа тіла, м'язи й вправи", en: 'Body map, muscles and exercises' },
-  'welcome.game': { uk: 'Партія карток: назви Агоніста вголос', en: 'A round of cards: say the Agonist out loud' },
+  'welcome.game': { uk: 'Партія Завдань: тапни Агоніста на мапі', en: 'A round of tasks: tap the Agonist on the map' },
   'welcome.exam': { uk: 'Конспект і партії до Іспиту Школи Тренерів', en: 'Digest and rounds for the Trainer School Exam' },
   'welcome.start': { uk: 'Почати', en: 'Start' },
 

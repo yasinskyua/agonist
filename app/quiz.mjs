@@ -1,22 +1,24 @@
-// A Round: a deck of Cards played in order, each self-graded «Знав» / «Не
-// знав» before moving to the next (ADR-0007). The Round doesn't know whether
-// a Card is a Game Exercise or an Exam Question (ADR-0008) — the deck is just
-// a list, built by the caller. `createQuiz` and `createExamQuiz` are those
-// callers: they ask the atlas or the exam and know nothing about the screen,
-// so a Round can be played and checked in Node on the real content.
+// A Round: a deck of Cards played in order, each graded before moving to the
+// next. The Round doesn't know whether a Card is a Game Task (ADR-0010) or an
+// Exam Question (ADR-0008) — the deck is just a list, built by the caller.
+// `createQuiz` and `createExamQuiz` are those callers: they ask the atlas or
+// the exam and know nothing about the screen, so a Round can be played and
+// checked in Node on the real content.
 //
-// The Test Format (ticket 07) auto-grades instead: `round.choose(i)` reveals
-// the Card and remembers which option, so the caller reads `round.choice`
-// back to mark the screen and to grade the Card correct or not.
+// The Exam's Cards self-grade («Знав» / «Не знав», ADR-0007). The Test Format
+// (ticket 07) and the Game's Tasks are auto-graded instead: `round.choose(x)`
+// reveals the Card and remembers what was picked, so the caller reads
+// `round.choice` back to mark the screen and to grade the Card correct or not.
 //
 // Randomness comes from the caller (`random` returns [0, 1) like
 // `Math.random`), so a test can replay any Round from a seed.
 //
 //   const quiz = createQuiz({ atlas, random: Math.random });
 //   const round = quiz.round();
-//   round.current;              // { exercise, answer } — Exercise and Muscle ids
-//   round.reveal();
-//   round.grade(true);          // «Знав» — or false, «Не знав»; moves to the next Card
+//   round.current;              // a Task: { kind, exercise, muscle } — Exercise and Muscle ids
+//   round.choose(tappedMuscle); // or DONT_KNOW
+//   judge(atlas, round.current, round.choice); // { correct, tapped, role }
+//   round.grade(correct);       // moves to the next Task
 //   round.summary();            // once finished: { score, total, mistakes }
 
 export const ROUND_SIZE = 10;
@@ -98,16 +100,70 @@ export function createRound(deck, size = ROUND_SIZE) {
   };
 }
 
-/** The Game's deck: every Exercise, shuffled, each Card naming its Agonist (the atlas lists it first). */
-export function createQuiz({ atlas, random = Math.random }) {
+/** What a Task is answered with when the Trainer gives up. Not a Muscle id: those have no hyphen. */
+export const DONT_KNOW = 'dont-know';
+
+const agonistOf = (atlas, exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
+
+/**
+ * The kinds of Task (ADR-0010) — the list a Round is composed from. A kind says
+ * every Task it could ask (`tasks`, off the atlas) and how an answer to one is
+ * judged (`judge`); adding a kind is adding an entry, the composition below is
+ * not touched. A Task names the Exercise and the Muscle it is about, so that no
+ * Round asks about either twice — a kind that has no Exercise (Знайди М'яз)
+ * just leaves it out.
+ */
+export const KINDS = [
+  {
+    id: 'agonist',
+    tasks: (atlas) => atlas.exercises().map(({ id }) => ({ kind: 'agonist', exercise: id, muscle: agonistOf(atlas, id) })),
+    /** `given` is the Muscle tapped. A miss carries that Muscle's Role in this Exercise — null where it does not work. */
+    judge(atlas, task, given) {
+      const tapped = given === DONT_KNOW ? null : given;
+      const role = tapped && atlas.exerciseMuscles(task.exercise).find((x) => x.muscle.id === tapped)?.role;
+      return { correct: tapped === task.muscle, tapped, role: role ?? null };
+    },
+  },
+];
+
+/** Whether an answer to `task` is right, and — for a miss — what was tapped. `given` is what the screen passes on: a Muscle id, or `DONT_KNOW`. */
+export function judge(atlas, task, given, kinds = KINDS) {
+  return kinds.find((k) => k.id === task.kind).judge(atlas, task, given);
+}
+
+/**
+ * The Game's deck: kinds take turns (from a random one), each turn the next
+ * Task of that kind off its shuffled pool that touches no Exercise or Muscle
+ * already in the Round; the deck is then shuffled again so the turns do not show.
+ */
+export function createQuiz({ atlas, random = Math.random, kinds = KINDS }) {
   const shuffle = shuffleWith(random);
-  const agonistOf = (exercise) => atlas.exerciseMuscles(exercise)[0].muscle.id;
 
   return {
     round(size = ROUND_SIZE) {
-      const ids = shuffle(atlas.exercises().map((e) => e.id)).slice(0, size);
-      const deck = ids.map((exercise) => ({ exercise, answer: agonistOf(exercise) }));
-      return createRound(deck, size);
+      const pools = kinds.map((kind) => shuffle(kind.tasks(atlas)));
+      const start = Math.floor(random() * pools.length);
+      const usedExercises = new Set();
+      const usedMuscles = new Set();
+      const fresh = (task) => !usedExercises.has(task.exercise) && !usedMuscles.has(task.muscle);
+      const deck = [];
+
+      // `dry` counts kinds in a row that had nothing left to offer: all of them, and the deck is as full as it gets.
+      for (let turn = 0, dry = 0; deck.length < size && dry < pools.length; turn++) {
+        const pool = pools[(start + turn) % pools.length];
+        const at = pool.findIndex(fresh);
+        if (at < 0) {
+          dry++;
+          continue;
+        }
+        dry = 0;
+        const [task] = pool.splice(at, 1);
+        deck.push(task);
+        // A kind with no Exercise (or no Muscle) adds nothing: `undefined` must not block its siblings.
+        if (task.exercise) usedExercises.add(task.exercise);
+        if (task.muscle) usedMuscles.add(task.muscle);
+      }
+      return createRound(shuffle(deck), size);
     },
   };
 }

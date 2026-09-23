@@ -31,6 +31,12 @@
 
   /* The finger minimum. ui.mjs reads it to size the tap zones on the map. */
   --tap: 44px;
+  /* The Game's tap zone (ADR-0010; ui.mjs reads it): a Muscle narrower or lower
+     than this is caught by a tap this close. The knob to turn if small Muscles
+     are hard to hit with one hand. */
+  --game-zone: 44px;
+  /* A wrong Muscle the Trainer tapped in the Game: no Role has this colour. */
+  --c-miss: var(--ink);
   /* The bottom tab bar's own height, safe area excluded (added where it's used). */
   --tabsh: 3.9rem;
   /* The sticky top bar's own rendered height, safe area excluded — what the
@@ -460,6 +466,8 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
    of the Round), and neither has any other fixed chrome at its foot either:
    a little room under the last row is all they need. */
 #page[data-screen='game'], #page[data-screen='examCards'], #page[data-screen='examTest'] { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+/* A Task (waiting or answered) docks its button at the foot like Cards do. */
+#page[data-game='task'], #page[data-game='answered'] { padding-bottom: calc(var(--examgoh) + 1rem + env(safe-area-inset-bottom)); }
 /* Cards/Test dock their action buttons at the bottom while a Round is in
    play (data-exam="card"; see #top > .main / .card-go below) — the page
    needs extra room at its foot to clear that bar. */
@@ -475,6 +483,25 @@ button.row { width: 100%; border: 0; background: none; text-align: left; }
    its summary are all just text. Neither does the Test Format (ticket 07). */
 #page[data-screen='examCards'] #dock, #page[data-screen='examCards'] #mapbar,
 #page[data-screen='examTest'] #dock, #page[data-screen='examTest'] #mapbar { display: none; }
+
+/* The Game (ADR-0010): one figure, whichever side the Trainer picked, and always
+   on show — the choice to hide the map is the reference's. */
+#page[data-screen='game'] #dock[hidden] { display: block !important; }
+#page[data-screen='game'] #mapbar { display: none !important; }
+#page[data-screen='game'] .layer { grid-template-columns: 1fr; }
+#page[data-screen='game'] #map[data-side='front'] [data-view='back'],
+#page[data-screen='game'] #map[data-side='back'] [data-view='front'] { display: none; }
+/* Its own controls: the side switch on top, the zoom below; no hiding, expanding or closing. */
+#page[data-screen='game'] .tools { top: 0.5rem; bottom: auto; }
+#page[data-screen='game'] .tools .pg, #page[data-screen='game'] .tools [data-act='close-map'] { display: none; }
+#page[data-screen='game'] .tools .seg.fl { display: flex; }
+/* A Task waiting for its tap: the map takes all the height between the wording
+   and the button at the foot. Answered, it is the usual pinned map, with the
+   explanation and the list scrolling under it. */
+#page[data-game='task'] { display: flex; flex-direction: column; height: calc(100svh - var(--barh) - env(safe-area-inset-top)); }
+#page[data-game='task'] #top { flex: none; }
+#page[data-game='task'] #dock { flex: 1 1 0; height: auto; min-height: 0; }
+#page[data-game='task'] #map { position: absolute; inset: 0; height: auto; }
 
 /* The welcome (ticket 04) is home's own state, not its own screen — the map
    is hidden by a flag of its own rather than a #page[data-screen] value. */
@@ -789,7 +816,7 @@ html:not(.full-map) .zoom .lbl {
    #tabs is a sibling of #page, not its descendant — `~` reaches across. */
 #page[data-screen='game'] ~ #tabs, #page[data-screen='examCards'] ~ #tabs, #page[data-screen='examTest'] ~ #tabs, .full-map #tabs { display: none; }
 
-/* ── The Game: a Round of Cards (ADR-0007) ────────────────────────────── */
+/* ── The Game: a Round of Tasks (ADR-0010), and Cards' buttons ─────────── */
 
 .main, .ghost {
   display: flex;
@@ -815,10 +842,12 @@ html:not(.full-map) .zoom .lbl {
 /* Ticket 11: Cards/Test have no map, so their action buttons («Показати
    відповідь», «Знав»/«Не знав», «Далі») dock at the foot in the thumb zone
    instead of sitting right under the question — same fixed-bar recipe #tabs
-   uses. The Game keeps them in normal flow: its map fills the middle. */
+   uses. The Game's Tasks dock theirs the same way (`.task-go`): its map fills the middle. */
 #page[data-screen='examCards'][data-exam='card'] #top > .main,
 #page[data-screen='examCards'][data-exam='card'] #top > .card-go,
-#page[data-screen='examTest'][data-exam='card'] #top > .card-go {
+#page[data-screen='examTest'][data-exam='card'] #top > .card-go,
+#page[data-game='task'] #top > .task-go,
+#page[data-game='answered'] #top > .task-go {
   position: fixed;
   z-index: 6;
   inset-inline: 0;
@@ -829,6 +858,11 @@ html:not(.full-map) .zoom .lbl {
   border-top: 1px solid var(--ink);
   background: var(--bg);
 }
+
+/* The Game's wording: the action over the Exercise's name; the verdict, a mark and words. */
+.task-do { display: block; margin-bottom: 0.25rem; font: 500 0.7rem var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); }
+.verdict { margin: 0.5rem 0 0; font-weight: 700; }
+.verdict[data-verdict='wrong'] { color: var(--red); }
 
 .score { margin: 0.6rem 0 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; }
 .score b { font-variant-numeric: tabular-nums; }

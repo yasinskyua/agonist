@@ -11,7 +11,6 @@ const PATHS = {
   down: 'M6 9l6 6 6-6',
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM16 16l4 4',
   full: 'M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6',
-  fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   // Tab bar: named after the tab's data-tab value, so icon(tab.dataset.tab)
   // resolves directly without a separate name-mapping table.
   reference: 'M11 4H5v16h6M13 4h6v16h-6',

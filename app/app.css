@@ -180,7 +180,15 @@ p.sub[translate='no'] { font-style: italic; }
   font-size: 0.85rem;
 }
 
-.legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend li { display: inline-flex; align-items: center; }
+.legend i { margin-right: 0.4rem; }
+
+/* A Role's sentence, or the Card's «Хто такий Агоніст?» (ticket 05): a native
+   `<details>`, so the tap target, keyboard access, disclosure triangle and
+   VoiceOver announcement all come from the browser — no JS or ARIA of our own. */
+summary { cursor: pointer; }
+details > p { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--dim); }
+.who { margin: 0.6rem 0 0; font-size: 0.95rem; }
 
 /* ── Search ────────────────────────────────────────────────────────────── */
 

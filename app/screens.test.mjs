@@ -164,6 +164,22 @@ test('a Muscle with no Exercises says so instead of showing an empty list', () =
   assert.deepEqual(hrefs(list), []);
 });
 
+test('a Muscle page has a legend of the Roles it actually plays, each with its own sentence', () => {
+  const top = pageTopHtml(t, 'uk', atlas, { screen: 'muscle', id: 'pectoralis_major' });
+  const roles = new Set(atlas.muscleExercises('pectoralis_major').map((x) => x.role));
+
+  for (const role of ROLES) {
+    assert.equal(top.includes(`<li data-role="${role}">`), roles.has(role), role);
+    assert.equal(top.includes(t(`role.${role}.sentence`)), roles.has(role), role);
+  }
+});
+
+test('a Muscle with no Exercises has no legend at all', () => {
+  const top = pageTopHtml(t, 'uk', atlas, { screen: 'muscle', id: 'supinators' });
+
+  assert.ok(!top.includes('class="legend"'));
+});
+
 test('a Muscle without a Latin name has no empty line for it', () => {
   const bare = atlas.muscles().find((m) => !m.la);
   const top = pageTopHtml(t, 'uk', atlas, { screen: 'muscle', id: bare.id });
@@ -239,6 +255,17 @@ test('an Exercise page names the Exercise in both languages, and the legend has 
   assert.ok(top.includes(e.uk) && top.includes(e.en));
   for (const role of ROLES) {
     assert.equal(top.includes(`<li data-role="${role}">`), roles.has(role), role);
+  }
+});
+
+test('each Role in the legend is a native disclosure holding its own sentence, and only the shown Roles appear', () => {
+  const top = pageTopHtml(t, 'uk', atlas, ROLL);
+  const roles = new Set(atlas.exerciseMuscles(ROLL.id).map((x) => x.role));
+
+  for (const role of ROLES) {
+    const shown = top.includes(`<li data-role="${role}"><details><summary>`);
+    assert.equal(shown, roles.has(role), role);
+    assert.equal(top.includes(t(`role.${role}.sentence`)), roles.has(role), role);
   }
 });
 
@@ -367,6 +394,14 @@ test('a Card before reveal shows the Exercise and the way to reveal it, and noth
   assert.equal(cardListHtml(t, 'uk', atlas, round), '');
 });
 
+test('a Card before reveal offers «Хто такий Агоніст?» as a native disclosure holding the Agonist\'s sentence', () => {
+  const round = quiz().round();
+  const top = cardTopHtml(t, 'uk', atlas, round);
+
+  assert.ok(top.includes('<details class="who"><summary>' + t('card.agonist.question')));
+  assert.ok(top.includes(t('role.agonist.sentence')));
+});
+
 test('revealing a Card shows the Agonist, both grades, and the whole Role Distribution', () => {
   const round = quiz().round();
   round.reveal();
@@ -379,6 +414,18 @@ test('revealing a Card shows the Agonist, both grades, and the whole Role Distri
   for (const { muscle, role } of atlas.exerciseMuscles(round.current.exercise)) {
     assert.ok(list.includes(muscle.uk));
     assert.ok(list.includes(`data-role="${role}"`));
+  }
+});
+
+test('a revealed Card has a legend of its own Role Distribution, each Role a tap away from its sentence', () => {
+  const round = quiz().round();
+  round.reveal();
+  const top = cardTopHtml(t, 'uk', atlas, round);
+  const roles = new Set(atlas.exerciseMuscles(round.current.exercise).map((x) => x.role));
+
+  for (const role of ROLES) {
+    assert.equal(top.includes(`<li data-role="${role}">`), roles.has(role), role);
+    assert.equal(top.includes(t(`role.${role}.sentence`)), roles.has(role), role);
   }
 });
 

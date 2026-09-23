@@ -134,24 +134,32 @@ function searchField(t) {
     </div>`;
 }
 
-/** The Roles an Exercise's Muscles play, most central first, each once. */
-const rolesOf = (atlas, id) => {
-  const used = new Set(atlas.exerciseMuscles(id).map((x) => x.role));
+/** The Roles present in a list of {role} pairs (an Exercise's Muscles, or a Muscle's Exercises), most central first, each once. */
+const rolesIn = (pairs) => {
+  const used = new Set(pairs.map((x) => x.role));
   return ROLES.filter((r) => used.has(r));
 };
+
+/**
+ * One legend item: the Role's colour and name; a tap opens its own sentence
+ * from `CONTEXT.md` in place — a native `<details>`, no JS of our own (ticket 05).
+ */
+const roleItem = (t, r) =>
+  `<li data-role="${r}"><details><summary><i></i>${t(`role.${r}`)}</summary><p>${t(`role.${r}.sentence`)}</p></details></li>`;
+
+/** A legend of the Roles actually shown here, each a tap away from its sentence. Nothing when there are none. */
+const legendHtml = (t, roles) =>
+  roles.length ? `<ul class="legend" aria-label="${t('exercise.legend')}">${roles.map((r) => roleItem(t, r)).join('')}</ul>` : '';
 
 /** The page's own words above the map: its name and what it is. */
 export function pageTopHtml(t, lang, atlas, here) {
   if (here.screen === 'muscle') {
     const m = atlas.muscle(here.id);
-    return `<h1 tabindex="-1">${m.uk}</h1>${m.la ? `<p class="sub" translate="no">${m.la}</p>` : ''}<p class="lead">${m.action}</p>`;
+    return `<h1 tabindex="-1">${m.uk}</h1>${m.la ? `<p class="sub" translate="no">${m.la}</p>` : ''}<p class="lead">${m.action}</p>${legendHtml(t, rolesIn(atlas.muscleExercises(here.id)))}`;
   }
   if (here.screen === 'exercise') {
     const e = atlas.exercise(here.id);
-    return `<h1 tabindex="-1">${e[lang]}</h1><p class="sub" lang="${otherLang(lang)}">${e[otherLang(lang)]}</p>
-      <ul class="legend" aria-label="${t('exercise.legend')}">${rolesOf(atlas, here.id)
-        .map((r) => `<li data-role="${r}"><i></i>${t(`role.${r}`)}</li>`)
-        .join('')}</ul>`;
+    return `<h1 tabindex="-1">${e[lang]}</h1><p class="sub" lang="${otherLang(lang)}">${e[otherLang(lang)]}</p>${legendHtml(t, rolesIn(atlas.exerciseMuscles(here.id)))}`;
   }
   return searchField(t);
 }
@@ -224,11 +232,13 @@ export function cardTopHtml(t, lang, atlas, round) {
   const { exercise, answer } = round.current;
   const action = round.revealed
     ? `<p class="lead"><b>${t('role.agonist')}:</b> ${atlas.muscle(answer).uk}</p>
+       ${legendHtml(t, rolesIn(atlas.exerciseMuscles(exercise)))}
        <div class="card-go">
          <button class="ghost" type="button" data-act="grade" data-knew="0">${t('card.no')}</button>
          <button class="main" type="button" data-act="grade" data-knew="1">${t('card.yes')}</button>
        </div>`
     : `<p class="lead">${t('card.hint')}</p>
+       <details class="who"><summary>${t('card.agonist.question')}</summary><p>${t('role.agonist.sentence')}</p></details>
        <button class="main" type="button" data-act="reveal">${t('card.reveal')}</button>`;
   return `<h1 tabindex="-1">${atlas.exercise(exercise)[lang]}</h1>${action}`;
 }

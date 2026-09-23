@@ -62,9 +62,34 @@ const STRINGS = {
     en: 'Holds the joint from the opposite side',
   },
 
+  // The legend's own disclosure sentences (ticket 05): one per Role, after
+  // `CONTEXT.md`'s definitions — shown when a tap opens that Role in the legend.
+  'role.agonist.sentence': {
+    uk: "Агоніст — м'яз, який виконує основний рух Вправи: у присіданні це квадрицепс.",
+    en: "The Agonist is the Muscle that drives the Exercise's main movement — the quadriceps in a squat.",
+  },
+  'role.synergist.sentence': {
+    uk: "Синергіст — м'яз, який допомагає Агоністу виконати рух, не ведучи його сам: у присіданні це сідничні.",
+    en: 'A Synergist is a Muscle that helps the Agonist move without leading it — the glutes in a squat.',
+  },
+  'role.dynamic_stabilizer.sentence': {
+    uk: "Динамічний стабілізатор — двосуглобовий м'яз, що проходить Вправу майже без зміни довжини, стабілізуючи суглоби на ходу: у присіданні це задня поверхня стегна.",
+    en: 'A Dynamic stabilizer is a two-joint Muscle that barely changes length through the Exercise, stabilizing the joints as it goes — the hamstrings in a squat.',
+  },
+  'role.stabilizer.sentence': {
+    uk: "Стабілізатор — м'яз, який утримує положення тіла чи суглоба під час Вправи, не створюючи самого руху: у присіданні це розгиначі спини.",
+    en: "A Stabilizer is a Muscle that holds the body or a joint in place during the Exercise without creating the movement itself — the spinal erectors in a squat.",
+  },
+  'role.antagonist_stabilizer.sentence': {
+    uk: "Стабілізатор-антагоніст — м'яз, що скорочується з протилежного боку суглоба, аби двосуглобовий м'яз зберігав натяг у сусідньому суглобі: у згинанні ніг лежачи це квадрицепс.",
+    en: 'An Antagonist stabilizer is a Muscle that contracts on the opposite side of a joint so a two-joint Muscle keeps its tension at the neighboring joint — the quadriceps in a lying leg curl.',
+  },
+
   // The header's way into the Game (ADR-0007): the two grades of a Card.
   'flash.enter': { uk: 'Знав / Не знав', en: 'Knew it / Didn\'t' },
   'card.hint': { uk: 'Назви Агоніста вголос, потім перевір себе', en: 'Say the Agonist out loud, then check yourself' },
+  // The Card's own disclosure (ticket 05), before reveal: what the task asks for.
+  'card.agonist.question': { uk: 'Хто такий Агоніст?', en: 'Who is the Agonist?' },
   'card.reveal': { uk: 'Показати відповідь', en: 'Show the answer' },
   'card.no': { uk: 'Не знав', en: "Didn't know it" },
   'card.yes': { uk: 'Знав', en: 'Knew it' },

@@ -135,6 +135,14 @@ test('search that finds nothing says so', () => {
   assert.ok(searchHtml(t, 'uk', atlas, 'zzzzqqq').includes(t('search.empty')));
 });
 
+test('an empty search suggests the first letters of what was typed (ticket 06)', () => {
+  const html = searchHtml(t, 'uk', atlas, 'Фіолетовий слон');
+
+  assert.ok(html.includes('Спробуйте коротше: «Фіол»'));
+  assert.ok(!searchHtml(t, 'uk', atlas, '<b>zzzzqqq').includes('<b>'), 'typed markup is escaped');
+  assert.ok(!searchHtml(t, 'uk', atlas, 'zzz').includes(t('search.shorter').slice(0, 8)), 'a short word has nothing to shorten');
+});
+
 // ── Muscle page ──────────────────────────────────────────────────────────
 
 test('a Muscle page has the name, Latin and Function, and lists its Exercises with the Role', () => {

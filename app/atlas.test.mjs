@@ -8,6 +8,8 @@ import { readFileSync } from 'node:fs';
 
 import { createAtlas, ContentError } from './atlas.mjs';
 
+const fold = (text) => (text ?? '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/['’ʼ`]/g, '');
+
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 
 const content = {
@@ -263,6 +265,39 @@ test('search ignores case, apostrophe shape and a missing apostrophe', () => {
 test('search ignores diacritics a phone keyboard drops: ї typed as і, й as и', () => {
   assert.ok(ids(atlas.search('мязи задньоі').muscles).includes('hamstrings'));
   assert.ok(ids(atlas.search('прямии мяз живота').muscles).includes('rectus_abdominis'));
+});
+
+test('a word in another form finds the name with the same root (ticket 06)', () => {
+  // The Trainer types the way the gym talks, not the way the name is spelled.
+  for (const query of ['сідниці', 'сідничні', 'сідницях']) {
+    assert.ok(ids(atlas.search(query).muscles).includes('gluteus_maximus'), query);
+  }
+  assert.ok(ids(atlas.search('біцепса').exercises).includes('barbell-curl'));
+  assert.ok(ids(atlas.search('грудні').muscles).includes('pectoralis_major'));
+  assert.ok(ids(atlas.search('грудні').groups).includes('chest'));
+  assert.ok(ids(atlas.search('штангу лежачі').exercises).includes('bench-press'));
+  assert.ok(ids(atlas.search('присідання зі штангою').exercises).includes('back-squat'));
+  assert.ok(ids(atlas.search('присідань').exercises).includes('back-squat'));
+});
+
+test('a short query (up to four letters) stays a plain fragment of a name', () => {
+  // A fuzzy rule on «жим» or «сідн» would drag in unrelated rows.
+  for (const query of ['жим', 'сідн', 'мязи']) {
+    const plain = (list, key) => list.filter((x) => fold(x[key]).includes(query));
+    const found = atlas.search(query);
+    assert.equal(found.exercises.length, plain(atlas.exercises(), 'uk').length, query);
+    assert.equal(found.muscles.length, plain(atlas.muscles(), 'uk').length, query);
+  }
+});
+
+test('everything a query found by an exact fragment it still finds, and possibly more', () => {
+  // The old rule is a floor: every whole-fragment hit survives the new one.
+  for (const query of ['великий грудний', 'жим штанги лежачи', 'latissimus', 'мязи задньоі', 'спина']) {
+    const found = atlas.search(query);
+    const exact = (list) => list.filter((x) => [x.uk, x.la, x.en].some((n) => fold(n).includes(fold(query))));
+    for (const id of ids(exact(atlas.muscles()))) assert.ok(ids(found.muscles).includes(id), `${query}: ${id}`);
+    for (const id of ids(exact(atlas.exercises()))) assert.ok(ids(found.exercises).includes(id), `${query}: ${id}`);
+  }
 });
 
 test('an empty query finds nothing rather than everything', () => {

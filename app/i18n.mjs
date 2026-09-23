@@ -33,9 +33,11 @@ const STRINGS = {
   'search.label': { uk: "Пошук м'язів, груп і вправ", en: 'Search muscles, groups and exercises' },
   'search.placeholder': { uk: 'Жим лежачи, біцепс…', en: 'Bench press, biceps…' },
   'search.empty': {
-    uk: "Нічого не знайдено. М'язи шукаються українською й латиною, вправи — українською й англійською.",
-    en: 'Nothing found. Muscles are searched in Ukrainian and Latin, exercises in Ukrainian and English.',
+    uk: "Нічого не знайдено. Шукаються м'язи, групи й вправи.",
+    en: 'Nothing found. Muscles, groups and exercises are searched.',
   },
+  // «{q}» is the first letters of the Trainer's own word.
+  'search.shorter': { uk: 'Спробуйте коротше: «{q}»', en: 'Try it shorter: «{q}»' },
   'search.groups': { uk: "М'язові групи", en: 'Muscle groups' },
   'search.muscles': { uk: "М'язи", en: 'Muscles' },
   'search.exercises': { uk: 'Вправи', en: 'Exercises' },

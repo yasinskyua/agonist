@@ -123,6 +123,27 @@ const fold = (text) =>
     .replace(/ґ/g, 'г')
     .replace(/\s+/g, ' ')
     .trim();
+
+/**
+ * The part of a typed word that survives its case ending: «сідниці» and
+ * «сідничний» meet at «сідни». Two letters go, then a consonant that
+ * alternates (ц/ч, г/ж/з, к/ч, х/ш/с) so both forms meet at the same place.
+ * Words of up to four letters are not touched: a short query is a plain
+ * fragment, «жим» must not drag in unrelated rows.
+ *
+ * ponytail: a rule tried on the real names, not a morphology; a root that
+ * changes deeper inside (e.g. о/і) will not meet — add a pair when the
+ * Trainer hits one.
+ */
+const stemOf = (word) => {
+  if (word.length <= 4) return word;
+  const stem = word.slice(0, Math.max(4, word.length - 2));
+  return /[цчзжгкхшс]$/.test(stem) && stem.length > 4 ? stem.slice(0, -1) : stem;
+};
+
+/** Every word of the query, by its stem, is somewhere in the name. */
+const sameRoots = (name, q) => q.split(' ').every((word) => name.includes(stemOf(word)));
+
 const roleOrder = (role) => ROLES.indexOf(role);
 
 export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
@@ -214,7 +235,8 @@ export function createAtlas({ muscles, groups, exercises, atlasMuscles }) {
     search(query) {
       const q = fold(query);
       if (!q) return { groups: [], muscles: [], exercises: [] };
-      const hit = (...names) => names.some((name) => fold(name).includes(q));
+      const hit = (...names) =>
+        names.some((name) => fold(name).includes(q) || sameRoots(fold(name), q));
 
       return {
         groups: Object.entries(groups)

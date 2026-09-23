@@ -94,7 +94,10 @@ export function indexHtml(t, lang, atlas) {
 export function searchHtml(t, lang, atlas, query) {
   const found = atlas.search(query);
   if (!found.groups.length && !found.muscles.length && !found.exercises.length) {
-    return `<p class="none">${t('search.empty')}</p>`;
+    // Only a word longer than the hint can be shortened.
+    const [word = ''] = query.trim().split(/\s+/);
+    const hint = word.length > 4 ? ` ${t('search.shorter').replace('{q}', word.slice(0, 4).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`))}` : '';
+    return `<p class="none">${t('search.empty')}${hint}</p>`;
   }
   const agonist = (e) => atlas.exerciseMuscles(e.id)[0].muscle.uk;
   const groups = found.groups.map(

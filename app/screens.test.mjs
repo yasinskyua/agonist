@@ -424,6 +424,18 @@ test('the length picker offers ten, every Topic, and all of them — the count n
   }
 });
 
+test('«Повторити слабкі» (ticket 08): with none weak, the picker says there is nothing to repeat', () => {
+  const html = examCardsPickerHtml(t, exam, 0);
+  assert.ok(html.includes(t('exam.weak.empty')));
+  assert.ok(!html.includes('data-weak'));
+});
+
+test('«Повторити слабкі»: with some weak, the button names the count and starts a weak Round', () => {
+  const html = examCardsPickerHtml(t, exam, 4);
+  assert.ok(html.includes(t('exam.weak.repeat').replace('{n}', 4)));
+  assert.ok(html.includes('data-act="exam-round"') && html.includes('data-weak="1"'));
+});
+
 test('a Card before reveal shows the Question and the way to reveal it, and nothing more — the costliest mistake this Format could make', () => {
   const round = examQuiz().round({ length: 10 });
   const top = examCardTopHtml(t, round);
@@ -515,6 +527,13 @@ test('the Test length picker offers ten, every Topic, and all of them — over t
     assert.ok(html.includes(topic.uk));
     assert.ok(html.includes(`>${exam.testable().filter((q) => q.topic === topic.id).length}<`), topic.id);
   }
+});
+
+test('«Повторити слабкі» on the Test picker: same rule as Cards — a count, or nothing to repeat', () => {
+  assert.ok(examTestPickerHtml(t, exam, 0).includes(t('exam.weak.empty')));
+  const html = examTestPickerHtml(t, exam, 3);
+  assert.ok(html.includes(t('exam.weak.repeat').replace('{n}', 3)));
+  assert.ok(html.includes('data-act="exam-test-round"') && html.includes('data-weak="1"'));
 });
 
 test('a Question before a choice shows the four options and nothing more — no answer marked, no explanation, no Далі', () => {

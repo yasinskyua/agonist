@@ -117,13 +117,16 @@ export function createQuiz({ atlas, random = Math.random }) {
  * caller-picked slice of them. `topic` narrows the pool before shuffling;
  * `length` slices it after — left out, the whole (possibly topic-narrowed)
  * pool plays, which is how «one Topic» and «all 51» both get their exact count.
+ * `ids` (ticket 08, «Повторити слабкі») further narrows the pool to just
+ * those ids — the weak-set button passes it alone, with no `topic`.
  */
 export function createExamQuiz({ exam, random = Math.random }) {
   const shuffle = shuffleWith(random);
 
   return {
-    round({ topic, length } = {}) {
-      const deck = shuffle(exam.questions({ topic }));
+    round({ topic, length, ids } = {}) {
+      const pool = exam.questions({ topic }).filter((q) => !ids || ids.has(q.id));
+      const deck = shuffle(pool);
       return createRound(deck, length ?? deck.length);
     },
   };
@@ -133,14 +136,15 @@ export function createExamQuiz({ exam, random = Math.random }) {
  * The Exam Test's deck: only Questions with a Test block (ticket 07 — one
  * without doesn't belong in the pool), each carrying its four options
  * pre-shuffled from the same seed as the deck, so a seed replays both the
- * Question order and the option order.
+ * Question order and the option order. `ids` (ticket 08) works as it does in
+ * `createExamQuiz`.
  */
 export function createExamTestQuiz({ exam, random = Math.random }) {
   const shuffle = shuffleWith(random);
 
   return {
-    round({ topic, length } = {}) {
-      const pool = exam.testable().filter((q) => !topic || q.topic === topic);
+    round({ topic, length, ids } = {}) {
+      const pool = exam.testable().filter((q) => (!topic || q.topic === topic) && (!ids || ids.has(q.id)));
       const deck = shuffle(pool).map((q) => {
         const question = q.test.question ?? q.question;
         const answer = q.test.answer ?? q.answer;

@@ -11,6 +11,7 @@ import { createAtlas } from './atlas.mjs';
 import { createExam } from './exam.mjs';
 import { createQuiz, createExamQuiz, createExamTestQuiz } from './quiz.mjs';
 import { translator, otherLang, loadLang, saveLang } from './i18n.mjs';
+import { loadWeak, saveAnswer } from './memory.mjs';
 import { icon } from './icons.mjs';
 import { parseRoute, muscleHref, HOME, GAME, EXAM, EXAM_CARDS, EXAM_TEST } from './route.mjs';
 import {
@@ -698,7 +699,9 @@ export async function start() {
     // the header for no reason.
     el('tally').hidden = !examRound;
     if (!examRound) {
-      top.innerHTML = `<h1 tabindex="-1">${t('exam.cards')}</h1>${examCardsPickerHtml(t, exam)}`;
+      const weak = loadWeak(storage);
+      const weakCount = exam.questions().filter((q) => weak.has(q.id)).length;
+      top.innerHTML = `<h1 tabindex="-1">${t('exam.cards')}</h1>${examCardsPickerHtml(t, exam, weakCount)}`;
       list.innerHTML = '';
       el('tally').textContent = '';
       el('status').textContent = '';
@@ -729,7 +732,9 @@ export async function start() {
   function syncExamTest(t) {
     el('tally').hidden = !examTestRound;
     if (!examTestRound) {
-      top.innerHTML = `<h1 tabindex="-1">${t('exam.test')}</h1>${examTestPickerHtml(t, exam)}`;
+      const weak = loadWeak(storage);
+      const weakCount = exam.testable().filter((q) => weak.has(q.id)).length;
+      top.innerHTML = `<h1 tabindex="-1">${t('exam.test')}</h1>${examTestPickerHtml(t, exam, weakCount)}`;
       list.innerHTML = '';
       el('tally').textContent = '';
       el('status').textContent = '';
@@ -973,8 +978,8 @@ export async function start() {
       redrawGame(true);
     },
     'exam-round': (button) => {
-      const { topic, length } = button.dataset;
-      examRound = examQuiz.round({ topic, length: length ? Number(length) : undefined });
+      const { topic, length, weak } = button.dataset;
+      examRound = examQuiz.round({ topic, length: length ? Number(length) : undefined, ids: weak ? loadWeak(storage) : undefined });
       redrawExamCards(true);
     },
     'exam-reveal': () => {
@@ -982,12 +987,17 @@ export async function start() {
       redrawExamCards(false);
     },
     'exam-grade': (button) => {
-      examRound.grade(button.dataset.knew === '1');
+      const id = examRound.current.id;
+      const knew = button.dataset.knew === '1';
+      // grade() first: it throws on a stale click (already finished, not
+      // revealed) — the memory should only be written once it hasn't.
+      examRound.grade(knew);
+      saveAnswer(storage, id, knew);
       redrawExamCards(true);
     },
     'exam-test-round': (button) => {
-      const { topic, length } = button.dataset;
-      examTestRound = examTestQuiz.round({ topic, length: length ? Number(length) : undefined });
+      const { topic, length, weak } = button.dataset;
+      examTestRound = examTestQuiz.round({ topic, length: length ? Number(length) : undefined, ids: weak ? loadWeak(storage) : undefined });
       redrawExamTest(true);
     },
     'exam-test-choose': (button) => {
@@ -996,7 +1006,11 @@ export async function start() {
     },
     'exam-test-next': () => {
       const q = examTestRound.current;
-      examTestRound.grade(q.options[examTestRound.choice] === q.answer);
+      const knew = q.options[examTestRound.choice] === q.answer;
+      // grade() first, same reason as 'exam-grade': never write a memory the
+      // Round itself refused to record.
+      examTestRound.grade(knew);
+      saveAnswer(storage, q.id, knew);
       redrawExamTest(true);
     },
     clear: clearSearch,

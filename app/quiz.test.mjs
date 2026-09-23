@@ -185,6 +185,28 @@ test('the same seed gives the same Exam Round, another seed another one', () => 
   assert.notDeepEqual(ids(examQuizWith(7).round()), ids(examQuizWith(8).round()));
 });
 
+// «Повторити слабкі» (ticket 08): a caller-picked set of ids, cutting across Topics.
+
+test('a weak-set Round holds exactly those ids, and only those', () => {
+  const want = exam.questions().slice(0, 3).map((q) => q.id);
+  const round = examQuizWith(1).round({ ids: new Set(want) });
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(want));
+});
+
+test('an empty weak set gives an empty, not a broken, Round', () => {
+  const round = examQuizWith(1).round({ ids: new Set() });
+  assert.equal(round.total, 0);
+  assert.equal(round.finished, true);
+});
+
+test('a weak set combines with `topic`: only the ids that are also in it play', () => {
+  const topic = exam.topics()[0].id;
+  const inTopic = exam.questions({ topic })[0].id;
+  const outsideTopic = exam.questions().find((q) => q.topic !== topic).id;
+  const round = examQuizWith(1).round({ ids: new Set([inTopic, outsideTopic]), topic });
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set([inTopic]));
+});
+
 test('an Exam Round plays the same way a Game Round does: reveal, grade, summary', () => {
   const round = examQuizWith(2).round({ length: 5 });
   for (let i = 0; i < 5; i++) {
@@ -229,6 +251,22 @@ test('every Card carries exactly four options, one of them the answer', () => {
     assert.equal(q.options.length, 4);
     assert.equal(q.options.filter((o) => o === q.answer).length, 1);
   }
+});
+
+// «Повторити слабкі» (ticket 08), over the testable Questions.
+
+test('a weak-set Test Round holds exactly those ids among the testable Questions', () => {
+  const want = exam.testable().slice(0, 2).map((q) => q.id);
+  const round = examTestQuizWith(1).round({ ids: new Set(want) });
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(want));
+});
+
+test('a weak id without a Test block is not offered — only testable Questions play', () => {
+  const { id: _id1, test: _test, ...nonTestable } = exam.question(exam.testable()[0].id);
+  const { id: _id2, ...testable } = exam.question(exam.testable()[1].id);
+  const fromExam = createExam({ questions: { nonTestable, testable }, atlas });
+  const round = createExamTestQuiz({ exam: fromExam, random: () => 0 }).round({ ids: new Set(['nonTestable', 'testable']) });
+  assert.deepEqual(new Set(round.cards.map((q) => q.id)), new Set(['testable']));
 });
 
 test('the same seed gives the same Test Round and the same option order, another seed another one', () => {

@@ -258,8 +258,23 @@ export function examDigestHtml(t, lang, atlas, exam) {
 
 // ── The Exam: Cards, a Round of Questions (ADR-0008) ────────────────────
 
-/** Before a Round: the Student picks how many Questions play — ten, one Topic, or all. */
-export function examCardsPickerHtml(t, exam) {
+/** «Повторити слабкі» (ticket 08): a button naming the weak count, or a line saying there is none. */
+function weakRepeatHtml(t, act, weakCount) {
+  return `
+    <h2 class="h">${t('exam.weak')}</h2>
+    ${
+      weakCount
+        ? `<div class="card-go"><button class="ghost" type="button" data-act="${act}" data-weak="1">${t('exam.weak.repeat').replace('{n}', weakCount)}</button></div>`
+        : `<p class="lead">${t('exam.weak.empty')}</p>`
+    }`;
+}
+
+/**
+ * Before a Round: the Student picks how many Questions play — ten, one Topic,
+ * all, or (ticket 08) just the Questions last graded «Не знав». `weakCount`
+ * comes from the caller: this module never touches browser storage.
+ */
+export function examCardsPickerHtml(t, exam, weakCount = 0) {
   const all = exam.questions();
   const topics = exam
     .topics()
@@ -276,7 +291,8 @@ export function examCardsPickerHtml(t, exam) {
       <button class="main" type="button" data-act="exam-round">${t('exam.cards.all').replace('{n}', all.length)}</button>
     </div>
     <h2 class="h">${t('exam.cards.topic')}</h2>
-    <ul class="list">${topics.join('')}</ul>`;
+    <ul class="list">${topics.join('')}</ul>
+    ${weakRepeatHtml(t, 'exam-round', weakCount)}`;
 }
 
 /**
@@ -336,7 +352,7 @@ export function examSummaryHtml(t, round) {
  * Before a Round: the same three lengths as Cards, over only the testable
  * Questions — a Topic with none of those does not offer an empty Round.
  */
-export function examTestPickerHtml(t, exam) {
+export function examTestPickerHtml(t, exam, weakCount = 0) {
   const all = exam.testable();
   const topics = exam
     .topics()
@@ -354,7 +370,8 @@ export function examTestPickerHtml(t, exam) {
       <button class="main" type="button" data-act="exam-test-round">${t('exam.cards.all').replace('{n}', all.length)}</button>
     </div>
     <h2 class="h">${t('exam.cards.topic')}</h2>
-    <ul class="list">${topics.join('')}</ul>`;
+    <ul class="list">${topics.join('')}</ul>
+    ${weakRepeatHtml(t, 'exam-test-round', weakCount)}`;
 }
 
 /**

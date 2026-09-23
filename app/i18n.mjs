@@ -116,6 +116,13 @@ const STRINGS = {
   'exam.test.next': { uk: 'Далі', en: 'Next' },
   'exam.test.correct': { uk: 'Правильно', en: 'Correct' },
   'exam.test.wrong': { uk: 'Неправильно', en: 'Incorrect' },
+
+  // «Повторити слабкі» (ticket 08): a Round of only the Questions last graded
+  // «Не знав» — shared wording between Cards and Test, since the memory is.
+  'exam.weak': { uk: 'Слабкі Питання', en: 'Weak Questions' },
+  // «{n}» is how many Questions are weak right now — never hardcoded.
+  'exam.weak.repeat': { uk: 'Повторити слабкі ({n})', en: 'Repeat weak ({n})' },
+  'exam.weak.empty': { uk: 'Поки нема чого повторювати.', en: 'Nothing to repeat yet.' },
 };
 
 export const KEYS = Object.keys(STRINGS);

@@ -470,8 +470,9 @@ export async function start() {
   /**
    * Run `update` as a View Transition: `dir` is 'forward' (the new screen
    * slides in from the right), 'back' (from the left) or 'fade' (a screen
-   * that stays put — the full map, the hidden map, «Спереду/Ззаду», a
-   * revealed Card). The map and the header carry their own transition names
+   * that stays put — the full map, the hidden map, «Спереду/Ззаду») or
+   * 'none' (no motion: a Round's Tasks and Questions, which change many times
+   * a minute, and whose full-page snapshots stuttered on a phone). The map and the header carry their own transition names
    * in the CSS, so only the rest of the page moves.
    *
    * Without support, or under «Зменшити рух», `update` just runs. A
@@ -480,7 +481,7 @@ export async function start() {
    * then, so the screen is drawn either way and nothing here throws.
    */
   function draw(dir, update) {
-    if (calm.matches || !document.startViewTransition) return update();
+    if (dir === 'none' || calm.matches || !document.startViewTransition) return update();
     // 'fade' matches no rule below — the default cross-fade plays on its own —
     // so only 'forward'/'back' need the flag that picks a slide direction.
     if (dir !== 'fade') document.documentElement.dataset.dir = dir;
@@ -784,7 +785,7 @@ export async function start() {
    * figure to the Agonist and closes in on it.
    */
   function redrawGame(newTask) {
-    draw(newTask ? 'forward' : 'fade', () => {
+    draw('none', () => {
       unlight();
       syncGame(translator(state.lang));
       makeRoom();
@@ -855,7 +856,7 @@ export async function start() {
 
   /** Redraw Cards outside of `render()`: picking a length, reveal, grade. */
   function redrawExamCards(fresh) {
-    draw(fresh ? 'forward' : 'fade', () => {
+    draw('none', () => {
       syncExamCards(translator(state.lang));
       makeRoom();
       if (fresh) {
@@ -892,7 +893,7 @@ export async function start() {
 
   /** Redraw Test outside of `render()`: picking a length, choosing, Далі. */
   function redrawExamTest(fresh) {
-    draw(fresh ? 'forward' : 'fade', () => {
+    draw('none', () => {
       syncExamTest(translator(state.lang));
       makeRoom();
       if (fresh) {

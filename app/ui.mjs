@@ -287,7 +287,7 @@ export async function start() {
   const openPick = pickBar.querySelector('button');
   let zoom = IDENTITY;
 
-  for (const [button, name] of [[fit, 'fit'], [zoomIn, 'plus'], [zoomOut, 'minus'], [hideMap, 'up'], [fullMap, 'full'], [closeMap, 'close']]) {
+  for (const [button, name] of [[zoomIn, 'plus'], [zoomOut, 'minus'], [fullMap, 'full'], [closeMap, 'close']]) {
     button.innerHTML = icon(name);
   }
 
@@ -594,9 +594,12 @@ export async function start() {
       if (tab.dataset.tab === current) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     }
-    for (const [button, key] of [[fit, 'zoom.fit'], [zoomIn, 'zoom.in'], [zoomOut, 'zoom.out'], [hideMap, 'map.hide'], [fullMap, 'map.full'], [closeMap, 'map.close']]) {
+    for (const [button, key] of [[zoomIn, 'zoom.in'], [zoomOut, 'zoom.out'], [fullMap, 'map.full'], [closeMap, 'map.close']]) {
       button.setAttribute('aria-label', t(key));
     }
+    // These two say what they do in words: the word is the button's own name.
+    hideMap.innerHTML = `${icon('up')}${t('map.hide')}`;
+    fit.textContent = t('zoom.fit');
     mapbar.innerHTML = `${icon('down')}${t('map.show')}`;
     map.querySelector('.seg').setAttribute('aria-label', t('view.label'));
     for (const button of sides) button.textContent = t(`view.${button.dataset.side}`);
